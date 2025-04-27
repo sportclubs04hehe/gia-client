@@ -1,0 +1,58 @@
+<div class="form-group">
+    <label *ngIf="label" [for]="ngControl.name || ''" class="form-label">
+      {{ label }}
+      <span *ngIf="required" class="text-danger">*</span>
+    </label>
+    <div class="input-group datepicker-container">
+      <input
+        [id]="ngControl.name || ''"
+        class="form-control date-input"
+        [placeholder]="placeholder"
+        [formControl]="control"
+        ngbDatepicker
+        #datepicker="ngbDatepicker"
+        [footerTemplate]="showFooter ? footerTemplate : emptyFooter"
+        [class.is-invalid]="ngControl.invalid && (ngControl.touched || ngControl.dirty)"
+        [attr.aria-invalid]="ngControl.invalid && (ngControl.touched || ngControl.dirty)"
+        (blur)="onInputBlur()"
+        (keydown)="onKeyDown($event)"
+      />
+      <button
+        class="btn btn-outline-secondary calendar-button"
+        type="button"
+        (click)="datepicker.toggle()"
+        [disabled]="disabled"
+      >
+        <i class="bi bi-calendar3"></i>
+      </button>
+      
+      <!-- Error display -->
+      <div *ngIf="ngControl?.invalid && (ngControl?.touched || ngControl?.dirty)" class="invalid-feedback">
+        <ng-container *ngIf="ngControl?.errors?.['required']">
+          {{ label || 'This field' }} là bắt buộc.
+        </ng-container>
+        <ng-container *ngIf="ngControl?.errors?.['beforeStart']">
+          Ngày hiệu lực không được lớn hơn ngày hết hiệu lực
+        </ng-container>
+        <ng-container *ngIf="ngControl?.errors?.['ngbDate']?.invalid">
+          Định dạng ngày không hợp lệ. Vui lòng nhập theo định dạng {{ placeholder }}.
+        </ng-container>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Datepicker footer template -->
+  <ng-template #footerTemplate>
+    <hr class="my-0" />
+    <div class="d-flex justify-content-between p-2">
+      <button *ngIf="showTodayButton" class="btn btn-primary btn-sm" (click)="setToToday()">
+        Ngày hôm nay
+      </button>
+      <button class="btn btn-secondary btn-sm" (click)="datepicker.close()">
+        Đóng
+      </button>
+    </div>
+  </ng-template>
+
+  <ng-template #emptyFooter></ng-template>
+

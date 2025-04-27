@@ -1,0 +1,89 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="needs-validation">
+  <div class="modal-header bg-light">
+    <h5 class="modal-title">{{ title }}</h5>
+    <button type="button" class="btn-close" (click)="cancel()"></button>
+  </div>
+
+  <div class="modal-body">
+    <!-- Row 1: Mã và tên mặt hàng -->
+    <div class="row mb-4">
+      <div class="col-md-5">
+        <div class="form-floating">
+          <input id="maMatHang" type="text" formControlName="maMatHang" class="form-control"
+            placeholder="Nhập mã mặt hàng"
+            [class.is-invalid]="form.get('maMatHang')?.touched && form.get('maMatHang')?.invalid">
+          <label for="maMatHang">Mã mặt hàng <span class="text-danger">*</span></label>
+          <div *ngIf="form.get('maMatHang')?.touched && form.get('maMatHang')?.hasError('required')"
+            class="invalid-feedback">
+            Mã mặt hàng không được để trống.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-7">
+        <div class="form-floating">
+          <input id="tenMatHang" type="text" formControlName="tenMatHang" class="form-control"
+            placeholder="Nhập tên mặt hàng"
+            [class.is-invalid]="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.invalid">
+          <label for="tenMatHang">Tên mặt hàng <span class="text-danger">*</span></label>
+          <div *ngIf="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.hasError('required')"
+            class="invalid-feedback">
+            Tên mặt hàng không được để trống.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Ghi chú -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="form-floating">
+          <textarea id="ghiChu" rows="3" formControlName="ghiChu" class="form-control" style="height: 100px"
+            placeholder="Nhập ghi chú"></textarea>
+          <label for="ghiChu">Ghi chú</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Ngày hiệu lực và hết hiệu lực -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <app-date-input
+          formControlName="ngayHieuLuc"
+          label="Ngày hiệu lực"
+          [required]="true"
+          [showTodayButton]="true">
+        </app-date-input>
+      </div>
+
+      <div class="col-md-6">
+        <app-date-input
+          formControlName="ngayHetHieuLuc"
+          label="Ngày hết hiệu lực"
+          [required]="true"
+          [showTodayButton]="true">
+        </app-date-input>
+      </div>
+    </div>
+
+    <!-- Row 4: Nhóm hàng hóa -->
+    <div class="row mb-3">
+      <div class="col-md-8">
+        <div class="form-floating">
+          <input id="nhomHangHoaId" type="text" formControlName="nhomHangHoaId" class="form-control"
+            placeholder="Nhập nhóm hàng hóa">
+          <label for="nhomHangHoaId">Nhóm hàng hóa</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer bg-light">
+    <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="bi bi-x-circle me-1"></i> Hủy
+    </button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+      <i class="bi bi-save me-1"></i> Lưu
+    </button>
+  </div>
+</form>

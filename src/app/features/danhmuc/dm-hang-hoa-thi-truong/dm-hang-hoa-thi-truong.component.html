@@ -1,0 +1,85 @@
+<div class="page-container">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="header-title m-0">Danh sách Hàng hóa</h4>
+        <div class="action-buttons">
+          
+          <button class="btn btn-action btn-success me-2" (click)="openModal()"
+            [disabled]="isLoadingList() || isSaving()">
+            <i class="bi bi-plus-circle me-1"></i>
+            Thêm
+          </button>
+
+          <button class="btn btn-action btn-primary me-2" class="btn btn-action btn-primary me-2" 
+          (click)="openModalEdit()" 
+          [disabled]="!selectedHangHoa()">
+            <i class="bi bi-pencil me-1"></i> Sửa
+          </button>
+
+          <button class="btn btn-action btn-danger" 
+          (click)="deleteHangHoa()" 
+          [disabled]="!selectedHangHoa() || isSaving()">
+          <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          <i *ngIf="!isSaving()" class="bi bi-trash me-1"></i> 
+          Xóa
+        </button>
+
+        </div>
+      </div>
+
+      <div class="table-container" infiniteScroll [scrollWindow]="false" [infiniteScrollDistance]="2"
+        [infiniteScrollThrottle]="150" (scrolled)="onScroll()">
+
+        <table class="table custom-table">
+          <thead class="table-header">
+
+            <tr>
+              <th width="15%">Mã mặt hàng</th>
+              <th width="30%">Tên mặt hàng</th>
+              <th width="20%">Ghi chú</th>
+              <th width="15%">Ngày hiệu lực</th>
+              <th width="15%">Ngày hết hiệu lực</th>
+            </tr>
+
+          </thead>
+          <tbody>
+            <tr 
+            *ngFor="let hangHoa of hangHoas(); let i = index" 
+            class="table-row" 
+            [class.selected]="selectedHangHoa() === hangHoa"
+            (click)="selectHangHoa(hangHoa)">
+              <td>{{ hangHoa.maMatHang }}</td>
+              <td>{{ hangHoa.tenMatHang }}</td>
+              <td>{{ hangHoa.ghiChu || '-' }}</td>
+
+              <td>
+                <span class="date-badge active">
+                  <i class="bi bi-calendar-check me-1"></i>
+                  {{ hangHoa.ngayHieuLuc | date: 'dd/MM/yyyy' }}
+                </span>
+              </td>
+
+              <td>
+                <span class="date-badge">
+                  <i class="bi bi-calendar-x me-1"></i>
+                  {{ hangHoa.ngayHetHieuLuc | date: 'dd/MM/yyyy' }}
+                </span>
+              </td>
+            </tr>
+
+            <tr *ngIf="isLoadingList()">
+              <td colspan="6" class="text-center py-3">Đang tải…</td>
+            </tr>
+
+            <tr *ngIf="!hasNextPage() && !isLoadingList()" class="text-center">
+              <td colspan="6" class="py-3 text-muted">Không còn dữ liệu</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

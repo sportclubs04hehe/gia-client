@@ -1,0 +1,146 @@
+.form-floating {
+    position: relative;
+  }
+  
+  .form-floating > .form-control {
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+  }
+  
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transition: all 0.15s ease-in-out;
+  }
+  
+  .modal-header {
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  .modal-footer {
+    border-top: 2px solid #dee2e6;
+  }
+  
+  .btn {
+    transition: all 0.3s;
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn:active {
+    transform: translateY(0);
+  }
+  
+  /* Animation for form fields */
+  .form-control {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .form-control:focus {
+    transform: translateY(-3px);
+  }
+  
+  textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  /* Styles for datepicker */
+  .date-input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  
+  .calendar-button {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  
+  .calendar-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .ngb-dp-day {
+    transition: background-color 0.2s;
+  }
+  
+  .ngb-dp-day:hover > .btn-light {
+    background-color: #e9ecef;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .row > [class*='col-'] {
+      margin-bottom: 15px;
+    }
+  }
+
+  /* Fix for datepicker popup width and positioning */
+.datepicker-container {
+  position: relative;
+}
+
+/* Style the datepicker popup */
+ngb-datepicker {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(0, 0, 0, 0.125) !important;
+  border-radius: 0.25rem !important;
+  background-color: white !important;
+  padding: 0.5rem !important;
+}
+
+  .ngb-dp-month {
+    width: 100% !important;
+  }
+  .ngb-dp-month-name {
+    width: 100% !important;
+  }
+  .ngb-dp-week {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .ngb-dp-weekday {
+    flex: 1 !important;
+    text-align: center !important;
+  }
+  .ngb-dp-day {
+    flex: 1 !important;
+    text-align: center !important;
+  }
+
+
+/* them-moi.component.css */
+@media (min-width: 576px) {
+  /* Style the month navigation */
+  .ngb-dp-navigation-select {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+  .ngb-dp-arrow {
+    flex: 0 0 auto !important;
+  }
+  /* Style for current date */
+  .ngb-dp-today .btn-light {
+    background-color: #e9ecef !important;
+    font-weight: bold !important;
+  }
+  /* Style for selected date */
+  .ngb-dp-day.selected .btn-light {
+    background-color: #007bff !important;
+    color: white !important;
+  }
+  /* Style for date hover */
+  .ngb-dp-day:not(.disabled):not(.selected):not(.ngb-dp-today):hover .btn-light {
+    background-color: #f8f9fa !important;
+  }
+  /* Make sure datepicker footer spans full width */
+  ngb-datepicker-footer {
+    width: 100% !important;
+  }
+}
+

@@ -1,0 +1,17 @@
+.navbar {
+    padding: 1.15rem 1.5rem;
+    border-bottom: 2px dashed #b3a8a8;
+  }
+  
+  .toggler-btn {
+    background-color: transparent;
+    cursor: pointer;
+    border: 0;
+  }
+  
+  .toggler-btn i {
+    font-size: 1.75rem;
+    color: #000;
+    font-weight: 1000;
+  }
+  

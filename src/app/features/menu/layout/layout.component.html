@@ -1,0 +1,11 @@
+<div class="d-flex">
+    <app-sidebars [isCollapsed]="isSidebarCollapsed" (collapseChange)="isSidebarCollapsed = $event"></app-sidebars>  
+    <div class="main">
+      <app-navbar (toggle)="onToggleSidebar()"></app-navbar>
+      <main>
+        <div class="container-fluid">
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+    </div>
+  </div>  

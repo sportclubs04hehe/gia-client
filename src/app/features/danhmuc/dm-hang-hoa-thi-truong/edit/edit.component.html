@@ -1,0 +1,67 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ title }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+</div>
+<div class="modal-body">
+  <form [formGroup]="form" class="row g-3">
+    <!-- Mã mặt hàng -->
+    <div class="col-md-6 mb-3">
+      <label for="maMatHang" class="form-label">Mã mặt hàng <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" id="maMatHang" formControlName="maMatHang">
+      <div *ngIf="form.get('maMatHang')?.invalid && form.get('maMatHang')?.touched" class="text-danger small">
+        Mã mặt hàng là trường bắt buộc
+      </div>
+    </div>
+
+    <!-- Tên mặt hàng -->
+    <div class="col-md-6 mb-3">
+      <label for="tenMatHang" class="form-label">Tên mặt hàng <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" id="tenMatHang" formControlName="tenMatHang">
+      <div *ngIf="form.get('tenMatHang')?.invalid && form.get('tenMatHang')?.touched" class="text-danger small">
+        Tên mặt hàng là trường bắt buộc
+      </div>
+    </div>
+
+    <!-- Ghi chú -->
+    <div class="col-12 mb-3">
+      <label for="ghiChu" class="form-label">Ghi chú</label>
+      <textarea class="form-control" id="ghiChu" formControlName="ghiChu" rows="3"></textarea>
+    </div>
+
+    <!-- REPLACE: Ngày hiệu lực -->
+    <div class="col-md-6 mb-3">
+      <app-date-input
+        formControlName="ngayHieuLuc"
+        label="Ngày hiệu lực"
+        [required]="true"
+        [showTodayButton]="true">
+      </app-date-input>
+    </div>
+
+    <!-- REPLACE: Ngày hết hiệu lực -->
+    <div class="col-md-6 mb-3">
+      <app-date-input
+        formControlName="ngayHetHieuLuc"
+        label="Ngày hết hiệu lực"
+        [required]="true"
+        [showTodayButton]="true">
+      </app-date-input>
+    </div>
+
+    <!-- Nhóm hàng hóa -->
+    <div class="col-md-6 mb-3">
+      <label for="nhomHangHoaId" class="form-label">Nhóm hàng hóa</label>
+      <select class="form-select" id="nhomHangHoaId" formControlName="nhomHangHoaId">
+        <option [ngValue]="null">-- Chọn nhóm hàng hóa --</option>
+        <!-- Add nhóm hàng hóa options here if available -->
+      </select>
+    </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-dark" (click)="cancel()">Hủy</button>
+  <button type="button" class="btn btn-success" (click)="update()" [disabled]="form.invalid || isSaving">
+    <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+    Cập nhật
+  </button>
+</div>

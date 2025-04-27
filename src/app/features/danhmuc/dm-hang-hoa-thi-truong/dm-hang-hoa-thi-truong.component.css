@@ -1,0 +1,147 @@
+.page-container {
+  padding-top: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+/* Card Styling */
+.card {
+  border: none;
+  border-radius: 0.75rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.header-title small {
+  opacity: 0.7;
+}
+
+/* Button Styling */
+.btn-action {
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success {
+  background-color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+/* Table Styling */
+.table-container {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+}
+
+.custom-table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-header {
+  background-color: #f1f5f9;
+  position: sticky;
+  top: 0;                  /* giữ header cố định khi cuộn */
+  z-index: 1;
+}
+
+.table-header th {
+  font-weight: 600;
+  color: #495057;
+  border: none;
+  padding: 1rem;
+}
+
+.table-row {
+  transition: all 0.2s;
+}
+
+.table-row:hover {
+  background-color: rgba(52, 152, 219, 0.05);
+}
+
+.table-row td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+/* Badge Styling */
+.badge {
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+}
+
+.date-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.date-badge.active {
+  background-color: #e3f2fd;
+  color: #0d6efd;
+}
+
+/* Pagination */
+.pagination-info {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.pagination .page-link {
+  color: #3498db;
+  border-radius: 0.25rem;
+  margin: 0 0.125rem;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-title h3 {
+    font-size: 1.5rem;
+  }
+  
+  .action-buttons {
+    margin-top: 1rem;
+  }
+}
+
+.table-row.selected td {
+  background-color: #3498db;  /* Brighter blue background */
+  box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.5);  /* Blue outline */
+  font-weight: 500;  /* Slightly bolder text */
+  color: #fff;
+}
+
+.table-row {
+  cursor: pointer;
+  transition: all 0.2s ease;  /* Smooth transition for selection */
+}
