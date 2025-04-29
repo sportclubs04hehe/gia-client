@@ -9,6 +9,7 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { ToastrService } from 'ngx-toastr';
+import { uniqueItemCodeValidator } from '../../utils/validate-ma-mat-hang';
 
 @Component({
   selector: 'app-edit',
@@ -28,7 +29,6 @@ export class EditComponent extends FormComponentBase implements OnInit {
   dmService = inject(DmThitruongService);
   toastrService = inject(ToastrService);
 
-  // Add property to store original form values for comparison
   private originalFormValues: any;
 
   constructor(fb: FormBuilder) {
@@ -46,18 +46,14 @@ export class EditComponent extends FormComponentBase implements OnInit {
       return;
     }
 
-    // Kiểm tra xem ID có tồn tại không trước khi tiếp tục
     if (!this.hangHoa.id) {
       console.error('Cannot update: Item ID is missing');
       return;
     }
     
-    // Nhận giá trị biểu mẫu hiện tại với chuyển đổi ngày
     const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
     
-    // So sánh với giá trị ban đầu
     if (this.isFormUnchanged(formData)) {
-      // Nếu không có gì thay đổi, hãy đóng modal mà không cần gọi API
       this.toastrService.success('Cập nhật mặt hàng thành công','Thành công');
       this.activeModal.close(false);
       return;
@@ -65,10 +61,10 @@ export class EditComponent extends FormComponentBase implements OnInit {
 
     this.isSaving = true;
 
-    this.dmService.update(this.hangHoa.id, formData as HangHoaUpdateDto).subscribe({
-      next: () => {
+    this.dmService.update(this.hangHoa.id!, formData as HangHoaUpdateDto).subscribe({
+      next: (updatedEntity) => {
         this.isSaving = false;
-        this.activeModal.close(true);
+        this.activeModal.close(updatedEntity);
       },
       error: () => {
         this.isSaving = false;
@@ -92,25 +88,27 @@ export class EditComponent extends FormComponentBase implements OnInit {
 
   protected buildForm(): void {
     this.form = this.fb.group({
-      maMatHang: ['', Validators.required],
+      maMatHang: ['', {
+        validators: [Validators.required],
+        asyncValidators: [uniqueItemCodeValidator(this.dmService, this.hangHoa?.maMatHang)],
+        updateOn: 'blur'
+      }],
       tenMatHang: ['', Validators.required],
       ghiChu: [''],
       ngayHieuLuc: [null, Validators.required],
       ngayHetHieuLuc: [null, Validators.required],
       nhomHangHoaId: [null]
     }, {
-      validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc') // Use imported validator
+      validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc') 
     });
   }
 
   private populateForm(): void {
     if (!this.hangHoa) return;
     
-    // Convert dates to strings then to NgbDateStruct using utility function
     const ngayHieuLuc = stringToDateStruct(this.hangHoa.ngayHieuLuc ? this.hangHoa.ngayHieuLuc.toString() : null);
     const ngayHetHieuLuc = stringToDateStruct(this.hangHoa.ngayHetHieuLuc ? this.hangHoa.ngayHetHieuLuc.toString() : null);
     
-    // Create the form values object
     const formValues = {
       maMatHang: this.hangHoa.maMatHang,
       tenMatHang: this.hangHoa.tenMatHang,
@@ -120,10 +118,19 @@ export class EditComponent extends FormComponentBase implements OnInit {
       nhomHangHoaId: this.hangHoa.nhomHangHoaId
     };
     
-    // Update the form with these values
     this.form.patchValue(formValues);
     
-    // Store the original values for later comparison, with dates converted to strings
     this.originalFormValues = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
+  }
+
+  preventSpaces(event: KeyboardEvent) {
+    if (event.key === ' ') {
+      event.preventDefault();
+    }
+  }
+
+  get isValidatingCode(): boolean {
+    const control = this.form?.get('maMatHang');
+    return control?.pending === true;
   }
 }

@@ -11,11 +11,19 @@
         <div class="form-floating">
           <input id="maMatHang" type="text" formControlName="maMatHang" class="form-control"
             placeholder="Nhập mã mặt hàng"
-            [class.is-invalid]="form.get('maMatHang')?.touched && form.get('maMatHang')?.invalid">
+            [class.is-invalid]="form.get('maMatHang')?.touched && form.get('maMatHang')?.invalid"
+            [class.is-valid]="form.get('maMatHang')?.valid && form.get('maMatHang')?.touched && !isValidatingCode">
           <label for="maMatHang">Mã mặt hàng <span class="text-danger">*</span></label>
           <div *ngIf="form.get('maMatHang')?.touched && form.get('maMatHang')?.hasError('required')"
             class="invalid-feedback">
             Mã mặt hàng không được để trống.
+          </div>
+          <div *ngIf="form.get('maMatHang')?.hasError('duplicate') && form.get('maMatHang')?.touched"
+            class="invalid-feedback">
+            Mã mặt hàng này đã tồn tại.
+          </div>
+          <div *ngIf="isValidatingCode" class="text-primary small">
+            <span class="spinner-border spinner-border-sm me-1"></span>
           </div>
         </div>
       </div>
@@ -24,7 +32,8 @@
         <div class="form-floating">
           <input id="tenMatHang" type="text" formControlName="tenMatHang" class="form-control"
             placeholder="Nhập tên mặt hàng"
-            [class.is-invalid]="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.invalid">
+            [class.is-invalid]="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.invalid"
+            [class.is-valid]="form.get('tenMatHang')?.valid && form.get('tenMatHang')?.touched">
           <label for="tenMatHang">Tên mặt hàng <span class="text-danger">*</span></label>
           <div *ngIf="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.hasError('required')"
             class="invalid-feedback">

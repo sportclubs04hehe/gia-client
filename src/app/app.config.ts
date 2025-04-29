@@ -7,6 +7,7 @@ import { paginationInterceptor } from './core/interceptors/pagination.intercepto
 import { loggingInterceptor } from './core/interceptors/logging.interceptor';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
       withInterceptors([
+        errorInterceptor,
         paginationInterceptor,
         loggingInterceptor,
       ])),
@@ -24,6 +26,14 @@ export const appConfig: ApplicationConfig = {
       })
     ),
     provideAnimations(),
-    provideToastr(),
+    provideToastr({
+      positionClass: 'toast-top-right',
+      timeOut: 3000,
+      closeButton: true,
+      progressBar: true,
+      maxOpened: 1,
+      autoDismiss: true,
+      preventDuplicates: true
+    }),
   ]
 };

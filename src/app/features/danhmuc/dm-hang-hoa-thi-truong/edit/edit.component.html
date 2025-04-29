@@ -7,9 +7,23 @@
     <!-- Mã mặt hàng -->
     <div class="col-md-6 mb-3">
       <label for="maMatHang" class="form-label">Mã mặt hàng <span class="text-danger">*</span></label>
-      <input type="text" class="form-control" id="maMatHang" formControlName="maMatHang">
-      <div *ngIf="form.get('maMatHang')?.invalid && form.get('maMatHang')?.touched" class="text-danger small">
+      <div class="input-group">
+        <input type="text" 
+               class="form-control" 
+               id="maMatHang" 
+               formControlName="maMatHang"
+               (keypress)="preventSpaces($event)">
+        <span class="input-group-text" *ngIf="isValidatingCode">
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </span>
+      </div>
+      <div *ngIf="form.get('maMatHang')?.errors?.['required'] && form.get('maMatHang')?.touched" 
+           class="text-danger small">
         Mã mặt hàng là trường bắt buộc
+      </div>
+      <div *ngIf="form.get('maMatHang')?.errors?.['duplicate'] && form.get('maMatHang')?.touched" 
+           class="text-danger small">
+        Mã mặt hàng đã tồn tại
       </div>
     </div>
 

@@ -19,13 +19,27 @@ export class DmThitruongService {
   private apiUrl = environment.appUrl;
   private endpoint = 'HangHoas';
 
-  /**
-* Thêm mới hàng hóa
-*/
+  // Thêm mới
   add(createDto: HangHoaCreateDto) {
     return this.http.post<any>(`${this.apiUrl}/${this.endpoint}`, createDto);
   }
 
+  // Thêm nhiều cùng lúc
+  addBatch(createDtos: HangHoaCreateDto[]): Observable<HangHoa[]> {
+    return this.http.post<HangHoa[]>(
+      `${this.apiUrl}/${this.endpoint}/batch`,
+      createDtos
+    );
+  }
+  
+  search(searchParams: SearchParams): Observable<PagedResult<HangHoa>> {
+    const params = buildHttpParams(searchParams);
+    
+    return this.http.get<PagedResult<HangHoa>>(
+      `${this.apiUrl}/${this.endpoint}/search`,
+      { params }
+    );
+  }
 
   getAll(params: PaginationParams): Observable<PagedResult<HangHoa>> {
     const httpParams = new HttpParams()
@@ -41,8 +55,8 @@ export class DmThitruongService {
   /**
  * Cập nhật thông tin hàng hóa
  */
-  update(id: string, updateDto: HangHoaUpdateDto): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${this.endpoint}/${id}`, updateDto);
+  update(id: string, updateDto: HangHoaUpdateDto): Observable<HangHoa> {
+    return this.http.put<HangHoa>(`${this.apiUrl}/${this.endpoint}/${id}`, updateDto);
   }
 
   /**
@@ -80,17 +94,6 @@ export class DmThitruongService {
     const params = buildHttpParams(paginationParams);
     return this.http.get<any>(
       `${this.apiUrl}/${this.endpoint}/nhom/${nhomHangHoaId}`,
-      { params }
-    );
-  }
-
-  /**
-   * Tìm kiếm hàng hóa theo từ khóa
-   */
-  search(searchParams: SearchParams): Observable<any> {
-    const params = buildHttpParams(searchParams);
-    return this.http.get<any>(
-      `${this.apiUrl}/${this.endpoint}/search`,
       { params }
     );
   }

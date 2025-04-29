@@ -1,5 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, ElementRef, HostListener, ViewChild, Inject, PLATFORM_ID, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, Inject, PLATFORM_ID, AfterViewInit, Input, Output, EventEmitter } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './sidebars.component.html',
   styleUrl: './sidebars.component.css'
 })
-export class SidebarsComponent implements OnInit {
+export class SidebarsComponent implements AfterViewInit {
   @Input() isCollapsed = false;
   @Output() collapseChange = new EventEmitter<boolean>();
   private isBrowser: boolean;
@@ -21,9 +21,11 @@ export class SidebarsComponent implements OnInit {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  ngOnInit() {
+  ngAfterViewInit() {
     if (this.isBrowser) {
-      this.checkScreenSize();
+      setTimeout(() => {
+        this.checkScreenSize();
+      });
     }
   }
 
@@ -34,7 +36,6 @@ export class SidebarsComponent implements OnInit {
       const shouldBeCollapsed = screenWidth <= 768;
       
       if (this.isCollapsed !== shouldBeCollapsed) {
-        this.isCollapsed = shouldBeCollapsed;
         this.collapseChange.emit(shouldBeCollapsed);
       }
     }

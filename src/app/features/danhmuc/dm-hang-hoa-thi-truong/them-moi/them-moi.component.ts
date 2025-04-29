@@ -6,7 +6,8 @@ import { SharedModule } from '../../../../shared/shared.module';
 import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
-
+import { DmThitruongService } from '../../services/dm-thitruong.service';
+import { uniqueItemCodeValidator } from '../../utils/validate-ma-mat-hang';
 @Component({
   selector: 'app-them-moi',
   standalone: true,
@@ -20,6 +21,7 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 export class ThemMoiComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
   calendar = inject(NgbCalendar);
+  dmService = inject(DmThitruongService);
 
   @Input() title: string = '';
   @Input() onSave!: (dto: HangHoaCreateDto) => void;
@@ -54,7 +56,11 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
 
   protected buildForm(): void {
     this.form = this.fb.group({
-      maMatHang: ['', Validators.required],
+      maMatHang: ['', {
+        validators: [Validators.required],
+        asyncValidators: [uniqueItemCodeValidator(this.dmService, null)],
+        updateOn: 'blur'
+      }],
       tenMatHang: ['', Validators.required],
       ghiChu: [''],
       ngayHieuLuc: [this.today, Validators.required],
@@ -65,6 +71,11 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
     });
   }
 
+  get isValidatingCode(): boolean {
+    const control = this.form?.get('maMatHang');
+    return control?.pending === true;
+  }
+
   private setDefaultDates(): void {
     this.today = this.calendar.getToday();
     this.defaultNgayHetHieuLuc = {
@@ -72,5 +83,11 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
       month: this.today.month,
       day: this.today.day
     };
+  }
+
+  preventSpaces(event: KeyboardEvent) {
+    if (event.key === ' ') {
+      event.preventDefault();
+    }
   }
 }
