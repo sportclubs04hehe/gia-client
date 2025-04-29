@@ -1,0 +1,167 @@
+<div class="modal-header">
+    <h4 class="modal-title">{{title}}</h4>
+    <button type="button" class="btn-close" (click)="dismiss()"></button>
+  </div>
+  
+  <div class="modal-body">
+    <!-- Step 1: Upload File -->
+    <div *ngIf="step === 1" class="upload-container">
+      <div class="mb-4 text-center">
+        <p class="mb-3">
+          Tải lên file Excel để nhập danh sách mặt hàng. Bạn có thể tải xuống mẫu để biết cách định dạng file.
+        </p>
+        <button type="button" class="btn btn-outline-primary" (click)="downloadTemplate()">
+          <i class="bi bi-download me-1"></i>
+          Tải mẫu Excel
+        </button>
+      </div>
+  
+      <div class="mb-3">
+        <div class="import-file-input">
+          <div class="d-flex align-items-center justify-content-center border rounded p-4 mb-3" 
+               [class.border-danger]="errorMessage">
+            <div class="text-center">
+              <i class="bi bi-file-earmark-excel fs-1 text-success mb-2"></i>
+              <p class="mb-2">Kéo thả file hoặc click để chọn file</p>
+              <input type="file" class="form-control" 
+                     (change)="onFileSelected($event)" 
+                     accept=".xlsx, .xls"
+                     style="opacity: 0; position: absolute; top: 0; left: 0; height: 100%; width: 100%; cursor: pointer;" />
+            </div>
+          </div>
+          <div *ngIf="selectedFile" class="selected-file">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-file-earmark-excel text-success me-2"></i>
+              <span class="file-name">{{ selectedFile.name }}</span>
+              <span class="ms-2 text-muted">({{ (selectedFile.size / 1024).toFixed(2) }} KB)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Step 2: Preview Data -->
+    <div *ngIf="step === 2" class="preview-container">
+      <div class="mb-3">
+        <h5>Xác nhận nhập dữ liệu ({{parsedItems.length}} mục)</h5>
+        <p class="text-muted">Xem lại dữ liệu từ file Excel trước khi nhập vào hệ thống.</p>
+      </div>
+
+      <div *ngIf="invalidItems.length > 0" class="alert alert-danger mb-3">
+        <h6 class="alert-heading">Phát hiện lỗi trong danh sách:</h6>
+        <ul class="mb-0 ps-3">
+          <li *ngFor="let error of invalidItems">{{error}}</li>
+        </ul>
+        <hr>
+        <p class="mb-0">Vui lòng kiểm tra và sửa các lỗi trước khi tiếp tục.</p>
+        <div class="mt-2">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="step = 1">
+            <i class="bi bi-pencil me-1"></i> Sửa lại danh sách
+          </button>
+        </div>
+      </div>
+
+      <!-- Excel duplicates alert -->
+      <div *ngIf="duplicateItems.length > 0" class="alert alert-warning mb-3">
+        <h6 class="alert-heading">Phát hiện mã mặt hàng trùng lặp trong file Excel:</h6>
+        <ul class="mb-0 ps-3">
+          <li *ngFor="let item of duplicateItems">
+            Mã <strong>{{item.code}}</strong> xuất hiện tại các dòng: {{item.rows.join(',')}}
+          </li>
+        </ul>
+        <hr>
+        <p class="mb-0">Vui lòng sửa lại file Excel để đảm bảo mỗi mã mặt hàng chỉ xuất hiện một lần.</p>
+        <div class="mt-2">
+          <button type="button" class="btn btn-sm btn-outline-warning" (click)="step = 1">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại tải file khác
+          </button>
+        </div>
+      </div>
+  
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Mã mặt hàng</th>
+              <th scope="col">Tên mặt hàng</th>
+              <th scope="col">Ghi chú</th>
+              <th scope="col">Ngày hiệu lực</th>
+              <th scope="col">Ngày hết hiệu lực</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of parsedItems; let i = index" 
+                [class.table-danger]="hasError(item.maMatHang)"
+                [class.table-warning]="isDuplicateInExcel(item.maMatHang)">
+              <td>{{i + 1}}</td>
+              <td>
+                <span [class.text-danger]="invalidItemCodes.has(item.maMatHang)" 
+                      [class.text-warning]="isDuplicateInExcel(item.maMatHang)">
+                  {{item.maMatHang}}
+                  <i *ngIf="invalidItemCodes.has(item.maMatHang)" class="bi bi-exclamation-triangle-fill ms-1" 
+                     title="Mã này đã tồn tại trong hệ thống"></i>
+                  <i *ngIf="isDuplicateInExcel(item.maMatHang)" class="bi bi-files ms-1" 
+                     title="Mã này xuất hiện nhiều lần trong file Excel"></i>
+                </span>
+              </td>
+              <td>{{item.tenMatHang}}</td>
+              <td>{{item.ghiChu || '-'}}</td>
+              <td>{{item.ngayHieuLuc | date: 'dd/MM/yyyy'}}</td>
+              <td>{{item.ngayHetHieuLuc ? (item.ngayHetHieuLuc | date: 'dd/MM/yyyy') : '-'}}</td>
+            </tr>
+            <!-- <tr *ngIf="parsedItems.length > 10" class="text-center">
+              <td colspan="6" class="py-2 text-muted">
+                ... và {{parsedItems.length - 10}} mục khác
+              </td>
+            </tr> -->
+          </tbody>
+        </table>
+      </div> 
+    </div>
+  
+    <!-- Step 3: Success -->
+    <div *ngIf="step === 3" class="success-container text-center py-4">
+      <div class="mb-4">
+        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+      </div>
+      <h4 class="mb-3">Nhập dữ liệu thành công!</h4>
+      <p class="text-muted">
+        Đã nhập thành công {{parsedItems.length}} mặt hàng vào hệ thống.
+      </p>
+    </div>
+  </div>
+  
+  <div class="modal-footer">
+    <!-- Step 1 footer -->
+    <div *ngIf="step === 1" class="w-100 d-flex justify-content-between">
+      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">
+        Hủy
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="!selectedFile || isProcessing" (click)="processFile()">
+        <span *ngIf="isProcessing" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        Tiếp theo
+      </button>
+    </div>
+  
+    <!-- Step 2 footer -->
+    <div *ngIf="step === 2" class="w-100 d-flex justify-content-between">
+      <button type="button" class="btn btn-outline-secondary" (click)="step = 1">
+        Quay lại
+      </button>
+      <button type="button" class="btn btn-success" 
+              [disabled]="isProcessing || hasDuplicates" 
+              (click)="importData()">
+        <span *ngIf="isProcessing" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        <i *ngIf="!isProcessing" class="bi bi-cloud-upload me-1"></i>
+        Nhập dữ liệu
+      </button>
+    </div>
+  
+    <!-- Step 3 footer -->
+    <div *ngIf="step === 3" class="w-100 text-center">
+      <button type="button" class="btn btn-primary px-4" (click)="close()">
+        Hoàn thành
+      </button>
+    </div>
+  </div>

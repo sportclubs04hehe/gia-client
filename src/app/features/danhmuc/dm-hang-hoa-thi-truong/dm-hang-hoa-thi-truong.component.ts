@@ -12,6 +12,7 @@ import { SharedModule } from '../../../shared/shared.module';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TextHighlightPipe } from '../../../shared/pipes/text-highlight.pipe';
+import { ImportExcelComponent } from '../import-excel/import-excel.component';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',
@@ -46,11 +47,48 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   searchTerm = signal<string>('');
   searchTermModel: string = '';
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
 
   ngOnInit() {
     this.setupSearchStream();
     this.loadMore();
+  }
+
+  openModal() {
+    const modalRef = this.modalService.open(ThemMoiComponent, { size: 'xl' });
+    modalRef.componentInstance.title = 'Thêm mặt hàng';
+
+    modalRef.componentInstance.onSave = (dto: HangHoaCreateDto): void => {
+      this.isSaving.set(true);
+
+      this.svc.add(dto).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.toastr.success('Thêm mặt hàng thành công', 'Thành công');
+          this.loadFirstPage();
+        },
+        error: (error) => {
+          this.isSaving.set(false);
+          this.toastr.error('Không thể thêm mặt hàng', 'Lỗi');
+        }
+      });
+    };
+  }
+
+  openImportModal() {
+    const modalRef = this.modalService.open(ImportExcelComponent, {
+      size: 'lg',
+      centered: true,
+      backdrop: 'static',
+    });
+
+    modalRef.result.then(
+      (refreshList: boolean) => {
+        if (refreshList) {
+          this.loadFirstPage();
+        }
+      }
+    );
   }
 
   openModalEdit(): void {
@@ -162,16 +200,16 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   private handlePagedResult(res: PagedResult<HangHoa>): void {
     const activeElement = isPlatformBrowser(this.platformId) ? document.activeElement : null;
-    
+
     const items = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
-    
+
     this.hangHoas.update(arr => [...arr, ...items]);
-    
+
     const pagination = res.pagination || {};
     this.hasNextPage.set(pagination.hasNextPage || false);
     this.pageIndex.update(i => i + 1);
     this.isLoadingList.set(false);
-    
+
     if (isPlatformBrowser(this.platformId) && activeElement instanceof HTMLElement) {
       setTimeout(() => activeElement.focus(), 0);
     }
@@ -179,12 +217,12 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   private loadFirstPage(): void {
     const activeElement = isPlatformBrowser(this.platformId) ? document.activeElement : null;
-    
+
     this.pageIndex.set(1);
     this.hangHoas.set([]);
     this.hasNextPage.set(true);
     this.loadMore();
-    
+
     if (isPlatformBrowser(this.platformId) && activeElement instanceof HTMLElement) {
       setTimeout(() => activeElement.focus(), 0);
     }
@@ -193,28 +231,6 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   onScroll() {
     this.loadMore();
   }
-
-  openModal() {
-    const modalRef = this.modalService.open(ThemMoiComponent, { size: 'xl' });
-    modalRef.componentInstance.title = 'Thêm mặt hàng';
-
-    modalRef.componentInstance.onSave = (dto: HangHoaCreateDto): void => {
-      this.isSaving.set(true);
-
-      this.svc.add(dto).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.toastr.success('Thêm mặt hàng thành công', 'Thành công');
-          this.loadFirstPage();
-        },
-        error: (error) => {
-          this.isSaving.set(false);
-          this.toastr.error('Không thể thêm mặt hàng', 'Lỗi');
-        }
-      });
-    };
-  }
-
   selectHangHoa(hangHoa: HangHoa): void {
     this.selectedHangHoa.set(hangHoa);
   }

@@ -5,18 +5,20 @@
         <h4 class="header-title m-0">Danh sách Hàng hóa</h4>
         <div class="action-buttons">
 
-          <button class="btn btn-action btn-success me-2" (click)="openModal()"
+          <button class="btn btn-action btn-success me-2" 
+            (click)="openModal()"
             [disabled]="isLoadingList() || isSaving()">
             <i class="bi bi-plus-circle me-1"></i>
             Thêm
           </button>
 
           <button class="btn btn-action btn-primary me-2" class="btn btn-action btn-primary me-2"
-            (click)="openModalEdit()" [disabled]="!selectedHangHoa()">
+            (click)="openModalEdit()" 
+            [disabled]="!selectedHangHoa()">
             <i class="bi bi-pencil me-1"></i> Sửa
           </button>
 
-          <button class="btn btn-action btn-danger" (click)="deleteHangHoa()"
+          <button class="btn btn-action btn-danger me-2" (click)="deleteHangHoa()"
             [disabled]="!selectedHangHoa() || isSaving()">
             <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-1" role="status"
               aria-hidden="true"></span>
@@ -24,33 +26,38 @@
             Xóa
           </button>
 
+          <!-- Add this button after the "Thêm" button -->
+          <button class="btn btn-action btn-info me-2" (click)="openImportModal()"
+            [disabled]="isLoadingList() || isSaving()">
+            <i class="bi bi-file-earmark-excel me-1"></i>
+            Nhập Excel
+          </button>
+
         </div>
 
         <div class="search-container mb-4">
           <div class="input-group">
-            <span class="input-group-text bg-white border-end-0">
-              <i class="bi bi-search text-muted"></i>
-            </span>
-            <input
-              #searchInput
-              type="text"
-              class="form-control border-start-0 shadow-sm"
-              placeholder="Tìm kiếm mặt hàng…"
-              [(ngModel)]="searchTermModel"
-              (ngModelChange)="onSearchChange($event)"
-            />
+            <div class="position-relative">
+              <i class="bi bi-search text-muted position-absolute 
+              top-50 start-0 translate-middle-y ps-3"></i>
+              <input
+                #searchInput
+                type="text"
+                class="form-control ps-5 border-start-0 shadow-sm"
+                placeholder="Tìm kiếm mặt hàng…"
+                [(ngModel)]="searchTermModel"
+                (ngModelChange)="onSearchChange($event)"
+              />
+            </div>
+            
             <span *ngIf="isLoadingList()" class="input-group-text border-start-0">
               <i class="bi bi-arrow-clockwise spin"></i>
             </span>
-            <button
-              *ngIf="searchTerm()"
-              class="btn btn-outline-secondary border-start-0"
-              type="button"
-              (click)="clearSearch(searchInput)"
-            >
+            <button *ngIf="searchTerm()" class="btn btn-outline-secondary border-start-0" type="button"
+              (click)="clearSearch(searchInput)">
               <i class="bi bi-x-lg"></i>
             </button>
-          </div>          
+          </div>
         </div>
 
       </div>
@@ -95,8 +102,20 @@
               <td colspan="6" class="text-center py-3">Đang tải…</td>
             </tr>
 
-            <tr *ngIf="hangHoas().length === 0 && !isLoadingList()" class="text-center">
-              <td colspan="6" class="py-3 text-muted">Không tìm thấy mặt hàng phù hợp</td>
+            <!-- No items found when searching -->
+            <tr *ngIf="hangHoas().length === 0 && !isLoadingList() && searchTerm() !== ''" class="text-center">
+              <td colspan="6" class="py-3 text-muted">
+                <i class="bi bi-search me-2"></i>
+                Không tìm thấy mục nào phù hợp với từ khóa "{{searchTerm()}}"
+              </td>
+            </tr>
+
+            <!-- No items in the system at all -->
+            <tr *ngIf="hangHoas().length === 0 && !isLoadingList() && searchTerm() === ''" class="text-center">
+              <td colspan="6" class="py-3 text-muted">
+                <i class="bi bi-inbox me-2"></i>
+                Chưa có mục nào được thêm vào
+              </td>
             </tr>
 
             <tr *ngIf="!hasNextPage() && !isLoadingList() && hangHoas().length > 0" class="text-center">

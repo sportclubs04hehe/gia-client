@@ -1,0 +1,31 @@
+.import-file-input {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .selected-file {
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  .file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    display: inline-block;
+  }
+  
+  .preview-container {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  
+  .success-container {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
