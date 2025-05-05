@@ -145,3 +145,47 @@
   cursor: pointer;
   transition: all 0.2s ease;  /* Smooth transition for selection */
 }
+
+/* Add these new styles for horizontal alignment */
+.action-row {
+  flex-wrap: nowrap;
+}
+
+.search-container {
+  min-width: 280px;
+}
+
+.action-wrapper {
+  white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-container {
+    margin-bottom: 1rem;
+    margin-right: 0 !important;
+  }
+  
+  .action-wrapper {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-wrapper app-active-button .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .action-wrapper app-active-button .btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    margin-right: 0 !important;
+  }
+}

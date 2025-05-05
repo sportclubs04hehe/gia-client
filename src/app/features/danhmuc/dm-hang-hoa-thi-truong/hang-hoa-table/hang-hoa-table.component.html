@@ -1,0 +1,61 @@
+<div #tableContainer class="table-container">
+  <table class="table custom-table">
+    <thead class="table-header">
+      <tr>
+        <th width="15%">Mã mặt hàng</th>
+        <th width="30%">Tên mặt hàng</th>
+        <th width="20%">Ghi chú</th>
+        <th width="15%">Ngày hiệu lực</th>
+        <th width="15%">Ngày hết hiệu lực</th>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <tr *ngFor="let hangHoa of hangHoas; let i = index" 
+          class="table-row" 
+          [id]="'item-' + hangHoa.id"
+          [class.selected]="selectedHangHoa === hangHoa" 
+          (click)="selectHangHoa(hangHoa)">
+        <td [innerHTML]="hangHoa.maMatHang | textHighlight: searchTerm"></td>
+        <td [innerHTML]="hangHoa.tenMatHang | textHighlight: searchTerm"></td>
+        <td [innerHTML]="(hangHoa.ghiChu || '-') | textHighlight: searchTerm"></td>
+        <td>
+          <span class="date-badge active">
+            <i class="bi bi-calendar-check me-1"></i>
+            {{ hangHoa.ngayHieuLuc | date: 'dd/MM/yyyy' }}
+          </span>
+        </td>
+        <td>
+          <span class="date-badge">
+            <i class="bi bi-calendar-x me-1"></i>
+            {{ hangHoa.ngayHetHieuLuc | date: 'dd/MM/yyyy' }}
+          </span>
+        </td>
+      </tr>
+
+      <tr *ngIf="isLoading">
+        <td colspan="6" class="text-center py-3">Đang tải…</td>
+      </tr>
+
+      <!-- No items found when searching -->
+      <tr *ngIf="hangHoas.length === 0 && !isLoading && searchTerm !== ''" class="text-center">
+        <td colspan="6" class="py-3 text-muted">
+          <i class="bi bi-search me-2"></i>
+          Không tìm thấy mục nào phù hợp với từ khóa "{{searchTerm}}"
+        </td>
+      </tr>
+
+      <!-- No items in the system at all -->
+      <tr *ngIf="hangHoas.length === 0 && !isLoading && searchTerm === ''" class="text-center">
+        <td colspan="6" class="py-3 text-muted">
+          <i class="bi bi-inbox me-2"></i>
+          Chưa có mục nào được thêm vào
+        </td>
+      </tr>
+
+      <tr *ngIf="!hasNextPage && !isLoading && hangHoas.length > 0" class="text-center">
+        <td colspan="6" class="py-3 text-muted">Đã hiển thị tất cả kết quả</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

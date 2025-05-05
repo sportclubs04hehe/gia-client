@@ -1,129 +1,42 @@
 <div class="page-container">
   <div class="card shadow-sm mb-4">
     <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="header-title m-0">Danh sách Hàng hóa</h4>
-        <div class="action-buttons">
-
-          <button class="btn btn-action btn-success me-2" 
-            (click)="openModal()"
-            [disabled]="isLoadingList() || isSaving()">
-            <i class="bi bi-plus-circle me-1"></i>
-            Thêm
-          </button>
-
-          <button class="btn btn-action btn-primary me-2" class="btn btn-action btn-primary me-2"
-            (click)="openModalEdit()" >
-            <i class="bi bi-pencil me-1"></i> Sửa
-          </button>
-
-          <button class="btn btn-action btn-danger me-2" (click)="deleteHangHoa()">
-            <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-1" role="status"
-              aria-hidden="true"></span>
-            <i *ngIf="!isSaving()" class="bi bi-trash me-1"></i>
-            Xóa
-          </button>
-
-          <!-- Add this button after the "Thêm" button -->
-          <button class="btn btn-action btn-info me-2" (click)="openImportModal()"
-            [disabled]="isLoadingList() || isSaving()">
-            <i class="bi bi-file-earmark-excel me-1"></i>
-            Nhập Excel
-          </button>
-
+      <!-- Action row - Search bar and buttons on the same line -->
+      <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
+        <!-- Search bar takes more space -->
+        <div class="search-container flex-grow-1 me-3">
+          <app-search-bar 
+            [isLoading]="isLoadingList()"
+            [searchTerm]="searchTerm()"
+            (search)="onSearchChange($event)"
+            (clear)="clearSearch()">  
+          </app-search-bar>
         </div>
-
-        <div class="search-container mb-4">
-          <div class="input-group">
-            <div class="position-relative">
-              <i class="bi bi-search text-muted position-absolute 
-              top-50 start-0 translate-middle-y ps-3"></i>
-              <input
-                #searchInput
-                type="text"
-                class="form-control ps-5 border-start-0 shadow-sm"
-                placeholder="Tìm kiếm mặt hàng…"
-                [(ngModel)]="searchTermModel"
-                (ngModelChange)="onSearchChange($event)"
-              />
-            </div>
-            
-            <span *ngIf="isLoadingList()" class="input-group-text border-start-0">
-              <i class="bi bi-arrow-clockwise spin"></i>
-            </span>
-            <button *ngIf="searchTerm()" class="btn btn-outline-secondary border-start-0" type="button"
-              (click)="clearSearch(searchInput)">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
+        
+        <!-- Action buttons take less space -->
+        <div class="action-wrapper">
+          <app-active-button
+            [isLoading]="isLoadingList()"
+            [isSaving]="isSaving()"
+            [hasSelected]="!!selectedHangHoa()"
+            (add)="openModal()"
+            (edit)="openModalEdit()"
+            (delete)="deleteHangHoa()"
+            (importExcel)="openImportModal()">
+          </app-active-button>
         </div>
-
-      </div>
-      <div class="table-container" infiniteScroll [scrollWindow]="false" [infiniteScrollDistance]="2"
-        [infiniteScrollThrottle]="150" (scrolled)="onScroll()">
-
-        <table class="table custom-table">
-          <thead class="table-header">
-
-            <tr>
-              <th width="15%">Mã mặt hàng</th>
-              <th width="30%">Tên mặt hàng</th>
-              <th width="20%">Ghi chú</th>
-              <th width="15%">Ngày hiệu lực</th>
-              <th width="15%">Ngày hết hiệu lực</th>
-            </tr>
-
-          </thead>
-          <tbody>
-            <tr *ngFor="let hangHoa of hangHoas(); let i = index" class="table-row" [id]="'item-' + hangHoa.id"
-              [class.selected]="selectedHangHoa() === hangHoa" (click)="selectHangHoa(hangHoa)">
-              <td [innerHTML]="hangHoa.maMatHang | textHighlight: searchTerm()"></td>
-              <td [innerHTML]="hangHoa.tenMatHang | textHighlight: searchTerm()"></td>
-              <td [innerHTML]="(hangHoa.ghiChu || '-') | textHighlight: searchTerm()"></td>
-
-              <td>
-                <span class="date-badge active">
-                  <i class="bi bi-calendar-check me-1"></i>
-                  {{ hangHoa.ngayHieuLuc | date: 'dd/MM/yyyy' }}
-                </span>
-              </td>
-
-              <td>
-                <span class="date-badge">
-                  <i class="bi bi-calendar-x me-1"></i>
-                  {{ hangHoa.ngayHetHieuLuc | date: 'dd/MM/yyyy' }}
-                </span>
-              </td>
-            </tr>
-
-            <tr *ngIf="isLoadingList()">
-              <td colspan="6" class="text-center py-3">Đang tải…</td>
-            </tr>
-
-            <!-- No items found when searching -->
-            <tr *ngIf="hangHoas().length === 0 && !isLoadingList() && searchTerm() !== ''" class="text-center">
-              <td colspan="6" class="py-3 text-muted">
-                <i class="bi bi-search me-2"></i>
-                Không tìm thấy mục nào phù hợp với từ khóa "{{searchTerm()}}"
-              </td>
-            </tr>
-
-            <!-- No items in the system at all -->
-            <tr *ngIf="hangHoas().length === 0 && !isLoadingList() && searchTerm() === ''" class="text-center">
-              <td colspan="6" class="py-3 text-muted">
-                <i class="bi bi-inbox me-2"></i>
-                Chưa có mục nào được thêm vào
-              </td>
-            </tr>
-
-            <tr *ngIf="!hasNextPage() && !isLoadingList() && hangHoas().length > 0" class="text-center">
-              <td colspan="6" class="py-3 text-muted">Đã hiển thị tất cả kết quả</td>
-            </tr>
-
-          </tbody>
-        </table>
       </div>
 
+      <!-- Table remains unchanged -->
+      <app-hang-hoa-table
+        [hangHoas]="hangHoas()"
+        [selectedHangHoa]="selectedHangHoa()"
+        [isLoading]="isLoadingList()"
+        [hasNextPage]="hasNextPage()"
+        [searchTerm]="searchTerm()"
+        (selectItem)="selectHangHoa($event)"
+        (loadMore)="loadMore()">
+      </app-hang-hoa-table>
     </div>
   </div>
 </div>

@@ -11,8 +11,11 @@ import { ToastrService } from 'ngx-toastr';
 import { SharedModule } from '../../../shared/shared.module';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { TextHighlightPipe } from '../../../shared/pipes/text-highlight.pipe';
 import { ImportExcelComponent } from '../import-excel/import-excel.component';
+import { SearchBarComponent } from './search-bar/search-bar.component';
+import { HangHoaTableComponent } from './hang-hoa-table/hang-hoa-table.component';
+import { ActiveButtonComponent } from './active-button/active-button.component';
+import { DeleteConfirmationComponent } from '../../../shared/components/delete-confirmation/delete-confirmation.component';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',
@@ -20,7 +23,9 @@ import { ImportExcelComponent } from '../import-excel/import-excel.component';
   imports: [
     SharedModule,
     FormsModule,
-    TextHighlightPipe
+    SearchBarComponent,
+    ActiveButtonComponent,
+    HangHoaTableComponent
   ],
   templateUrl: './dm-hang-hoa-thi-truong.component.html',
   styleUrl: './dm-hang-hoa-thi-truong.component.css'
@@ -168,34 +173,34 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     this.searchTerms.next(term);
   }
 
-  clearSearch(searchInput: HTMLInputElement): void {
+  clearSearch(): void {
     this.searchTermModel = '';
     this.searchTerms.next('');
-    setTimeout(() => searchInput.focus(), 0);
+    // No need to access searchInput directly anymore
   }
 
   loadMore() {
+    // Guard clause to prevent loading if we're already loading or there's no more data
     if (!this.hasNextPage() || this.isLoadingList()) return;
+    
     this.isLoadingList.set(true);
-
+  
     const page = this.pageIndex();
     const searchParams = {
       pageIndex: page,
       pageSize: this.pageSize,
       searchTerm: this.searchTerm()
     };
-
-    if (this.searchTerm()) {
-      this.svc.search(searchParams).subscribe({
-        next: this.handlePagedResult.bind(this),
-        error: () => this.isLoadingList.set(false)
-      });
-    } else {
-      this.svc.getAll(searchParams).subscribe({
-        next: this.handlePagedResult.bind(this),
-        error: () => this.isLoadingList.set(false)
-      });
-    }
+  
+    // Use a single service call with conditional service selection
+    const service = this.searchTerm() 
+      ? this.svc.search(searchParams) 
+      : this.svc.getAll(searchParams);
+      
+    service.subscribe({
+      next: this.handlePagedResult.bind(this),
+      error: () => this.isLoadingList.set(false)
+    });
   }
 
   private handlePagedResult(res: PagedResult<HangHoa>): void {
@@ -242,26 +247,37 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     }
 
     const hangHoa = this.selectedHangHoa();
-
-    if (!confirm(`Bạn có chắc chắn muốn xóa mặt hàng "${hangHoa?.tenMatHang}" không?`)) {
-      return;
-    }
-
-    this.isSaving.set(true);
-
-    this.svc.delete(hangHoa!.id!).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.selectedHangHoa.set(null);
-        this.loadFirstPage();
-        this.toastr.success(`Đã xóa mặt hàng thành công"`, 'Thành công');
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        console.error('Error deleting item:', err);
-        this.toastr.error('Có lỗi xảy ra khi xóa mặt hàng. Vui lòng thử lại sau.', 'Lỗi');
-      }
+    
+    // Open delete confirmation modal instead of using confirm()
+    const modalRef = this.modalService.open(DeleteConfirmationComponent, {
+      centered: false,
+      backdrop: 'static',
     });
+    
+    // Handle the confirmation result
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.isSaving.set(true);
+          
+          this.svc.delete(hangHoa!.id!).subscribe({
+            next: () => {
+              this.isSaving.set(false);
+              this.selectedHangHoa.set(null);
+              this.loadFirstPage();
+              this.toastr.success(`Đã xóa mặt hàng thành công`, 'Thành công');
+            },
+            error: (err) => {
+              this.isSaving.set(false);
+              console.error('Error deleting item:', err);
+              this.toastr.error('Có lỗi xảy ra khi xóa mặt hàng. Vui lòng thử lại sau.', 'Lỗi');
+            }
+          });
+        }
+      },
+      () => {
+        // Modal dismissed, do nothing
+      }
+    );
   }
-
 }

@@ -1,0 +1,28 @@
+<div class="action-buttons">
+    <button class="btn btn-action btn-success me-2" 
+      (click)="add.emit()"
+      [disabled]="isLoading || isSaving">
+      <i class="bi bi-plus-circle me-1"></i>
+      Thêm
+    </button>
+  
+    <button class="btn btn-action btn-primary me-2"
+      (click)="edit.emit()" >
+      <i class="bi bi-pencil me-1"></i> Sửa
+    </button>
+  
+    <button class="btn btn-action btn-danger me-2" 
+      (click)="delete.emit()" >
+      <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status"
+        aria-hidden="true"></span>
+      <i *ngIf="!isSaving" class="bi bi-trash me-1"></i>
+      Xóa
+    </button>
+  
+    <button class="btn btn-action btn-info me-2" 
+      (click)="importExcel.emit()"
+      [disabled]="isLoading || isSaving">
+      <i class="bi bi-file-earmark-excel me-1"></i>
+      Nhập Excel
+    </button>
+  </div>

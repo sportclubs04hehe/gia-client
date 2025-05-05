@@ -1,0 +1,67 @@
+/* Table Styling */
+.table-container {
+  max-height: calc(100vh - 250px); /* Adjust this as needed */
+  min-height: 300px; /* Ensure there's enough height to trigger scroll */
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  position: relative; /* Important for proper scrolling */
+}
+
+.custom-table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-header {
+  background-color: #f1f5f9;
+  position: sticky;
+  top: 0;                  /* giữ header cố định khi cuộn */
+  z-index: 1;
+}
+
+.table-header th {
+  font-weight: 600;
+  color: #495057;
+  border: none;
+  padding: 1rem;
+}
+
+.table-row {
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.table-row:hover {
+  background-color: rgba(52, 152, 219, 0.05);
+}
+
+.table-row td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+/* Badge Styling */
+.date-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.date-badge.active {
+  background-color: #e3f2fd;
+  color: #0d6efd;
+}
+
+.table-row.selected td {
+  background-color: #3498db;
+  box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.5);
+  font-weight: 500;
+  color: #fff;
+}

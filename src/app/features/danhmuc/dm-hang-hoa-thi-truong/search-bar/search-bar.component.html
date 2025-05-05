@@ -1,0 +1,23 @@
+<div class="search-container">
+  <div class="input-group">
+    <div class="position-relative">
+      <i class="bi bi-search text-muted position-absolute top-50 start-0 translate-middle-y ps-3"></i>
+      <input
+        #searchInput
+        type="text"
+        class="form-control ps-5 border-start-0 shadow-sm"
+        placeholder="Tìm kiếm mặt hàng…"
+        [(ngModel)]="searchModel"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+    
+    <span *ngIf="isLoading" class="input-group-text border-start-0">
+      <i class="bi bi-arrow-clockwise spin"></i>
+    </span>
+    <button *ngIf="searchTerm" class="btn btn-outline-secondary border-start-0" type="button"
+      (click)="clearSearch()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+</div>

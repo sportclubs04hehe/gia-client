@@ -14,7 +14,6 @@ import { SharedModule } from '../../shared.module';
 export class DeleteConfirmationComponent {
   @Input() title: string = 'Xác nhận xóa';
   @Input() message: string = 'Bạn có chắc chắn muốn xóa mục này không?';
-  @Input() itemName?: string;
 
   activeModal = inject(NgbActiveModal);
 
