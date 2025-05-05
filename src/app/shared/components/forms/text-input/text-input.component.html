@@ -1,1 +1,52 @@
-<p>text-input works!</p>
+<div class="form-floating">
+  <ng-container [ngSwitch]="type">
+    <textarea *ngSwitchCase="'textarea'" 
+      [id]="label" 
+      [rows]="rows" 
+      class="form-control" 
+      [placeholder]="placeholder"
+      [value]="controlDir.control?.value || ''"
+      [class.is-invalid]="controlDir.control?.touched && controlDir.control?.invalid"
+      (blur)="onTouched()"
+      (input)="onInputChange($event)"
+      (keypress)="onKeyPress($event)"
+      style="height: 100px"
+    ></textarea>
+    <input *ngSwitchDefault
+      [id]="label" 
+      [type]="type" 
+      class="form-control" 
+      [placeholder]="placeholder"
+      [value]="controlDir.control?.value || ''"
+      [class.is-invalid]="controlDir.control?.touched && controlDir.control?.invalid"
+      [class.is-valid]="controlDir.control?.valid && controlDir.control?.touched && !isValidating"
+      (blur)="onTouched()"
+      (input)="onInputChange($event)"
+      (keypress)="onKeyPress($event)"
+    />
+  </ng-container>
+  <label [for]="label">{{ label }} <span *ngIf="required" class="text-danger">*</span></label>
+  
+  <div *ngIf="isValidating" class="text-primary small">
+    <span class="spinner-border spinner-border-sm me-1"></span>
+  </div>
+  
+  <!-- Validation messages -->
+  <ng-container *ngIf="controlDir?.control?.touched">
+    <div *ngIf="controlDir?.control?.errors?.['required']" class="invalid-feedback">
+      {{ label }} không được để trống.
+    </div>
+    <div *ngIf="controlDir?.control?.errors?.['duplicate']" class="invalid-feedback">
+      {{ label }} này đã tồn tại.
+    </div>
+    <div *ngIf="controlDir?.control?.errors?.['email']" class="invalid-feedback">
+      Email không hợp lệ.
+    </div>
+    <div *ngIf="controlDir?.control?.errors?.['minlength']" class="invalid-feedback">
+      {{ label }} phải có ít nhất {{ controlDir.control?.errors?.['minlength']?.requiredLength }} ký tự.
+    </div>
+    <div *ngIf="controlDir?.control?.errors?.['maxlength']" class="invalid-feedback">
+      {{ label }} không được vượt quá {{ controlDir.control?.errors?.['maxlength']?.requiredLength }} ký tự.
+    </div>
+  </ng-container>
+</div>

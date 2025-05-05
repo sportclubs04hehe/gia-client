@@ -8,49 +8,36 @@
     <!-- Row 1: Mã và tên mặt hàng -->
     <div class="row mb-4">
       <div class="col-md-5">
-        <div class="form-floating">
-          <input id="maMatHang" type="text" formControlName="maMatHang" class="form-control"
-            placeholder="Nhập mã mặt hàng"
-            [class.is-invalid]="form.get('maMatHang')?.touched && form.get('maMatHang')?.invalid"
-            [class.is-valid]="form.get('maMatHang')?.valid && form.get('maMatHang')?.touched && !isValidatingCode">
-          <label for="maMatHang">Mã mặt hàng <span class="text-danger">*</span></label>
-          <div *ngIf="form.get('maMatHang')?.touched && form.get('maMatHang')?.hasError('required')"
-            class="invalid-feedback">
-            Mã mặt hàng không được để trống.
-          </div>
-          <div *ngIf="form.get('maMatHang')?.hasError('duplicate') && form.get('maMatHang')?.touched"
-            class="invalid-feedback">
-            Mã mặt hàng này đã tồn tại.
-          </div>
-          <div *ngIf="isValidatingCode" class="text-primary small">
-            <span class="spinner-border spinner-border-sm me-1"></span>
-          </div>
-        </div>
+        <app-text-input
+          formControlName="maMatHang"
+          label="Mã mặt hàng"
+          placeholder="Nhập mã mặt hàng"
+          [required]="true"
+          [preventSpaces]="true"
+          [isValidating]="isValidatingCode"
+        ></app-text-input>
       </div>
 
       <div class="col-md-7">
-        <div class="form-floating">
-          <input id="tenMatHang" type="text" formControlName="tenMatHang" class="form-control"
-            placeholder="Nhập tên mặt hàng"
-            [class.is-invalid]="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.invalid"
-            [class.is-valid]="form.get('tenMatHang')?.valid && form.get('tenMatHang')?.touched">
-          <label for="tenMatHang">Tên mặt hàng <span class="text-danger">*</span></label>
-          <div *ngIf="form.get('tenMatHang')?.touched && form.get('tenMatHang')?.hasError('required')"
-            class="invalid-feedback">
-            Tên mặt hàng không được để trống.
-          </div>
-        </div>
+        <app-text-input
+          formControlName="tenMatHang"
+          label="Tên mặt hàng"
+          placeholder="Nhập tên mặt hàng"
+          [required]="true"
+        ></app-text-input>
       </div>
     </div>
 
     <!-- Row 2: Ghi chú -->
     <div class="row mb-4">
       <div class="col-12">
-        <div class="form-floating">
-          <textarea id="ghiChu" rows="3" formControlName="ghiChu" class="form-control" style="height: 100px"
-            placeholder="Nhập ghi chú"></textarea>
-          <label for="ghiChu">Ghi chú</label>
-        </div>
+        <app-text-input
+          formControlName="ghiChu"
+          label="Ghi chú"
+          placeholder="Nhập ghi chú"
+          type="textarea"
+          [rows]="3"
+        ></app-text-input>
       </div>
     </div>
 
@@ -78,11 +65,11 @@
     <!-- Row 4: Nhóm hàng hóa -->
     <div class="row mb-3">
       <div class="col-md-8">
-        <div class="form-floating">
-          <input id="nhomHangHoaId" type="text" formControlName="nhomHangHoaId" class="form-control"
-            placeholder="Nhập nhóm hàng hóa">
-          <label for="nhomHangHoaId">Nhóm hàng hóa</label>
-        </div>
+        <app-text-input
+          formControlName="nhomHangHoaId"
+          label="Nhóm hàng hóa"
+          placeholder="Nhập nhóm hàng hóa"
+        ></app-text-input>
       </div>
     </div>
   </div>

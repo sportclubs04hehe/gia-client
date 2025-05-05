@@ -6,43 +6,35 @@
   <form [formGroup]="form" class="row g-3">
     <!-- Mã mặt hàng -->
     <div class="col-md-6 mb-3">
-      <label for="maMatHang" class="form-label">Mã mặt hàng <span class="text-danger">*</span></label>
-      <div class="input-group">
-        <input type="text" 
-               class="form-control" 
-               id="maMatHang" 
-               formControlName="maMatHang"
-               (keypress)="preventSpaces($event)">
-        <span class="input-group-text" *ngIf="isValidatingCode">
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        </span>
-      </div>
-      <div *ngIf="form.get('maMatHang')?.errors?.['required'] && form.get('maMatHang')?.touched" 
-           class="text-danger small">
-        Mã mặt hàng là trường bắt buộc
-      </div>
-      <div *ngIf="form.get('maMatHang')?.errors?.['duplicate'] && form.get('maMatHang')?.touched" 
-           class="text-danger small">
-        Mã mặt hàng đã tồn tại
-      </div>
+      <app-text-input
+        formControlName="maMatHang"
+        label="Mã mặt hàng"
+        [required]="true"
+        [preventSpaces]="true"
+        [isValidating]="isValidatingCode">
+      </app-text-input>
     </div>
 
     <!-- Tên mặt hàng -->
     <div class="col-md-6 mb-3">
-      <label for="tenMatHang" class="form-label">Tên mặt hàng <span class="text-danger">*</span></label>
-      <input type="text" class="form-control" id="tenMatHang" formControlName="tenMatHang">
-      <div *ngIf="form.get('tenMatHang')?.invalid && form.get('tenMatHang')?.touched" class="text-danger small">
-        Tên mặt hàng là trường bắt buộc
-      </div>
+      <app-text-input
+        formControlName="tenMatHang"
+        label="Tên mặt hàng"
+        [required]="true">
+      </app-text-input>
     </div>
 
     <!-- Ghi chú -->
     <div class="col-12 mb-3">
-      <label for="ghiChu" class="form-label">Ghi chú</label>
-      <textarea class="form-control" id="ghiChu" formControlName="ghiChu" rows="3"></textarea>
+      <app-text-input
+        formControlName="ghiChu"
+        label="Ghi chú"
+        type="textarea"
+        [rows]="3">
+      </app-text-input>
     </div>
 
-    <!-- REPLACE: Ngày hiệu lực -->
+    <!-- Ngày hiệu lực -->
     <div class="col-md-6 mb-3">
       <app-date-input
         formControlName="ngayHieuLuc"
@@ -52,7 +44,7 @@
       </app-date-input>
     </div>
 
-    <!-- REPLACE: Ngày hết hiệu lực -->
+    <!-- Ngày hết hiệu lực -->
     <div class="col-md-6 mb-3">
       <app-date-input
         formControlName="ngayHetHieuLuc"

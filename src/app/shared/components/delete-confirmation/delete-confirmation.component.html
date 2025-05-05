@@ -1,0 +1,18 @@
+<div class="modal-header">
+    <h4 class="modal-title d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+        {{ title }}
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+    <p class="fs-5 text-center fw-bold">{{ message }}</p>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">
+        Hủy
+    </button>
+    <button type="button" class="btn btn-primary confirm-btn" (click)="confirm()">
+        Xác nhận
+    </button>
+</div>

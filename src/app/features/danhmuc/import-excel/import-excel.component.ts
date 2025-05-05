@@ -5,7 +5,7 @@ import { HangHoaCreateDto } from '../models/hanghoathitruong/hh-thitruong-create
 import { DmThitruongService } from '../services/dm-thitruong.service';
 import { ExcelImportService, ExcelImportResult } from '../services/excel-import.service';
 import { SharedModule } from '../../../shared/shared.module';
-import { BatchImportErrorResponse } from '../models/hanghoathitruong/batch-import-error-response';
+import { ApiResponse } from '../models/hanghoathitruong/api-response';
 
 @Component({
   selector: 'app-import-excel',
@@ -131,25 +131,25 @@ export class ImportExcelComponent implements OnInit {
     this.dmService.addBatch(this.parsedItems).subscribe({
       next: (result) => {
         this.isProcessing = false;
-        this.step = 3; // Move to success step
+        this.step = 3; 
         this.toastr.success(`Đã nhập thành công ${result.length} mặt hàng`, 'Nhập dữ liệu thành công');
       },
       error: (error) => {
         this.isProcessing = false;
         
-        // Check if this is our specific batch import error
         if (error.errors && error.errors.invalidItems) {
-          // This is a batch import error
-          const batchError = error as BatchImportErrorResponse;
-          this.invalidItems = batchError.errors.invalidItems;
-          
-          // Extract item codes from error messages
-          this.invalidItems.forEach(item => {
-            const match = item.match(/\[([^\]]+)\]/);
-            if (match && match[1]) {
-              this.invalidItemCodes.add(match[1]);
-            }
-          });
+          const batchError = error as ApiResponse<HangHoaCreateDto[]>;
+        
+          if (batchError.errors) {
+            this.invalidItems = batchError.errors.invalidItems;
+            
+            this.invalidItems.forEach(item => {
+              const match = item.match(/\[([^\]]+)\]/);
+              if (match && match[1]) {
+                this.invalidItemCodes.add(match[1]);
+              }
+            });
+          }
           
           this.errorMessage = batchError.message || 'Có lỗi với một số mặt hàng trong danh sách';
         } else {

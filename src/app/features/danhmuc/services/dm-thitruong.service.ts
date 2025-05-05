@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
 import { HangHoa } from '../models/hanghoathitruong/dm-thitruong';
 import { HangHoaCreateDto } from '../models/hanghoathitruong/hh-thitruong-create';
@@ -10,6 +10,7 @@ import { SearchParams } from '../models/search-params';
 import { SpecificationParams } from '../models/specification-params';
 import { buildHttpParams } from '../utils/build-http-params';
 import { PagedResult } from '../models/paged-result';
+import { ApiResponse } from '../models/hanghoathitruong/api-response';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +22,7 @@ export class DmThitruongService {
 
   // Thêm mới
   add(createDto: HangHoaCreateDto) {
-    return this.http.post<any>(`${this.apiUrl}/${this.endpoint}`, createDto);
+    return this.http.post<ApiResponse<HangHoa>>(`${this.apiUrl}/${this.endpoint}`, createDto);
   }
 
   // Thêm nhiều cùng lúc
@@ -55,15 +56,20 @@ export class DmThitruongService {
   /**
  * Cập nhật thông tin hàng hóa
  */
-  update(id: string, updateDto: HangHoaUpdateDto): Observable<HangHoa> {
-    return this.http.put<HangHoa>(`${this.apiUrl}/${this.endpoint}/${id}`, updateDto);
+  update(id: string, dto: HangHoaUpdateDto): Observable<ApiResponse<HangHoa>> {
+    return this.http
+      .put<ApiResponse<HangHoa>>(
+        `${this.apiUrl}/${this.endpoint}/${id}`,
+        dto
+      );
   }
-
   /**
  * Xóa hàng hóa theo ID
  */
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${this.endpoint}/${id}`);
+  delete(id: string): Observable<ApiResponse<string>> {
+    return this.http.delete<ApiResponse<string>>(
+      `${this.apiUrl}/${this.endpoint}/${id}`
+    );
   }
 
   /**

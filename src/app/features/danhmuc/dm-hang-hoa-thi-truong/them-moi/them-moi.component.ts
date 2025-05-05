@@ -8,12 +8,14 @@ import { DateInputComponent } from '../../../../shared/components/forms/date-inp
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
 import { DmThitruongService } from '../../services/dm-thitruong.service';
 import { uniqueItemCodeValidator } from '../../utils/validate-ma-mat-hang';
+import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 @Component({
   selector: 'app-them-moi',
   standalone: true,
   imports: [
     SharedModule,
-    DateInputComponent  
+    DateInputComponent,
+    TextInputComponent,
   ],
   templateUrl: './them-moi.component.html',
   styleUrl: './them-moi.component.css'
