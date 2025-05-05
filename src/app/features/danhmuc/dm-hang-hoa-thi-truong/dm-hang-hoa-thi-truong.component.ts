@@ -41,7 +41,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   hangHoas: WritableSignal<HangHoa[]> = signal([]);
   pageIndex = signal(1);
-  readonly pageSize = 8;
+  readonly pageSize = 50;
   hasNextPage = signal(true);
 
   searchTerm = signal<string>('');
@@ -93,7 +93,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   openModalEdit(): void {
     if (!this.selectedHangHoa()) {
-      this.toastr.warning('Vui lòng chọn một mặt hàng để sửa', 'Chưa chọn mặt hàng');
+      this.toastr.warning('Vui lòng chọn một mặt hàng để sửa', 'Thông báo');
       return;
     }
 
@@ -237,7 +237,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   deleteHangHoa(): void {
     if (!this.selectedHangHoa()) {
-      this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Chưa chọn mặt hàng');
+      this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Thông báo');
       return;
     }
 

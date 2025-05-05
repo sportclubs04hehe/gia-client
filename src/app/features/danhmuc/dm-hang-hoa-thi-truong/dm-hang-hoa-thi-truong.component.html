@@ -13,13 +13,11 @@
           </button>
 
           <button class="btn btn-action btn-primary me-2" class="btn btn-action btn-primary me-2"
-            (click)="openModalEdit()" 
-            [disabled]="!selectedHangHoa()">
+            (click)="openModalEdit()" >
             <i class="bi bi-pencil me-1"></i> Sửa
           </button>
 
-          <button class="btn btn-action btn-danger me-2" (click)="deleteHangHoa()"
-            [disabled]="!selectedHangHoa() || isSaving()">
+          <button class="btn btn-action btn-danger me-2" (click)="deleteHangHoa()">
             <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-1" role="status"
               aria-hidden="true"></span>
             <i *ngIf="!isSaving()" class="bi bi-trash me-1"></i>
