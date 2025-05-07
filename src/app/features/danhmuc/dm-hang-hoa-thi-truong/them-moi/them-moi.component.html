@@ -62,14 +62,37 @@
       </div>
     </div>
 
-    <!-- Row 4: Nhóm hàng hóa -->
+    <!-- Row 4: Nhóm hàng hóa và Đơn vị tính -->
     <div class="row mb-3">
-      <div class="col-md-8">
+      <div class="col-md-6">
         <app-text-input
           formControlName="nhomHangHoaId"
           label="Nhóm hàng hóa"
           placeholder="Nhập nhóm hàng hóa"
         ></app-text-input>
+      </div>
+
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+         <!-- component.html -->
+        <div class="position-relative mb-3" (click)="openDonViTinhModal(donViTinhModal)">
+          <input
+            type="text"
+            class="form-control pe-5"
+            [value]="selectedDonViTinh?.ten | truncate: 20"
+            readonly
+            placeholder="Chọn đơn vị tính"
+            formControlName="donViTinhId"
+            (focus)="iconFill = true"
+            (blur)="iconFill = false"
+          />
+          <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;">
+            <i class="bi" [ngClass]=" iconFill ? 'bi-box2-fill' : 'bi-box2' "></i>
+          </span>
+        </div>
+
+        </div>
       </div>
     </div>
   </div>
@@ -83,3 +106,46 @@
     </button>
   </div>
 </form>
+
+<ng-template #donViTinhModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Chọn đơn vị tính</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="table-responsive table-scrollable">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th width="30%">Mã</th>
+            <th width="70%">Tên đơn vị tính</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of donViTinhList" 
+              (click)="selectDonViTinh(item)" 
+              [class.table-active]="tempSelectedDonViTinh?.id === item.id"
+              style="cursor: pointer">
+            <td>{{ item.ma }}</td>
+            <td>{{ item.ten | truncate:30}}</td>
+          </tr>
+          <tr *ngIf="donViTinhList.length === 0">
+            <td colspan="2" class="text-center py-4 text-muted">
+              <i class="bi bi-inbox me-2"></i>Không có dữ liệu
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+      <i class="bi bi-x-circle me-1"></i> Đóng
+    </button>
+    <button type="button" class="btn btn-primary" 
+            [disabled]="!tempSelectedDonViTinh" 
+            (click)="confirmDonViTinhSelection()">
+      <i class="bi bi-check-circle me-1"></i> Chọn
+    </button>
+  </div>
+</ng-template>

@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { NgbActiveModal, NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbCalendar, NgbDateStruct, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
 import { SharedModule } from '../../../../shared/shared.module';
 import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
@@ -9,6 +9,11 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 import { DmThitruongService } from '../../services/dm-thitruong.service';
 import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
+import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
+import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
+import { PagedResult } from '../../models/paged-result';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
+
 @Component({
   selector: 'app-them-moi',
   standalone: true,
@@ -16,6 +21,7 @@ import { TextInputComponent } from '../../../../shared/components/forms/text-inp
     SharedModule,
     DateInputComponent,
     TextInputComponent,
+    TruncatePipe,
   ],
   templateUrl: './them-moi.component.html',
   styleUrl: './them-moi.component.css'
@@ -24,12 +30,20 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
   calendar = inject(NgbCalendar);
   dmService = inject(DmThitruongService);
+  donViTinhService = inject(DmDonViTinhService);
+  modalService = inject(NgbModal);
+
+  selectedDonViTinh: DonViTinhSelectDto | null = null;
+  tempSelectedDonViTinh: DonViTinhSelectDto | null = null;
+  donViTinhModalRef: NgbModalRef | null = null;
 
   @Input() title: string = '';
   @Input() onSave!: (dto: HangHoaCreateDto) => void;
 
   today!: NgbDateStruct;
   defaultNgayHetHieuLuc!: NgbDateStruct;
+  donViTinhList: DonViTinhSelectDto[] = [];
+  iconFill = false;
 
   constructor(fb: FormBuilder) {
     super(fb);
@@ -38,6 +52,14 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
   ngOnInit(): void {
     this.setDefaultDates();
     this.buildForm();
+    this.loadDonViTinh();
+    this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
+      if (id) {
+        this.selectedDonViTinh = this.donViTinhList.find(d => d.id === id) || null;
+      } else {
+        this.selectedDonViTinh = null;
+      }
+    });
   }
 
   save(): void {
@@ -59,17 +81,31 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
   protected buildForm(): void {
     this.form = this.fb.group({
       maMatHang: ['', {
-        validators: [Validators.required],
+        validators: [Validators.required, Validators.maxLength(50)],
         asyncValidators: [uniqueItemCodeValidator(this.dmService, null)],
         updateOn: 'blur'
       }],
-      tenMatHang: ['', Validators.required],
+      tenMatHang: ['', [Validators.required, Validators.maxLength(200)]],
       ghiChu: [''],
       ngayHieuLuc: [this.today, Validators.required],
       ngayHetHieuLuc: [this.defaultNgayHetHieuLuc, Validators.required],
-      nhomHangHoaId: null
+      nhomHangHoaId: [null],
+      donViTinhId: [null]
     }, {
       validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
+    });
+  }
+  
+  loadDonViTinh(): void {
+    const params = { pageIndex: 1, pageSize: 100 }; // Adjust page size as needed
+    
+    this.donViTinhService.getAllSelect(params).subscribe({
+      next: (result: PagedResult<DonViTinhSelectDto>) => {
+        this.donViTinhList = result.data;
+      },
+      error: (error) => {
+        console.error('Error loading units:', error);
+      }
     });
   }
 
@@ -87,9 +123,25 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
     };
   }
 
-  preventSpaces(event: KeyboardEvent) {
-    if (event.key === ' ') {
-      event.preventDefault();
+  openDonViTinhModal(content: any): void {
+    this.iconFill = true;
+    this.tempSelectedDonViTinh = this.selectedDonViTinh;
+    this.donViTinhModalRef = this.modalService.open(content, { centered: true });
+  }
+
+  selectDonViTinh(donViTinh: DonViTinhSelectDto): void {
+    this.tempSelectedDonViTinh = donViTinh;
+  }
+
+  confirmDonViTinhSelection(): void {
+    if (this.tempSelectedDonViTinh) {
+      this.form.patchValue({ donViTinhId: this.tempSelectedDonViTinh.id });
+      this.selectedDonViTinh = this.tempSelectedDonViTinh;
+      
+      // Close only this specific modal instead of all modals
+      if (this.donViTinhModalRef) {
+        this.donViTinhModalRef.close();
+      }
     }
   }
 }

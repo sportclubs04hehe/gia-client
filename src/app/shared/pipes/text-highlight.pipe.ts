@@ -24,5 +24,6 @@ export class TextHighlightPipe implements PipeTransform {
   private escapeRegex(string: string): string {
     return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   }
+  
 
 }

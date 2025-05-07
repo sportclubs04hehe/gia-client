@@ -10,6 +10,7 @@ import { SearchParams } from '../models/search-params';
 import { buildHttpParams } from '../utils/build-http-params';
 import { ApiResponse } from '../models/dm_hanghoathitruong/api-response';
 import { environment } from '../../../../environments/environment.development';
+import { DonViTinhSelectDto } from '../models/dm_donvitinh/don-vi-tinh-select.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,11 @@ export class DmDonViTinhService {
   getAll(params: PaginationParams): Observable<PagedResult<DonViTinhDto>> {
     const httpParams = buildHttpParams(params);
     return this.http.get<PagedResult<DonViTinhDto>>(this.baseUrl, { params: httpParams });
+  }
+
+  getAllSelect(params: PaginationParams): Observable<PagedResult<DonViTinhSelectDto>> {
+    const httpParams = buildHttpParams(params);
+    return this.http.get<PagedResult<DonViTinhSelectDto>>(`${this.baseUrl}/get-all-select`, { params: httpParams });
   }
 
   /**

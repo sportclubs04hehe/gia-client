@@ -1,0 +1,33 @@
+/* component.scss */
+.position-relative {
+    cursor: pointer;
+    /* cả vùng click được */
+}
+
+.form-control {
+    background-color: #fff;
+    /* trắng, rõ ràng */
+}
+
+.form-control.pe-5 {
+    padding-right: 2.5rem;
+    /* đủ chừa chỗ cho icon */
+}
+
+/* Table scrolling styles */
+.table-scrollable {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.table-scrollable table {
+    width: 100%;
+}
+
+.table-scrollable thead {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
+}
+
