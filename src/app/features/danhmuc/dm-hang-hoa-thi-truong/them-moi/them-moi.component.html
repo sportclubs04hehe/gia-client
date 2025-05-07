@@ -8,55 +8,33 @@
     <!-- Row 1: Mã và tên mặt hàng -->
     <div class="row mb-4">
       <div class="col-md-5">
-        <app-text-input
-          formControlName="maMatHang"
-          label="Mã mặt hàng"
-          placeholder="Nhập mã mặt hàng"
-          [required]="true"
-          [preventSpaces]="true"
-          [isValidating]="isValidatingCode"
-        ></app-text-input>
+        <app-text-input formControlName="maMatHang" label="Mã mặt hàng" placeholder="Nhập mã mặt hàng" [required]="true"
+          [preventSpaces]="true" [isValidating]="isValidatingCode"></app-text-input>
       </div>
 
       <div class="col-md-7">
-        <app-text-input
-          formControlName="tenMatHang"
-          label="Tên mặt hàng"
-          placeholder="Nhập tên mặt hàng"
-          [required]="true"
-        ></app-text-input>
+        <app-text-input formControlName="tenMatHang" label="Tên mặt hàng" placeholder="Nhập tên mặt hàng"
+          [required]="true"></app-text-input>
       </div>
     </div>
 
     <!-- Row 2: Ghi chú -->
     <div class="row mb-4">
       <div class="col-12">
-        <app-text-input
-          formControlName="ghiChu"
-          label="Ghi chú"
-          placeholder="Nhập ghi chú"
-          type="textarea"
-          [rows]="3"
-        ></app-text-input>
+        <app-text-input formControlName="ghiChu" label="Ghi chú" placeholder="Nhập ghi chú" type="textarea"
+          [rows]="3"></app-text-input>
       </div>
     </div>
 
     <!-- Row 3: Ngày hiệu lực và hết hiệu lực -->
     <div class="row mb-4">
       <div class="col-md-6">
-        <app-date-input
-          formControlName="ngayHieuLuc"
-          label="Ngày hiệu lực"
-          [required]="true"
-          [showTodayButton]="true">
+        <app-date-input formControlName="ngayHieuLuc" label="Ngày hiệu lực" [required]="true" [showTodayButton]="true">
         </app-date-input>
       </div>
 
       <div class="col-md-6">
-        <app-date-input
-          formControlName="ngayHetHieuLuc"
-          label="Ngày hết hiệu lực"
-          [required]="true"
+        <app-date-input formControlName="ngayHetHieuLuc" label="Ngày hết hiệu lực" [required]="true"
           [showTodayButton]="true">
         </app-date-input>
       </div>
@@ -65,32 +43,22 @@
     <!-- Row 4: Nhóm hàng hóa và Đơn vị tính -->
     <div class="row mb-3">
       <div class="col-md-6">
-        <app-text-input
-          formControlName="nhomHangHoaId"
-          label="Nhóm hàng hóa"
-          placeholder="Nhập nhóm hàng hóa"
-        ></app-text-input>
+        <app-text-input formControlName="nhomHangHoaId" label="Nhóm hàng hóa"
+          placeholder="Nhập nhóm hàng hóa"></app-text-input>
       </div>
 
       <div class="col-md-6">
         <div class="form-group">
           <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-         <!-- component.html -->
-        <div class="position-relative mb-3" (click)="openDonViTinhModal(donViTinhModal)">
-          <input
-            type="text"
-            class="form-control pe-5"
-            [value]="selectedDonViTinh?.ten | truncate: 20"
-            readonly
-            placeholder="Chọn đơn vị tính"
-            formControlName="donViTinhId"
-            (focus)="iconFill = true"
-            (blur)="iconFill = false"
-          />
-          <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;">
-            <i class="bi" [ngClass]=" iconFill ? 'bi-box2-fill' : 'bi-box2' "></i>
-          </span>
-        </div>
+          <!-- component.html -->
+          <div class="position-relative mb-3" (click)="openDonViTinhModal(donViTinhModal)">
+            <input type="text" class="form-control pe-5" [value]="selectedDonViTinh?.ten | truncate: 20" readonly
+              placeholder="Chọn đơn vị tính" formControlName="donViTinhId" (focus)="iconFill = true"
+              (blur)="iconFill = false" />
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;">
+              <i class="bi" [ngClass]=" iconFill ? 'bi-box2-fill' : 'bi-box2' "></i>
+            </span>
+          </div>
 
         </div>
       </div>
@@ -113,6 +81,13 @@
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body">
+    <!-- Add search bar -->
+    <div class="mb-3">
+      <app-search-bar [isLoading]="isLoadingDonViTinh" [searchTerm]="searchDonViTinhTerm"
+        [placeholder]="'Tìm kiếm đơn vị tính...'" (search)="onSearchDonViTinh($event)" (clear)="clearDonViTinhSearch()">
+      </app-search-bar>
+    </div>
+
     <div class="table-responsive table-scrollable">
       <table class="table table-hover">
         <thead>
@@ -122,16 +97,23 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of donViTinhList" 
-              (click)="selectDonViTinh(item)" 
-              [class.table-active]="tempSelectedDonViTinh?.id === item.id"
-              style="cursor: pointer">
-            <td>{{ item.ma }}</td>
-            <td>{{ item.ten | truncate:30}}</td>
+          <!-- Update just this part in them-moi.component.html -->
+          <tr *ngFor="let item of donViTinhList" (click)="selectDonViTinh(item)"
+            [class.table-active]="tempSelectedDonViTinh?.id === item.id" style="cursor: pointer">
+            <td [innerHTML]="item.ma | textHighlight:searchDonViTinhTerm"></td>
+            <td [innerHTML]="item.ten | truncate:30 | textHighlight:searchDonViTinhTerm"></td>
           </tr>
           <tr *ngIf="donViTinhList.length === 0">
             <td colspan="2" class="text-center py-4 text-muted">
               <i class="bi bi-inbox me-2"></i>Không có dữ liệu
+            </td>
+          </tr>
+          <tr *ngIf="isLoadingDonViTinh">
+            <td colspan="2" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+              </div>
+              <span class="ms-2">Đang tải...</span>
             </td>
           </tr>
         </tbody>
@@ -142,9 +124,8 @@
     <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
       <i class="bi bi-x-circle me-1"></i> Đóng
     </button>
-    <button type="button" class="btn btn-primary" 
-            [disabled]="!tempSelectedDonViTinh" 
-            (click)="confirmDonViTinhSelection()">
+    <button type="button" class="btn btn-primary" [disabled]="!tempSelectedDonViTinh"
+      (click)="confirmDonViTinhSelection()">
       <i class="bi bi-check-circle me-1"></i> Chọn
     </button>
   </div>

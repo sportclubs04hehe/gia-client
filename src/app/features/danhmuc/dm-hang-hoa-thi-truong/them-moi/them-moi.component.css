@@ -31,3 +31,11 @@
     z-index: 1;
 }
 
+:host ::ng-deep .highlight-text {
+  background-color: #2980b9 !important;
+  font-weight: bold !important;
+  color: #fff !important;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+

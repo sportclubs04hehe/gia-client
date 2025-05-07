@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbCalendar, NgbDateStruct, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
@@ -13,6 +13,9 @@ import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { PagedResult } from '../../models/paged-result';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
+import { SearchBarComponent } from '../../../../shared/components/search-bar/search-bar.component';
+import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe';
 
 @Component({
   selector: 'app-them-moi',
@@ -22,11 +25,13 @@ import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
     DateInputComponent,
     TextInputComponent,
     TruncatePipe,
+    SearchBarComponent,
+    TextHighlightPipe,
   ],
   templateUrl: './them-moi.component.html',
   styleUrl: './them-moi.component.css'
 })
-export class ThemMoiComponent extends FormComponentBase implements OnInit {
+export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDestroy {
   activeModal = inject(NgbActiveModal);
   calendar = inject(NgbCalendar);
   dmService = inject(DmThitruongService);
@@ -45,6 +50,11 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
   donViTinhList: DonViTinhSelectDto[] = [];
   iconFill = false;
 
+  // Add new properties for search functionality
+  searchDonViTinhTerm = '';
+  isLoadingDonViTinh = false;
+  private searchTerms = new Subject<string>();
+
   constructor(fb: FormBuilder) {
     super(fb);
   }
@@ -53,6 +63,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
     this.setDefaultDates();
     this.buildForm();
     this.loadDonViTinh();
+    this.setupSearchStream();
     this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
       if (id) {
         this.selectedDonViTinh = this.donViTinhList.find(d => d.id === id) || null;
@@ -60,6 +71,11 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
         this.selectedDonViTinh = null;
       }
     });
+  }
+
+  override ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   save(): void {
@@ -97,16 +113,55 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
   }
   
   loadDonViTinh(): void {
-    const params = { pageIndex: 1, pageSize: 100 }; // Adjust page size as needed
+    this.isLoadingDonViTinh = true;
+    const params = { pageIndex: 1, pageSize: 100 };
     
     this.donViTinhService.getAllSelect(params).subscribe({
       next: (result: PagedResult<DonViTinhSelectDto>) => {
         this.donViTinhList = result.data;
+        this.isLoadingDonViTinh = false;
       },
       error: (error) => {
         console.error('Error loading units:', error);
+        this.isLoadingDonViTinh = false;
       }
     });
+  }
+
+  setupSearchStream(): void {
+    this.searchTerms.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.isLoadingDonViTinh = true;
+        const params = { 
+          pageIndex: 1, 
+          pageSize: 100,
+          searchTerm: term
+        };
+        
+        return this.donViTinhService.search(params);
+      })
+    ).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.donViTinhList = result.data;
+        this.isLoadingDonViTinh = false;
+      },
+      error: (error) => {
+        console.error('Error searching units:', error);
+        this.isLoadingDonViTinh = false;
+      }
+    });
+  }
+
+  onSearchDonViTinh(term: string): void {
+    this.searchTerms.next(term);
+  }
+
+  clearDonViTinhSearch(): void {
+    this.searchDonViTinhTerm = '';
+    this.searchTerms.next('');
   }
 
   get isValidatingCode(): boolean {
