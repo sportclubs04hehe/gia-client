@@ -1,0 +1,52 @@
+<div #tableContainer class="table-container" style="flex: 1;">
+    <table class="table custom-table">
+      <thead class="table-header">
+        <tr>
+          <th *ngFor="let column of columns" [style.width]="column.width || 'auto'">
+            {{ column.header }}
+          </th>
+        </tr>
+      </thead>
+      
+      <tbody>
+        <tr *ngFor="let item of items; let i = index" 
+            class="table-row" 
+            [id]="'item-' + getFieldValue(item, idField)"
+            [class.selected]="isEqual(selectedItem, item)" 
+            (click)="selectRow(item)">
+          <td *ngFor="let column of columns">
+            <ng-container *ngIf="!column.template">
+              <span *ngIf="!column.formatter" 
+                   [innerHTML]="getFieldValue(item, column.field) | textHighlight: searchTerm">
+              </span>
+              <span *ngIf="column.formatter">
+                {{ column.formatter(item) }}
+              </span>
+            </ng-container>
+          </td>
+        </tr>
+  
+        <tr *ngIf="isLoading">
+          <td [attr.colspan]="columns.length" class="text-center py-3">Đang tải…</td>
+        </tr>
+  
+        <tr *ngIf="items.length === 0 && !isLoading && searchTerm !== ''" class="text-center">
+          <td [attr.colspan]="columns.length" class="py-3 text-muted">
+            <i class="bi bi-search me-2"></i>
+            Không tìm thấy kết quả phù hợp với từ khóa "{{searchTerm}}"
+          </td>
+        </tr>
+  
+        <tr *ngIf="items.length === 0 && !isLoading && searchTerm === ''" class="text-center">
+          <td [attr.colspan]="columns.length" class="py-3 text-muted">
+            <i class="bi bi-inbox me-2"></i>
+            Chưa có dữ liệu
+          </td>
+        </tr>
+  
+        <tr *ngIf="!hasNextPage && !isLoading && items.length > 0" class="text-center">
+          <td [attr.colspan]="columns.length" class="py-3 text-muted">Đã hiển thị tất cả kết quả</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>

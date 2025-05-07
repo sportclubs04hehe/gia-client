@@ -3,19 +3,20 @@ import { isPlatformBrowser } from '@angular/common';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ThemMoiComponent } from './them-moi/them-moi.component';
 import { DmThitruongService } from '../services/dm-thitruong.service';
-import { HangHoa } from '../models/hanghoathitruong/dm-thitruong';
+import { HangHoa } from '../models/dm_hanghoathitruong/dm-thitruong';
 import { PagedResult } from '../models/paged-result';
-import { HangHoaCreateDto } from '../models/hanghoathitruong/hh-thitruong-create';
+import { HangHoaCreateDto } from '../models/dm_hanghoathitruong/hh-thitruong-create';
 import { EditComponent } from './edit/edit.component';
 import { ToastrService } from 'ngx-toastr';
 import { SharedModule } from '../../../shared/shared.module';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { ImportExcelComponent } from '../import-excel/import-excel.component';
-import { SearchBarComponent } from './search-bar/search-bar.component';
-import { HangHoaTableComponent } from './hang-hoa-table/hang-hoa-table.component';
-import { ActiveButtonComponent } from './active-button/active-button.component';
+import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { DeleteConfirmationComponent } from '../../../shared/components/delete-confirmation/delete-confirmation.component';
+import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
+import { TableColumn } from '../../../shared/models/table-column';
+import { TableDataComponent } from '../../../shared/components/table-data/table-data.component';
+import { ImportExcelComponent } from './import-excel/import-excel.component';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',
@@ -25,13 +26,13 @@ import { DeleteConfirmationComponent } from '../../../shared/components/delete-c
     FormsModule,
     SearchBarComponent,
     ActiveButtonComponent,
-    HangHoaTableComponent
+    TableDataComponent,
   ],
   templateUrl: './dm-hang-hoa-thi-truong.component.html',
   styleUrl: './dm-hang-hoa-thi-truong.component.css'
 })
 export class DmHangHoaThiTruongComponent implements OnInit {
-  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+  @ViewChild(SearchBarComponent) searchBarComponent!: SearchBarComponent;
 
   private modalService = inject(NgbModal);
   private svc = inject(DmThitruongService);
@@ -51,6 +52,28 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   searchTerm = signal<string>('');
   searchTermModel: string = '';
+
+  tableColumns: TableColumn<HangHoa>[] = [
+    { header: 'Mã mặt hàng', field: 'maMatHang', width: '15%' },
+    { header: 'Tên mặt hàng', field: 'tenMatHang', width: '30%' },
+    { header: 'Ghi chú', field: 'ghiChu', width: '20%' },
+    {
+      header: 'Ngày hiệu lực',
+      field: 'ngayHieuLuc',
+      width: '15%',
+      formatter: (item: HangHoa) => {
+        return new Date(item.ngayHieuLuc).toLocaleDateString('vi-VN');
+      }
+    },
+    {
+      header: 'Ngày hết hiệu lực',
+      field: 'ngayHetHieuLuc',
+      width: '15%',
+      formatter: (item: HangHoa) => {
+        return new Date(item.ngayHetHieuLuc).toLocaleDateString('vi-VN');
+      }
+    }
+  ];
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
 
@@ -124,7 +147,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
           }
         });
 
-        this.toastr.success('Cập nhật mặt hàng thành công', 'Thành công');
+        this.toastr.success('Cập nhật thành công', 'Thành công');
       }
     );
   }
@@ -134,7 +157,6 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       debounceTime(400),
       distinctUntilChanged(),
       tap(term => {
-        // trước mỗi request, reset pagination + loading
         this.isLoadingList.set(true);
         this.pageIndex.set(1);
         this.hangHoas.set([]);
@@ -153,18 +175,23 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       })
     ).subscribe({
       next: res => {
-        // handle kết quả trang đầu
         const items = Array.isArray(res.data) ? res.data : [];
         this.hangHoas.set(items);
         this.hasNextPage.set(res.pagination?.hasNextPage ?? false);
         this.pageIndex.set(2);
         this.isLoadingList.set(false);
-        // restore focus ngay sau khi loading xong
-        setTimeout(() => this.searchInput.nativeElement.focus(), 0);
+        
+        // Use searchBarComponent instead
+        if (this.searchBarComponent) {
+          setTimeout(() => this.searchBarComponent.searchInput.nativeElement.focus(), 0);
+        }
       },
       error: () => {
         this.isLoadingList.set(false);
-        setTimeout(() => this.searchInput.nativeElement.focus(), 0);
+        // Use searchBarComponent instead
+        if (this.searchBarComponent) {
+          setTimeout(() => this.searchBarComponent.searchInput.nativeElement.focus(), 0);
+        }
       }
     });
   }
@@ -182,21 +209,21 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   loadMore() {
     // Guard clause to prevent loading if we're already loading or there's no more data
     if (!this.hasNextPage() || this.isLoadingList()) return;
-    
+
     this.isLoadingList.set(true);
-  
+
     const page = this.pageIndex();
     const searchParams = {
       pageIndex: page,
       pageSize: this.pageSize,
       searchTerm: this.searchTerm()
     };
-  
+
     // Use a single service call with conditional service selection
-    const service = this.searchTerm() 
-      ? this.svc.search(searchParams) 
+    const service = this.searchTerm()
+      ? this.svc.search(searchParams)
       : this.svc.getAll(searchParams);
-      
+
     service.subscribe({
       next: this.handlePagedResult.bind(this),
       error: () => this.isLoadingList.set(false)
@@ -247,19 +274,19 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     }
 
     const hangHoa = this.selectedHangHoa();
-    
+
     // Open delete confirmation modal instead of using confirm()
     const modalRef = this.modalService.open(DeleteConfirmationComponent, {
       centered: false,
       backdrop: 'static',
     });
-    
+
     // Handle the confirmation result
     modalRef.result.then(
       (result) => {
         if (result) {
           this.isSaving.set(true);
-          
+
           this.svc.delete(hangHoa!.id!).subscribe({
             next: () => {
               this.isSaving.set(false);
@@ -279,5 +306,22 @@ export class DmHangHoaThiTruongComponent implements OnInit {
         // Modal dismissed, do nothing
       }
     );
+  }
+
+  onActionButtonClick(action: string): void {
+    switch (action) {
+      case 'add':
+        this.openModal();
+        break;
+      case 'edit':
+        this.openModalEdit();
+        break;
+      case 'delete':
+        this.deleteHangHoa();
+        break;
+      case 'import':
+        this.openImportModal();
+        break;
+    }
   }
 }

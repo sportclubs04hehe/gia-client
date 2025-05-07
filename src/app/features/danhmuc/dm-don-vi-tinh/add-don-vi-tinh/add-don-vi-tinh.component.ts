@@ -1,32 +1,33 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
+import { SharedModule } from '../../../../shared/shared.module';
+import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
-import { SharedModule } from '../../../../shared/shared.module';
-import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
-import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
-import { DmThitruongService } from '../../services/dm-thitruong.service';
-import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
-import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
+import { DonViTinhCreateDto } from '../../models/dm_donvitinh/don-vi-tinh_create.dto';
+import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
+import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
+import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
+import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
+
 @Component({
-  selector: 'app-them-moi',
+  selector: 'app-add-don-vi-tinh',
   standalone: true,
   imports: [
     SharedModule,
-    DateInputComponent,
     TextInputComponent,
+    DateInputComponent,
   ],
-  templateUrl: './them-moi.component.html',
-  styleUrl: './them-moi.component.css'
+  templateUrl: './add-don-vi-tinh.component.html',
+  styleUrl: './add-don-vi-tinh.component.css'
 })
-export class ThemMoiComponent extends FormComponentBase implements OnInit {
+export class ThemMoiDonViTinhComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
+  donViTinhService = inject(DmDonViTinhService);
   calendar = inject(NgbCalendar);
-  dmService = inject(DmThitruongService);
 
   @Input() title: string = '';
-  @Input() onSave!: (dto: HangHoaCreateDto) => void;
+  @Input() onSave!: (dto: DonViTinhCreateDto) => void;
 
   today!: NgbDateStruct;
   defaultNgayHetHieuLuc!: NgbDateStruct;
@@ -48,7 +49,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
 
     const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
     
-    this.onSave(formData as HangHoaCreateDto);
+    this.onSave(formData as DonViTinhCreateDto);
     this.activeModal.close();
   }
 
@@ -58,23 +59,22 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit {
 
   protected buildForm(): void {
     this.form = this.fb.group({
-      maMatHang: ['', {
+      ma: ['', {
         validators: [Validators.required],
-        asyncValidators: [uniqueItemCodeValidator(this.dmService, null)],
+        asyncValidators: [uniqueDonViTinhCodeValidator(this.donViTinhService, null)],
         updateOn: 'blur'
       }],
-      tenMatHang: ['', Validators.required],
+      ten: ['', Validators.required],
       ghiChu: [''],
       ngayHieuLuc: [this.today, Validators.required],
-      ngayHetHieuLuc: [this.defaultNgayHetHieuLuc, Validators.required],
-      nhomHangHoaId: null
+      ngayHetHieuLuc: [this.defaultNgayHetHieuLuc, Validators.required]
     }, {
       validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
     });
   }
 
   get isValidatingCode(): boolean {
-    const control = this.form?.get('maMatHang');
+    const control = this.form?.get('ma');
     return control?.pending === true;
   }
 

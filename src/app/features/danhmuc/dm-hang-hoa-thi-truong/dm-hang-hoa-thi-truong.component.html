@@ -1,42 +1,25 @@
 <div class="page-container">
   <div class="card shadow-sm mb-4">
-    <div class="card-body">
-      <!-- Action row - Search bar and buttons on the same line -->
+    <div class="card-body ">
       <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
-        <!-- Search bar takes more space -->
         <div class="search-container flex-grow-1 me-3">
-          <app-search-bar 
-            [isLoading]="isLoadingList()"
-            [searchTerm]="searchTerm()"
-            (search)="onSearchChange($event)"
-            (clear)="clearSearch()">  
+          <app-search-bar [isLoading]="isLoadingList()" [searchTerm]="searchTerm()"
+            [placeholder]="'Tìm kiếm mặt hàng...'" (search)="onSearchChange($event)" (clear)="clearSearch()">
           </app-search-bar>
         </div>
-        
-        <!-- Action buttons take less space -->
+
         <div class="action-wrapper">
-          <app-active-button
-            [isLoading]="isLoadingList()"
-            [isSaving]="isSaving()"
-            [hasSelected]="!!selectedHangHoa()"
-            (add)="openModal()"
-            (edit)="openModalEdit()"
-            (delete)="deleteHangHoa()"
-            (importExcel)="openImportModal()">
+          <app-active-button [isLoading]="isLoadingList()" [isSaving]="isSaving()" [hasSelected]="!!selectedHangHoa()"
+            (buttonClick)="onActionButtonClick($event)">
           </app-active-button>
         </div>
       </div>
 
-      <!-- Table remains unchanged -->
-      <app-hang-hoa-table
-        [hangHoas]="hangHoas()"
-        [selectedHangHoa]="selectedHangHoa()"
-        [isLoading]="isLoadingList()"
-        [hasNextPage]="hasNextPage()"
-        [searchTerm]="searchTerm()"
-        (selectItem)="selectHangHoa($event)"
-        (loadMore)="loadMore()">
-      </app-hang-hoa-table>
+      <!-- Use the generic data table -->
+      <app-table-data [items]="hangHoas()" [columns]="tableColumns" [selectedItem]="selectedHangHoa()"
+        [isLoading]="isLoadingList()" [hasNextPage]="hasNextPage()" [searchTerm]="searchTerm()"
+        (selectItem)="selectHangHoa($event)" (loadMore)="loadMore()">
+      </app-table-data>
     </div>
   </div>
 </div>

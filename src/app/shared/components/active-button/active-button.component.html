@@ -1,0 +1,12 @@
+<div class="action-buttons">
+    <ng-container *ngFor="let button of buttons">
+      <button *ngIf="button.visible !== false" 
+        class="btn btn-action {{button.class}} me-2" 
+        (click)="onClick(button.action)">
+        <span *ngIf="isSaving && button.action === 'delete'" class="spinner-border spinner-border-sm me-1" role="status"
+          aria-hidden="true"></span>
+        <i *ngIf="!(isSaving && button.action === 'delete')" class="bi {{button.icon}} me-1"></i>
+        {{button.label}}
+      </button>
+    </ng-container>
+  </div>

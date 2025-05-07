@@ -1,12 +1,12 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { SharedModule } from '../../../../shared/shared.module';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-search-bar',
   standalone: true,
   imports: [
-    SharedModule,
+    CommonModule,
     FormsModule,
   ],
   templateUrl: './search-bar.component.html',
@@ -14,8 +14,11 @@ import { FormsModule } from '@angular/forms';
 })
 export class SearchBarComponent {
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+  
   @Input() isLoading = false;
   @Input() searchTerm = '';
+  @Input() placeholder = 'Tìm kiếm...';
+  
   @Output() search = new EventEmitter<string>();
   @Output() clear = new EventEmitter<void>();
 

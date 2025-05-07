@@ -1,0 +1,75 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="needs-validation">
+    <div class="modal-header bg-light">
+      <h5 class="modal-title">{{ title }}</h5>
+      <button type="button" class="btn-close" (click)="cancel()"></button>
+    </div>
+  
+    <div class="modal-body">
+      <!-- Row 1: Mã và tên đơn vị tính -->
+      <div class="row mb-4">
+        <div class="col-md-5">
+          <app-text-input
+            formControlName="ma"
+            label="Mã đơn vị tính"
+            placeholder="Nhập mã đơn vị tính"
+            [required]="true"
+            [preventSpaces]="true"
+            [isValidating]="isValidatingCode"
+          ></app-text-input>
+        </div>
+  
+        <div class="col-md-7">
+          <app-text-input
+            formControlName="ten"
+            label="Tên đơn vị tính"
+            placeholder="Nhập tên đơn vị tính"
+            [required]="true"
+          ></app-text-input>
+        </div>
+      </div>
+  
+      <!-- Row 2: Mô tả -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <app-text-input
+            formControlName="ghiChu"
+            label="Ghi chú"
+            placeholder="Nhập ghi chú"
+            type="textarea"
+            [rows]="3"
+          ></app-text-input>
+        </div>
+      </div>
+
+      <!-- Row 3: Ngày hiệu lực và hết hiệu lực -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <app-date-input
+            formControlName="ngayHieuLuc"
+            label="Ngày hiệu lực"
+            [required]="true"
+            [showTodayButton]="true">
+          </app-date-input>
+        </div>
+
+        <div class="col-md-6">
+          <app-date-input
+            formControlName="ngayHetHieuLuc"
+            label="Ngày hết hiệu lực"
+            [required]="true"
+            [showTodayButton]="true">
+          </app-date-input>
+        </div>
+      </div>
+    </div>
+  
+    <div class="modal-footer bg-light">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+        <i class="bi bi-x-circle me-1"></i> Hủy
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        <i *ngIf="!isSaving" class="bi bi-save me-1"></i> Lưu
+      </button>
+    </div>
+  </form>

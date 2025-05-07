@@ -8,6 +8,13 @@
   box-sizing: border-box;
 }
 
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent body scrollbar */
+}
+
 .highlight-text {
   background-color: #ffeb3b;
   padding: 0.1rem 0;

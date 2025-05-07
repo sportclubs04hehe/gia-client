@@ -2,14 +2,14 @@ import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { DmThitruongService } from '../../services/dm-thitruong.service';
-import { HangHoa } from '../../models/hanghoathitruong/dm-thitruong';
-import { HangHoaUpdateDto } from '../../models/hanghoathitruong/hh-thitruong-update';
+import { HangHoa } from '../../models/dm_hanghoathitruong/dm-thitruong';
+import { HangHoaUpdateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-update';
 import { SharedModule } from '../../../../shared/shared.module';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { ToastrService } from 'ngx-toastr';
-import { uniqueItemCodeValidator } from '../../utils/validate-ma-mat-hang';
+import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 
 @Component({

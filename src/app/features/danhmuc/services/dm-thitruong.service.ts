@@ -2,15 +2,15 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
-import { HangHoa } from '../models/hanghoathitruong/dm-thitruong';
-import { HangHoaCreateDto } from '../models/hanghoathitruong/hh-thitruong-create';
-import { HangHoaUpdateDto } from '../models/hanghoathitruong/hh-thitruong-update';
+import { HangHoa } from '../models/dm_hanghoathitruong/dm-thitruong';
+import { HangHoaCreateDto } from '../models/dm_hanghoathitruong/hh-thitruong-create';
+import { HangHoaUpdateDto } from '../models/dm_hanghoathitruong/hh-thitruong-update';
 import { PaginationParams } from '../models/pagination-params ';
 import { SearchParams } from '../models/search-params';
 import { SpecificationParams } from '../models/specification-params';
 import { buildHttpParams } from '../utils/build-http-params';
 import { PagedResult } from '../models/paged-result';
-import { ApiResponse } from '../models/hanghoathitruong/api-response';
+import { ApiResponse } from '../models/dm_hanghoathitruong/api-response';
 
 @Injectable({
   providedIn: 'root'

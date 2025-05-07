@@ -1,0 +1,44 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ title }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+</div>
+<div class="modal-body">
+  <form [formGroup]="form" class="row g-3">
+    <!-- Mã đơn vị tính -->
+    <div class="col-md-6 mb-3">
+      <app-text-input
+        formControlName="ma"
+        label="Mã đơn vị tính"
+        [required]="true"
+        [preventSpaces]="true"
+        [isValidating]="isValidatingCode">
+      </app-text-input>
+    </div>
+
+    <!-- Tên đơn vị tính -->
+    <div class="col-md-6 mb-3">
+      <app-text-input
+        formControlName="ten"
+        label="Tên đơn vị tính"
+        [required]="true">
+      </app-text-input>
+    </div>
+
+    <!-- Mô tả -->
+    <div class="col-12 mb-3">
+      <app-text-input
+        formControlName="ghiChu"
+        label="Ghi chú"
+        type="textarea"
+        [rows]="3">
+      </app-text-input>
+    </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-dark" (click)="cancel()">Hủy</button>
+  <button type="button" class="btn btn-success" (click)="update()" [disabled]="form.invalid || isSaving">
+    <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+    Cập nhật
+  </button>
+</div>

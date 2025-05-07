@@ -1,1 +1,38 @@
-<p>dm-don-vi-tinh works!</p>
+<div class="page-container">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
+        <div class="search-container flex-grow-1 me-3">
+          <app-search-bar 
+            [isLoading]="isLoadingList()"
+            [searchTerm]="searchTerm()"
+            [placeholder]="'Tìm kiếm đơn vị tính...'"
+            (search)="onSearchChange($event)"
+            (clear)="clearSearch()">  
+          </app-search-bar>
+        </div>
+        
+        <div class="action-wrapper">
+          <app-active-button
+            [isLoading]="isLoadingList()"
+            [isSaving]="isSaving()"
+            [hasSelected]="!!selectedDonViTinh()"
+            (buttonClick)="onActionButtonClick($event)">
+          </app-active-button>
+        </div>
+      </div>
+
+      <!-- Use the generic data table -->
+      <app-table-data
+        [items]="donViTinhs()"
+        [columns]="tableColumns"
+        [selectedItem]="selectedDonViTinh()"
+        [isLoading]="isLoadingList()"
+        [hasNextPage]="hasNextPage()"
+        [searchTerm]="searchTerm()"
+        (selectItem)="selectDonViTinh($event)"
+        (loadMore)="loadMore()">
+      </app-table-data>
+    </div>
+  </div>
+</div>

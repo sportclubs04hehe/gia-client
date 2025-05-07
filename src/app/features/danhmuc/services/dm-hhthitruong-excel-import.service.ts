@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HangHoaCreateDto } from '../models/hanghoathitruong/hh-thitruong-create';
+import { HangHoaCreateDto } from '../models/dm_hanghoathitruong/hh-thitruong-create';
 import * as XLSX from 'xlsx';
 
 export interface ExcelImportResult {
@@ -10,7 +10,7 @@ export interface ExcelImportResult {
 @Injectable({
   providedIn: 'root'
 })
-export class ExcelImportService {
+export class HHThiTruongExcelImportService {
   importHangHoaFromExcel(file: File): Promise<ExcelImportResult> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();

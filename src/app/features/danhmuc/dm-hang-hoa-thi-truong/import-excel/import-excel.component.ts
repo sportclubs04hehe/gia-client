@@ -1,11 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
-import { HangHoaCreateDto } from '../models/hanghoathitruong/hh-thitruong-create';
-import { DmThitruongService } from '../services/dm-thitruong.service';
-import { ExcelImportService, ExcelImportResult } from '../services/excel-import.service';
-import { SharedModule } from '../../../shared/shared.module';
-import { ApiResponse } from '../models/hanghoathitruong/api-response';
+import { SharedModule } from '../../../../shared/shared.module';
+import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
+import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
+import { DmThitruongService } from '../../services/dm-thitruong.service';
+import { ExcelImportResult, HHThiTruongExcelImportService } from '../../services/dm-hhthitruong-excel-import.service';
 
 @Component({
   selector: 'app-import-excel',
@@ -19,7 +19,7 @@ import { ApiResponse } from '../models/hanghoathitruong/api-response';
 export class ImportExcelComponent implements OnInit {
   private activeModal = inject(NgbActiveModal);
   private toastr = inject(ToastrService);
-  private excelService = inject(ExcelImportService);
+  private excelService = inject(HHThiTruongExcelImportService);
   private dmService = inject(DmThitruongService);
   
   title = 'Nhập dữ liệu từ Excel';
