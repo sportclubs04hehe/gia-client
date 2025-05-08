@@ -15,7 +15,7 @@ import { PagedResult } from '../../models/paged-result';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { SelectionModalService } from '../../../../shared/components/selection-modal/selection-modal.service';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
-import { Subject } from 'rxjs/internal/Subject';
+import { Subject, BehaviorSubject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, tap, switchMap, Observable } from 'rxjs';
 
 @Component({
@@ -52,7 +52,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   isLoadingDonViTinh = false;
 
   private modalRef: any; // Store the modal reference
-  private donViTinhSearchTerms = new Subject<string>();
+  private donViTinhSearchTerms = new BehaviorSubject<string>('');
 
   // Add a property to track initial form values
   initialFormValue: any;
@@ -229,12 +229,6 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     this.donViTinhSearchTerms.next('');
   }
 
-  // Add this method
-  isControlInvalid(controlName: string): boolean {
-    const control = this.form.get(controlName);
-    return control ? control.invalid && (control.dirty || control.touched) : false;
-  }
-
   setupDonViTinhSearchStream(): void {
     this.donViTinhSearchTerms.pipe(
       debounceTime(400),
@@ -246,13 +240,15 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
         }
       }),
       switchMap(term => {
+        // Store the current search term to use later
+        const currentTerm = term;
+        
         const params = {
           pageIndex: 1,
           pageSize: 100,
           searchTerm: term
         };
-
-        // Ensure consistent return types with explicit cast
+  
         return (term
           ? this.donViTinhService.search(params)
           : this.donViTinhService.getAllSelect(params)) as Observable<PagedResult<DonViTinhSelectDto>>;
@@ -261,17 +257,20 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
       next: (result: PagedResult<DonViTinhSelectDto>) => {
         this.donViTinhList = result.data;
         this.isLoadingDonViTinh = false;
-
+  
         if (this.modalRef) {
           const component = this.modalRef.componentInstance;
           component.items = this.donViTinhList;
           component.isLoading = false;
+          
+          // Important: update the searchTerm in the modal component
+          component.searchTerm = this.donViTinhSearchTerms.getValue(); 
         }
       },
       error: (error) => {
         console.error('Error searching/loading units:', error);
         this.isLoadingDonViTinh = false;
-
+  
         if (this.modalRef) {
           const component = this.modalRef.componentInstance;
           component.isLoading = false;
@@ -280,5 +279,10 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     });
   }
 
+    // Add this method
+    isControlInvalid(controlName: string): boolean {
+      const control = this.form.get(controlName);
+      return control ? control.invalid && (control.dirty || control.touched) : false;
+    }
 
 }

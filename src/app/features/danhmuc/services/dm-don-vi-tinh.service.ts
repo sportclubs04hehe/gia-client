@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { DonViTinhDto } from '../models/dm_donvitinh/don-ti-tinh.dto';
 import { DonViTinhCreateDto } from '../models/dm_donvitinh/don-vi-tinh_create.dto';
 import { DonViTinhUpdateDto } from '../models/dm_donvitinh/don-vi-tinh_update.dto';
@@ -17,7 +18,10 @@ import { DonViTinhSelectDto } from '../models/dm_donvitinh/don-vi-tinh-select.dt
 })
 export class DmDonViTinhService {
   private baseUrl = `${environment.appUrl}/donvitinhs`;
-
+  
+  // Cache for storing selection data
+  private selectCache: { [key: string]: PagedResult<DonViTinhSelectDto> } = {};
+  
   constructor(private http: HttpClient) { }
 
   /**
@@ -30,7 +34,29 @@ export class DmDonViTinhService {
 
   getAllSelect(params: PaginationParams): Observable<PagedResult<DonViTinhSelectDto>> {
     const httpParams = buildHttpParams(params);
-    return this.http.get<PagedResult<DonViTinhSelectDto>>(`${this.baseUrl}/get-all-select`, { params: httpParams });
+    const cacheKey = `select_${params.pageIndex}_${params.pageSize}`;
+    
+    if (this.selectCache[cacheKey]) {
+      console.log('Returning cached đơn vị tính data');
+      return of(this.selectCache[cacheKey]);
+    }
+    
+    console.log('Fetching đơn vị tính data from API');
+    return this.http.get<PagedResult<DonViTinhSelectDto>>(
+      `${this.baseUrl}/get-all-select`, 
+      { params: httpParams }
+    ).pipe(
+      tap(result => {
+        this.selectCache[cacheKey] = result;
+      })
+    );
+  }
+
+  /**
+   * Clear the select cache (call after CRUD operations)
+   */
+  clearSelectCache(): void {
+    this.selectCache = {};
   }
 
   /**
@@ -59,7 +85,8 @@ export class DmDonViTinhService {
    * Thêm mới đơn vị tính
    */
   create(donViTinh: DonViTinhCreateDto): Observable<ApiResponse<DonViTinhDto>> {
-    return this.http.post<ApiResponse<DonViTinhDto>>(this.baseUrl, donViTinh);
+    return this.http.post<ApiResponse<DonViTinhDto>>(this.baseUrl, donViTinh)
+      .pipe(tap(() => this.clearSelectCache()));
   }
 
   /**
@@ -73,14 +100,16 @@ export class DmDonViTinhService {
    * Cập nhật đơn vị tính
    */
   update(id: string, donViTinh: DonViTinhUpdateDto): Observable<ApiResponse<DonViTinhDto>> {
-    return this.http.put<ApiResponse<DonViTinhDto>>(`${this.baseUrl}/${id}`, donViTinh);
+    return this.http.put<ApiResponse<DonViTinhDto>>(`${this.baseUrl}/${id}`, donViTinh)
+      .pipe(tap(() => this.clearSelectCache()));
   }
 
   /**
    * Xóa đơn vị tính
    */
   delete(id: string): Observable<ApiResponse<string>> {
-    return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/${id}`);
+    return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/${id}`)
+      .pipe(tap(() => this.clearSelectCache()));
   }
 
   /**
