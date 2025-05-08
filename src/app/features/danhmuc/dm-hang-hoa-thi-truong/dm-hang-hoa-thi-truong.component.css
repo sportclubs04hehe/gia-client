@@ -1,0 +1,28 @@
+.page-container {
+  position: relative;
+  min-height: 400px;
+}
+
+/* Simple spinner text styling */
+::ng-deep .ngx-spinner p {
+  font-size: 16px;
+  margin-top: 60px;
+  font-weight: 500;
+}
+
+/* Adjust spinner position */
+::ng-deep .ngx-spinner {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Remove previous custom styling that might interfere */
+::ng-deep .spinner-message,
+::ng-deep .spinner-icon {
+  display: none;
+}

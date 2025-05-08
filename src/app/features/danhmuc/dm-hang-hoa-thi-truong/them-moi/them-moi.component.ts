@@ -15,6 +15,8 @@ import { PagedResult } from '../../models/paged-result';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { SelectionModalService } from '../../../../shared/components/selection-modal/selection-modal.service';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
+import { Subject } from 'rxjs/internal/Subject';
+import { debounceTime, distinctUntilChanged, tap, switchMap, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-them-moi',
@@ -37,7 +39,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   notificationService = inject(ModalNotificationService);
 
   selectedDonViTinh: DonViTinhSelectDto | null = null;
-  
+
   @Input() title: string = '';
   @Input() onSave!: (dto: HangHoaCreateDto) => void;
 
@@ -50,6 +52,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   isLoadingDonViTinh = false;
 
   private modalRef: any; // Store the modal reference
+  private donViTinhSearchTerms = new Subject<string>();
 
   // Add a property to track initial form values
   initialFormValue: any;
@@ -61,17 +64,17 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   ngOnInit(): void {
     this.setDefaultDates();
     this.buildForm();
-    
+
     // Store initial form value to track changes
     this.initialFormValue = this.form.value;
-    
+
     this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
-      if (id) {
-        this.loadSelectedDonViTinh(id);
-      } else {
-        this.selectedDonViTinh = null;
-      }
+      if (id) this.loadSelectedDonViTinh(id);
+      else this.selectedDonViTinh = null;
     });
+
+    // Setup search stream for DonViTinh
+    this.setupDonViTinhSearchStream();
   }
 
   // Check if form has unsaved changes
@@ -79,7 +82,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     // Convert current form value to JSON string to make deep comparison
     const currentValue = JSON.stringify(this.form.value);
     const initialValue = JSON.stringify(this.initialFormValue);
-    
+
     // Return true if values are different and form is not pristine
     return currentValue !== initialValue && !this.form.pristine;
   }
@@ -91,7 +94,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     }
 
     const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
-    
+
     this.onSave(formData as HangHoaCreateDto);
     this.activeModal.close();
   }
@@ -99,7 +102,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   cancel(): void {
     if (this.hasUnsavedChanges()) {
       this.notificationService.warning(
-        'Dữ liệu chưa được lưu. Bạn có chắc chắn muốn thoát không?', 
+        'Dữ liệu chưa được lưu. Bạn có chắc chắn muốn thoát không?',
         'Xác nhận thoát'
       ).subscribe(confirmed => {
         if (confirmed) {
@@ -128,18 +131,17 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
       validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
     });
   }
-  
+
   loadSelectedDonViTinh(id: string): void {
     this.selectedDonViTinh = this.donViTinhList.find(d => d.id === id) || null;
-    
+
     if (!this.selectedDonViTinh && id) {
       this.donViTinhService.getById(id).subscribe({
         next: (result) => {
-          if (result && typeof 
-            result.id === 'string' 
-            && typeof result.ma === 'string' 
-            && typeof result.ten === 'string') 
-            {
+          if (result && typeof
+            result.id === 'string'
+            && typeof result.ma === 'string'
+            && typeof result.ten === 'string') {
             this.selectedDonViTinh = {
               id: result.id,
               ma: result.ma,
@@ -173,13 +175,13 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   openDonViTinhModal(): void {
     this.iconFill = true;
     this.isLoadingDonViTinh = true;
-    
+
     // First load the initial list of units
     this.donViTinhService.getAllSelect({ pageIndex: 1, pageSize: 100 }).subscribe({
       next: (result: PagedResult<DonViTinhSelectDto>) => {
         this.donViTinhList = result.data;
         this.isLoadingDonViTinh = false;
-        
+
         // Then open the modal with the loaded data
         const options = {
           title: 'Chọn đơn vị tính',
@@ -192,14 +194,14 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
           searchPlaceholder: 'Tìm kiếm đơn vị tính...',
           noDataMessage: 'Không có dữ liệu',
           loadingMessage: 'Đang tải...',
-          selectedId: this.form.get('donViTinhId')?.value || null, // Fixed: Handle potential undefined
-          searchFn: (term: string) => this.searchDonViTinh(term), // Fixed: Added type annotation
+          selectedId: this.form.get('donViTinhId')?.value || null,
+          searchFn: (term: string) => this.searchDonViTinh(term),
           clearSearchFn: () => this.clearDonViTinhSearch()
         };
 
         // Get the modal reference when opening
         this.modalRef = this.selectionModalService.openWithRef(options);
-        
+
         this.modalRef.result.then((result: DonViTinhSelectDto) => {
           this.iconFill = false;
           if (result) {
@@ -218,79 +220,13 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     });
   }
 
+  // Replace your existing search methods with these:
   searchDonViTinh(term: string): void {
-    this.isLoadingDonViTinh = true;
-    
-    // Update loading state in modal
-    if (this.modalRef) {
-      const component = this.modalRef.componentInstance;
-      component.isLoading = true;
-    }
-    
-    const params = { 
-      pageIndex: 1, 
-      pageSize: 100,
-      searchTerm: term
-    };
-    
-    this.donViTinhService.search(params).subscribe({
-      next: (result: PagedResult<any>) => {
-        this.donViTinhList = result.data;
-        this.isLoadingDonViTinh = false;
-        
-        // Update the items in the modal component
-        if (this.modalRef) {
-          const component = this.modalRef.componentInstance;
-          component.items = this.donViTinhList;
-          component.isLoading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error searching units:', error);
-        this.isLoadingDonViTinh = false;
-        
-        // Update loading state in modal on error
-        if (this.modalRef) {
-          const component = this.modalRef.componentInstance;
-          component.isLoading = false;
-        }
-      }
-    });
+    this.donViTinhSearchTerms.next(term);
   }
 
   clearDonViTinhSearch(): void {
-    const params = { pageIndex: 1, pageSize: 100 };
-    this.isLoadingDonViTinh = true;
-    
-    // Update loading state in modal
-    if (this.modalRef) {
-      const component = this.modalRef.componentInstance;
-      component.isLoading = true;
-    }
-    
-    this.donViTinhService.getAllSelect(params).subscribe({
-      next: (result: PagedResult<DonViTinhSelectDto>) => {
-        this.donViTinhList = result.data;
-        this.isLoadingDonViTinh = false;
-        
-        // Update the items in the modal component
-        if (this.modalRef) {
-          const component = this.modalRef.componentInstance;
-          component.items = this.donViTinhList;
-          component.isLoading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading units:', error);
-        this.isLoadingDonViTinh = false;
-        
-        // Update loading state in modal on error
-        if (this.modalRef) {
-          const component = this.modalRef.componentInstance;
-          component.isLoading = false;
-        }
-      }
-    });
+    this.donViTinhSearchTerms.next('');
   }
 
   // Add this method
@@ -298,4 +234,51 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     const control = this.form.get(controlName);
     return control ? control.invalid && (control.dirty || control.touched) : false;
   }
+
+  setupDonViTinhSearchStream(): void {
+    this.donViTinhSearchTerms.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      tap(() => {
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.isLoading = true;
+        }
+      }),
+      switchMap(term => {
+        const params = {
+          pageIndex: 1,
+          pageSize: 100,
+          searchTerm: term
+        };
+
+        // Ensure consistent return types with explicit cast
+        return (term
+          ? this.donViTinhService.search(params)
+          : this.donViTinhService.getAllSelect(params)) as Observable<PagedResult<DonViTinhSelectDto>>;
+      })
+    ).subscribe({
+      next: (result: PagedResult<DonViTinhSelectDto>) => {
+        this.donViTinhList = result.data;
+        this.isLoadingDonViTinh = false;
+
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.items = this.donViTinhList;
+          component.isLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error searching/loading units:', error);
+        this.isLoadingDonViTinh = false;
+
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.isLoading = false;
+        }
+      }
+    });
+  }
+
+
 }

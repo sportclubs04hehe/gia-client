@@ -1,4 +1,24 @@
 <div class="page-container">
+  <!-- Table loading spinner with pacman style -->
+  <ngx-spinner name="tableSpinner" 
+               bdColor="rgba(0, 0, 0, 0.8)" 
+               size="default" 
+               color="#fff" 
+               type="pacman" 
+               [fullScreen]="true">
+    <p style="color: white">Đang tải dữ liệu...</p>
+  </ngx-spinner>
+  
+  <!-- Save/delete operations spinner with pacman style -->
+  <ngx-spinner name="savingSpinner" 
+               bdColor="rgba(0, 0, 0, 0.8)" 
+               size="default" 
+               color="#fff" 
+               type="pacman" 
+               [fullScreen]="true">
+    <p style="color: white">Đang xử lý...</p>
+  </ngx-spinner>
+
   <div class="card shadow-sm mb-4">
     <div class="card-body ">
       <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">

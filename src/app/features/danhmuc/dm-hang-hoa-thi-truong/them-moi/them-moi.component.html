@@ -58,12 +58,17 @@
               (blur)="iconFill = false"
               [ngClass]="{'is-invalid': isControlInvalid('donViTinhId')}" />
             <input type="hidden" formControlName="donViTinhId" />
-            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;">
+            
+            <!-- Only show the box icon when NOT in invalid state -->
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" 
+                  style="color: #2980b9;" 
+                  *ngIf="!isControlInvalid('donViTinhId')">
               <i class="bi" [ngClass]="iconFill ? 'bi-box2-fill' : 'bi-box2'"></i>
             </span>
-            <!-- Move the invalid-feedback div here, inside the container and as a sibling to the input -->
+            
+            <!-- Error message remains the same -->
             <div class="text-danger mt-1" *ngIf="isControlInvalid('donViTinhId')">
-              <small><i class="bi bi-exclamation-circle-fill me-1"></i>Vui lòng chọn đơn vị tính</small>
+              <small>Đơn vị tính không được để trống.</small>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { loggingInterceptor } from './core/interceptors/logging.interceptor';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { provideSpinnerConfig } from 'ngx-spinner';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -34,6 +35,9 @@ export const appConfig: ApplicationConfig = {
       maxOpened: 1,
       autoDismiss: true,
       preventDuplicates: true
+    }),
+    provideSpinnerConfig({
+      type: 'pacman',
     }),
   ]
 };

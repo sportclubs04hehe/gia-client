@@ -24,8 +24,8 @@ export class SelectionModalService {
     component.idField = options.idField || 'id';
     component.searchable = options.searchable !== undefined ? options.searchable : true;
     component.searchPlaceholder = options.searchPlaceholder || 'Tìm kiếm...';
-    component.noDataMessage = options.noDataMessage || 'No data available';
-    component.loadingMessage = options.loadingMessage || 'Loading...';
+    component.noDataMessage = options.noDataMessage || 'Không có dữ liệu';
+    component.loadingMessage = options.loadingMessage || 'Đang tải...';
     component.selectedId = options.selectedId || null;
     
     // Set up event handlers
@@ -55,8 +55,8 @@ export class SelectionModalService {
     component.idField = options.idField || 'id';
     component.searchable = options.searchable !== undefined ? options.searchable : true;
     component.searchPlaceholder = options.searchPlaceholder || 'Tìm kiếm...';
-    component.noDataMessage = options.noDataMessage || 'No data available';
-    component.loadingMessage = options.loadingMessage || 'Loading...';
+    component.noDataMessage = options.noDataMessage || 'Không có dữ liệu';
+    component.loadingMessage = options.loadingMessage || 'Đang tải...';
     component.selectedId = options.selectedId || null;
     
     // Set up event handlers
