@@ -11,7 +11,7 @@ import { TableDataComponent } from '../../../shared/components/table-data/table-
 import { TableColumn } from '../../../shared/models/table-column';
 import { DonViTinhDto } from '../models/dm_donvitinh/don-ti-tinh.dto';
 import { FormsModule } from '@angular/forms';
-import { DeleteConfirmationComponent } from '../../../shared/components/delete-confirmation/delete-confirmation.component';
+import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
 import { DonViTinhCreateDto } from '../models/dm_donvitinh/don-vi-tinh_create.dto';
 import { ThemMoiDonViTinhComponent } from './add-don-vi-tinh/add-don-vi-tinh.component';
 import { EditDonViTinhComponent } from './edit-don-vi-tinh/edit-don-vi-tinh.component';
@@ -188,7 +188,12 @@ export class DmDonViTinhComponent implements OnInit {
   }
 
   openModal() {
-    const modalRef = this.modalService.open(ThemMoiDonViTinhComponent, { size: 'lg' });
+    const modalRef = this.modalService.open(ThemMoiDonViTinhComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false
+    });
+    
     modalRef.componentInstance.title = 'Thêm đơn vị tính';
 
     modalRef.componentInstance.onSave = (dto: DonViTinhCreateDto): void => {

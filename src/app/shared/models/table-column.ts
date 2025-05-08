@@ -4,4 +4,5 @@ export interface TableColumn<T> {
   width?: string;
   template?: string;
   formatter?: (item: T) => string;
+  truncateLength?: number;
 }

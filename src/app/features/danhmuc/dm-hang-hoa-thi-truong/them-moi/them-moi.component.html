@@ -50,16 +50,22 @@
       <div class="col-md-6">
         <div class="form-group">
           <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
-          <!-- component.html -->
-          <div class="position-relative mb-3" (click)="openDonViTinhModal(donViTinhModal)">
-            <input type="text" class="form-control pe-5" [value]="selectedDonViTinh?.ten | truncate: 20" readonly
-              placeholder="Chọn đơn vị tính" formControlName="donViTinhId" (focus)="iconFill = true"
-              (blur)="iconFill = false" />
+          <div class="position-relative mb-3" (click)="openDonViTinhModal()">
+            <input type="text" class="form-control pe-5" 
+              [value]="selectedDonViTinh?.ten | truncate:25 " readonly
+              placeholder="Chọn đơn vị tính" 
+              (focus)="iconFill = true"
+              (blur)="iconFill = false"
+              [ngClass]="{'is-invalid': isControlInvalid('donViTinhId')}" />
+            <input type="hidden" formControlName="donViTinhId" />
             <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;">
-              <i class="bi" [ngClass]=" iconFill ? 'bi-box2-fill' : 'bi-box2' "></i>
+              <i class="bi" [ngClass]="iconFill ? 'bi-box2-fill' : 'bi-box2'"></i>
             </span>
+            <!-- Move the invalid-feedback div here, inside the container and as a sibling to the input -->
+            <div class="text-danger mt-1" *ngIf="isControlInvalid('donViTinhId')">
+              <small><i class="bi bi-exclamation-circle-fill me-1"></i>Vui lòng chọn đơn vị tính</small>
+            </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -69,64 +75,8 @@
     <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
       <i class="bi bi-x-circle me-1"></i> Hủy
     </button>
-    <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+    <button type="submit" class="btn btn-primary">
       <i class="bi bi-save me-1"></i> Lưu
     </button>
   </div>
 </form>
-
-<ng-template #donViTinhModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">Chọn đơn vị tính</h5>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-  <div class="modal-body">
-    <!-- Add search bar -->
-    <div class="mb-3">
-      <app-search-bar [isLoading]="isLoadingDonViTinh" [searchTerm]="searchDonViTinhTerm"
-        [placeholder]="'Tìm kiếm đơn vị tính...'" (search)="onSearchDonViTinh($event)" (clear)="clearDonViTinhSearch()">
-      </app-search-bar>
-    </div>
-
-    <div class="table-responsive table-scrollable">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th width="30%">Mã</th>
-            <th width="70%">Tên đơn vị tính</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Update just this part in them-moi.component.html -->
-          <tr *ngFor="let item of donViTinhList" (click)="selectDonViTinh(item)"
-            [class.table-active]="tempSelectedDonViTinh?.id === item.id" style="cursor: pointer">
-            <td [innerHTML]="item.ma | textHighlight:searchDonViTinhTerm"></td>
-            <td [innerHTML]="item.ten | truncate:30 | textHighlight:searchDonViTinhTerm"></td>
-          </tr>
-          <tr *ngIf="donViTinhList.length === 0">
-            <td colspan="2" class="text-center py-4 text-muted">
-              <i class="bi bi-inbox me-2"></i>Không có dữ liệu
-            </td>
-          </tr>
-          <tr *ngIf="isLoadingDonViTinh">
-            <td colspan="2" class="text-center py-4">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Đang tải...</span>
-              </div>
-              <span class="ms-2">Đang tải...</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
-      <i class="bi bi-x-circle me-1"></i> Đóng
-    </button>
-    <button type="button" class="btn btn-primary" [disabled]="!tempSelectedDonViTinh"
-      (click)="confirmDonViTinhSelection()">
-      <i class="bi bi-check-circle me-1"></i> Chọn
-    </button>
-  </div>
-</ng-template>

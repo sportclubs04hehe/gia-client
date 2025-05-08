@@ -12,7 +12,7 @@ import { SharedModule } from '../../../shared/shared.module';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
-import { DeleteConfirmationComponent } from '../../../shared/components/delete-confirmation/delete-confirmation.component';
+import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { TableColumn } from '../../../shared/models/table-column';
 import { TableDataComponent } from '../../../shared/components/table-data/table-data.component';
@@ -83,12 +83,17 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   }
 
   openModal() {
-    const modalRef = this.modalService.open(ThemMoiComponent, { size: 'xl' });
+    const modalRef = this.modalService.open(ThemMoiComponent, { 
+      size: 'xl',
+      backdrop: 'static', 
+      keyboard: false    
+    });
+    
     modalRef.componentInstance.title = 'Thêm mặt hàng';
-
+  
     modalRef.componentInstance.onSave = (dto: HangHoaCreateDto): void => {
       this.isSaving.set(true);
-
+  
       this.svc.add(dto).subscribe({
         next: () => {
           this.isSaving.set(false);

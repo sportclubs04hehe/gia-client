@@ -1,0 +1,25 @@
+<div class="modal-content">
+    <!-- Header with title and icon -->
+    <div [class]="getHeaderClass()">
+      <h5 class="modal-title d-flex align-items-center">
+        <i class="bi me-2" [class]="getIconClass()"></i>
+        {{ title }}
+      </h5>
+      <button *ngIf="!disableClose" type="button" class="btn-close" aria-label="Close" (click)="cancel()"></button>
+    </div>
+    
+    <!-- Body with message -->
+    <div class="modal-body">
+      <p class="text-center" style="font-size: 1rem;">{{message}}</p>
+    </div>
+    
+    <!-- Footer with action buttons -->
+    <div class="modal-footer">
+      <button *ngIf="showCancelButton" type="button" class="btn btn-outline-secondary" (click)="cancel()">
+        <i class="bi bi-x-circle me-1"></i> {{ cancelText }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="confirm()">
+        <i class="bi bi-check-circle me-1"></i> {{ confirmText }}
+      </button>
+    </div>
+  </div>

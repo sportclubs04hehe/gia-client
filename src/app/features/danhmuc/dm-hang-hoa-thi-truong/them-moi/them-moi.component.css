@@ -14,28 +14,3 @@
     /* đủ chừa chỗ cho icon */
 }
 
-/* Table scrolling styles */
-.table-scrollable {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.table-scrollable table {
-    width: 100%;
-}
-
-.table-scrollable thead {
-    position: sticky;
-    top: 0;
-    background-color: #fff;
-    z-index: 1;
-}
-
-:host ::ng-deep .highlight-text {
-  background-color: #2980b9 !important;
-  font-weight: bold !important;
-  color: #fff !important;
-  padding: 0 2px;
-  border-radius: 2px;
-}
-

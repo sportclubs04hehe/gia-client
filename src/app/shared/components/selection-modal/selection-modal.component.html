@@ -1,0 +1,66 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ title }}</h5>
+  <button type="button" class="btn-close" (click)="dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <!-- Search bar aligned right -->
+  <div class="d-flex justify-content-end mb-3" *ngIf="searchable">
+    <app-search-bar
+      [isLoading]="isLoading"
+      [searchTerm]="searchTerm"
+      [placeholder]="searchPlaceholder"
+      (search)="onSearch($event)"
+      (clear)="onClearSearch()"
+    ></app-search-bar>
+  </div>
+
+  <div class="table-responsive table-scrollable">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns" [width]="col.width || 'auto'">{{ col.header }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let item of items"
+          (click)="selectItem(item)"
+          [class.table-active]="tempSelectedItem && tempSelectedItem[idField] === item[idField]"
+          style="cursor: pointer"
+        >
+          <td *ngFor="let col of columns">
+            <ng-container *ngIf="col.truncateLength">
+              <span [innerHTML]="getFieldValue(item, col.field) | truncate:col.truncateLength | textHighlight:searchTerm"></span>
+            </ng-container>
+            <ng-container *ngIf="!col.truncateLength">
+              <span [innerHTML]="getFieldValue(item, col.field) | textHighlight:searchTerm"></span>
+            </ng-container>
+          </td>
+        </tr>
+        <tr *ngIf="items.length === 0 && !isLoading">
+          <td [colSpan]="columns.length" class="text-center py-4 text-muted">
+            <i class="bi bi-inbox me-2"></i>{{ noDataMessage }}
+          </td>
+        </tr>
+        <tr *ngIf="isLoading">
+          <td [colSpan]="columns.length" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">{{ loadingMessage }}</span>
+            </div>
+            <span class="ms-2">{{ loadingMessage }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">
+    <i class="bi bi-x-circle me-1"></i> Close
+  </button>
+  <button type="button" class="btn btn-primary" [disabled]="!tempSelectedItem" (click)="confirm()">
+    <i class="bi bi-check-circle me-1"></i> Select
+  </button>
+</div>

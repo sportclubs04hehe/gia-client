@@ -1,6 +1,6 @@
 import { Component, inject, Input } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { SharedModule } from '../../shared.module';
+import { SharedModule } from '../../../shared.module';
 
 @Component({
   selector: 'app-delete-confirmation',

@@ -23,6 +23,7 @@ export abstract class FormComponentBase implements OnDestroy {
     Object.keys(this.form.controls).forEach(key => {
       const control = this.form.get(key);
       control?.markAsTouched();
+      control?.markAsDirty(); // Add this line to the base class
     });
   }
   

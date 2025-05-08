@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { NgbActiveModal, NgbCalendar, NgbDateStruct, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
 import { SharedModule } from '../../../../shared/shared.module';
 import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
@@ -13,9 +13,8 @@ import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { PagedResult } from '../../models/paged-result';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
-import { SearchBarComponent } from '../../../../shared/components/search-bar/search-bar.component';
-import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe';
+import { SelectionModalService } from '../../../../shared/components/selection-modal/selection-modal.service';
+import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 
 @Component({
   selector: 'app-them-moi',
@@ -25,8 +24,6 @@ import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe'
     DateInputComponent,
     TextInputComponent,
     TruncatePipe,
-    SearchBarComponent,
-    TextHighlightPipe,
   ],
   templateUrl: './them-moi.component.html',
   styleUrl: './them-moi.component.css'
@@ -36,12 +33,11 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   calendar = inject(NgbCalendar);
   dmService = inject(DmThitruongService);
   donViTinhService = inject(DmDonViTinhService);
-  modalService = inject(NgbModal);
+  selectionModalService = inject(SelectionModalService);
+  notificationService = inject(ModalNotificationService);
 
   selectedDonViTinh: DonViTinhSelectDto | null = null;
-  tempSelectedDonViTinh: DonViTinhSelectDto | null = null;
-  donViTinhModalRef: NgbModalRef | null = null;
-
+  
   @Input() title: string = '';
   @Input() onSave!: (dto: HangHoaCreateDto) => void;
 
@@ -50,10 +46,13 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   donViTinhList: DonViTinhSelectDto[] = [];
   iconFill = false;
 
-  // Add new properties for search functionality
-  searchDonViTinhTerm = '';
+  // Variable for search functionality
   isLoadingDonViTinh = false;
-  private searchTerms = new Subject<string>();
+
+  private modalRef: any; // Store the modal reference
+
+  // Add a property to track initial form values
+  initialFormValue: any;
 
   constructor(fb: FormBuilder) {
     super(fb);
@@ -62,20 +61,27 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   ngOnInit(): void {
     this.setDefaultDates();
     this.buildForm();
-    this.loadDonViTinh();
-    this.setupSearchStream();
+    
+    // Store initial form value to track changes
+    this.initialFormValue = this.form.value;
+    
     this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
       if (id) {
-        this.selectedDonViTinh = this.donViTinhList.find(d => d.id === id) || null;
+        this.loadSelectedDonViTinh(id);
       } else {
         this.selectedDonViTinh = null;
       }
     });
   }
 
-  override ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  // Check if form has unsaved changes
+  hasUnsavedChanges(): boolean {
+    // Convert current form value to JSON string to make deep comparison
+    const currentValue = JSON.stringify(this.form.value);
+    const initialValue = JSON.stringify(this.initialFormValue);
+    
+    // Return true if values are different and form is not pristine
+    return currentValue !== initialValue && !this.form.pristine;
   }
 
   save(): void {
@@ -91,7 +97,18 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   }
 
   cancel(): void {
-    this.activeModal.dismiss();
+    if (this.hasUnsavedChanges()) {
+      this.notificationService.warning(
+        'Dữ liệu chưa được lưu. Bạn có chắc chắn muốn thoát không?', 
+        'Xác nhận thoát'
+      ).subscribe(confirmed => {
+        if (confirmed) {
+          this.activeModal.dismiss();
+        }
+      });
+    } else {
+      this.activeModal.dismiss();
+    }
   }
 
   protected buildForm(): void {
@@ -106,62 +123,37 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
       ngayHieuLuc: [this.today, Validators.required],
       ngayHetHieuLuc: [this.defaultNgayHetHieuLuc, Validators.required],
       nhomHangHoaId: [null],
-      donViTinhId: [null]
+      donViTinhId: [null, Validators.required]  // Added required validator here
     }, {
       validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
     });
   }
   
-  loadDonViTinh(): void {
-    this.isLoadingDonViTinh = true;
-    const params = { pageIndex: 1, pageSize: 100 };
+  loadSelectedDonViTinh(id: string): void {
+    this.selectedDonViTinh = this.donViTinhList.find(d => d.id === id) || null;
     
-    this.donViTinhService.getAllSelect(params).subscribe({
-      next: (result: PagedResult<DonViTinhSelectDto>) => {
-        this.donViTinhList = result.data;
-        this.isLoadingDonViTinh = false;
-      },
-      error: (error) => {
-        console.error('Error loading units:', error);
-        this.isLoadingDonViTinh = false;
-      }
-    });
-  }
-
-  setupSearchStream(): void {
-    this.searchTerms.pipe(
-      takeUntil(this.destroy$),
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap(term => {
-        this.isLoadingDonViTinh = true;
-        const params = { 
-          pageIndex: 1, 
-          pageSize: 100,
-          searchTerm: term
-        };
-        
-        return this.donViTinhService.search(params);
-      })
-    ).subscribe({
-      next: (result: PagedResult<any>) => {
-        this.donViTinhList = result.data;
-        this.isLoadingDonViTinh = false;
-      },
-      error: (error) => {
-        console.error('Error searching units:', error);
-        this.isLoadingDonViTinh = false;
-      }
-    });
-  }
-
-  onSearchDonViTinh(term: string): void {
-    this.searchTerms.next(term);
-  }
-
-  clearDonViTinhSearch(): void {
-    this.searchDonViTinhTerm = '';
-    this.searchTerms.next('');
+    if (!this.selectedDonViTinh && id) {
+      this.donViTinhService.getById(id).subscribe({
+        next: (result) => {
+          if (result && typeof 
+            result.id === 'string' 
+            && typeof result.ma === 'string' 
+            && typeof result.ten === 'string') 
+            {
+            this.selectedDonViTinh = {
+              id: result.id,
+              ma: result.ma,
+              ten: result.ten
+            };
+          } else {
+            console.error('Invalid result data:', result);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading selected unit:', error);
+        }
+      });
+    }
   }
 
   get isValidatingCode(): boolean {
@@ -178,25 +170,132 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     };
   }
 
-  openDonViTinhModal(content: any): void {
+  openDonViTinhModal(): void {
     this.iconFill = true;
-    this.tempSelectedDonViTinh = this.selectedDonViTinh;
-    this.donViTinhModalRef = this.modalService.open(content, { centered: true });
-  }
+    this.isLoadingDonViTinh = true;
+    
+    // First load the initial list of units
+    this.donViTinhService.getAllSelect({ pageIndex: 1, pageSize: 100 }).subscribe({
+      next: (result: PagedResult<DonViTinhSelectDto>) => {
+        this.donViTinhList = result.data;
+        this.isLoadingDonViTinh = false;
+        
+        // Then open the modal with the loaded data
+        const options = {
+          title: 'Chọn đơn vị tính',
+          items: this.donViTinhList,
+          columns: [
+            { field: 'ma', header: 'Mã', width: '30%' },
+            { field: 'ten', header: 'Tên đơn vị tính', width: '70%', truncateLength: 30 }
+          ],
+          idField: 'id',
+          searchPlaceholder: 'Tìm kiếm đơn vị tính...',
+          noDataMessage: 'Không có dữ liệu',
+          loadingMessage: 'Đang tải...',
+          selectedId: this.form.get('donViTinhId')?.value || null, // Fixed: Handle potential undefined
+          searchFn: (term: string) => this.searchDonViTinh(term), // Fixed: Added type annotation
+          clearSearchFn: () => this.clearDonViTinhSearch()
+        };
 
-  selectDonViTinh(donViTinh: DonViTinhSelectDto): void {
-    this.tempSelectedDonViTinh = donViTinh;
-  }
-
-  confirmDonViTinhSelection(): void {
-    if (this.tempSelectedDonViTinh) {
-      this.form.patchValue({ donViTinhId: this.tempSelectedDonViTinh.id });
-      this.selectedDonViTinh = this.tempSelectedDonViTinh;
-      
-      // Close only this specific modal instead of all modals
-      if (this.donViTinhModalRef) {
-        this.donViTinhModalRef.close();
+        // Get the modal reference when opening
+        this.modalRef = this.selectionModalService.openWithRef(options);
+        
+        this.modalRef.result.then((result: DonViTinhSelectDto) => {
+          this.iconFill = false;
+          if (result) {
+            this.selectedDonViTinh = result;
+            this.form.patchValue({ donViTinhId: result.id });
+          }
+        }).catch(() => {
+          this.iconFill = false;
+        });
+      },
+      error: (error) => {
+        console.error('Error loading units:', error);
+        this.isLoadingDonViTinh = false;
+        this.iconFill = false;
       }
+    });
+  }
+
+  searchDonViTinh(term: string): void {
+    this.isLoadingDonViTinh = true;
+    
+    // Update loading state in modal
+    if (this.modalRef) {
+      const component = this.modalRef.componentInstance;
+      component.isLoading = true;
     }
+    
+    const params = { 
+      pageIndex: 1, 
+      pageSize: 100,
+      searchTerm: term
+    };
+    
+    this.donViTinhService.search(params).subscribe({
+      next: (result: PagedResult<any>) => {
+        this.donViTinhList = result.data;
+        this.isLoadingDonViTinh = false;
+        
+        // Update the items in the modal component
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.items = this.donViTinhList;
+          component.isLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error searching units:', error);
+        this.isLoadingDonViTinh = false;
+        
+        // Update loading state in modal on error
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.isLoading = false;
+        }
+      }
+    });
+  }
+
+  clearDonViTinhSearch(): void {
+    const params = { pageIndex: 1, pageSize: 100 };
+    this.isLoadingDonViTinh = true;
+    
+    // Update loading state in modal
+    if (this.modalRef) {
+      const component = this.modalRef.componentInstance;
+      component.isLoading = true;
+    }
+    
+    this.donViTinhService.getAllSelect(params).subscribe({
+      next: (result: PagedResult<DonViTinhSelectDto>) => {
+        this.donViTinhList = result.data;
+        this.isLoadingDonViTinh = false;
+        
+        // Update the items in the modal component
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.items = this.donViTinhList;
+          component.isLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading units:', error);
+        this.isLoadingDonViTinh = false;
+        
+        // Update loading state in modal on error
+        if (this.modalRef) {
+          const component = this.modalRef.componentInstance;
+          component.isLoading = false;
+        }
+      }
+    });
+  }
+
+  // Add this method
+  isControlInvalid(controlName: string): boolean {
+    const control = this.form.get(controlName);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 }

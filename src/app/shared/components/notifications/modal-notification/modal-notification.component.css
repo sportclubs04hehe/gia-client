@@ -1,0 +1,16 @@
+.modal-title {
+    font-weight: 500;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Make icons slightly larger */
+  .bi {
+    font-size: 1.2rem;
+  }

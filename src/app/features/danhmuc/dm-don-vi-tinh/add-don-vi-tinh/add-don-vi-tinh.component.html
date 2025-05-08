@@ -67,7 +67,7 @@
       <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
         <i class="bi bi-x-circle me-1"></i> Hủy
       </button>
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+      <button type="submit" class="btn btn-primary">
         <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
         <i *ngIf="!isSaving" class="bi bi-save me-1"></i> Lưu
       </button>
