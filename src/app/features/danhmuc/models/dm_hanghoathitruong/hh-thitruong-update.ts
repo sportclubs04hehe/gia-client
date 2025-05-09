@@ -7,4 +7,5 @@ export interface HangHoaUpdateDto extends DanhMucBase {
     ngayHieuLuc: string;
     ngayHetHieuLuc: string;
     nhomHangHoaId: string | null;
+    donViTinhId: string | null;
 }

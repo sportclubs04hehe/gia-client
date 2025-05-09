@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { DmThitruongService } from '../../services/dm-thitruong.service';
@@ -11,6 +11,11 @@ import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatt
 import { ToastrService } from 'ngx-toastr';
 import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
+import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
+import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
+import { Subscription } from 'rxjs';
+import { DonViTinhSelectionService } from '../../services/don-vi-tinh-selection.service';
 
 @Component({
   selector: 'app-edit',
@@ -18,20 +23,29 @@ import { TextInputComponent } from '../../../../shared/components/forms/text-inp
   imports: [
     SharedModule,
     DateInputComponent,
-    TextInputComponent
+    TextInputComponent,
+    TruncatePipe
   ],
   templateUrl: './edit.component.html',
   styleUrl: './edit.component.css'
 })
-export class EditComponent extends FormComponentBase implements OnInit {
+export class EditComponent extends FormComponentBase implements OnInit, OnDestroy {
   @Input() title = '';
   @Input() hangHoa!: HangHoa;
 
   activeModal = inject(NgbActiveModal);
   dmService = inject(DmThitruongService);
   toastrService = inject(ToastrService);
+  donViTinhService = inject(DmDonViTinhService);
+  donViTinhSelectionService = inject(DonViTinhSelectionService);
 
   private originalFormValues: any;
+  private searchSubscription: Subscription | null = null;
+
+  selectedDonViTinh: DonViTinhSelectDto | null = null;
+  donViTinhList: DonViTinhSelectDto[] = [];
+  isLoadingDonViTinh = false;
+  iconFill = false;
 
   constructor(fb: FormBuilder) {
     super(fb);
@@ -40,9 +54,35 @@ export class EditComponent extends FormComponentBase implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     this.populateForm();
+    
+    // Subscribe to the search stream from the service
+    this.searchSubscription = this.donViTinhSelectionService
+      .setupDonViTinhSearchStream()
+      .subscribe({
+        next: result => {
+          this.donViTinhList = result.data;
+          this.isLoadingDonViTinh = false;
+        },
+        error: error => {
+          console.error('Error in DonViTinh search stream:', error);
+          this.isLoadingDonViTinh = false;
+        }
+      });
+
+    // Add donViTinhId value change listener
+    this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
+      if (id) this.loadSelectedDonViTinh(id);
+      else this.selectedDonViTinh = null;
+    });
   }
 
-  // edit.component.ts
+  override ngOnDestroy(): void {
+    // Clean up subscription when component is destroyed
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
+    super.ngOnDestroy();
+  }
 
   update() {
     if (this.form.invalid) {
@@ -64,9 +104,12 @@ export class EditComponent extends FormComponentBase implements OnInit {
       .subscribe({
         next: resp => {
           this.isSaving = false;
-          // show thông báo từ API
           this.toastrService.success(resp.message, resp.title);
-          // trả về đúng entity
+          
+          if (resp.data && resp.data.donViTinhId && this.selectedDonViTinh) {
+            resp.data.donViTinhSelectDto = this.selectedDonViTinh;
+          }
+          
           this.activeModal.close(resp.data);
         },
         error: err => {
@@ -76,10 +119,17 @@ export class EditComponent extends FormComponentBase implements OnInit {
       });
   }
 
-
   private isFormUnchanged(currentValues: any): boolean {
     for (const key in this.originalFormValues) {
-      if (typeof this.originalFormValues[key] === 'object') continue;
+      // For date objects, compare their string representation
+      if (key === 'ngayHieuLuc' || key === 'ngayHetHieuLuc') {
+        if (this.originalFormValues[key] !== currentValues[key]) {
+          return false;
+        }
+        continue;
+      }
+      
+      // Don't skip objects, compare their values directly
       if (this.originalFormValues[key] !== currentValues[key]) {
         return false;
       }
@@ -102,7 +152,8 @@ export class EditComponent extends FormComponentBase implements OnInit {
       ghiChu: [''],
       ngayHieuLuc: [null, Validators.required],
       ngayHetHieuLuc: [null, Validators.required],
-      nhomHangHoaId: [null]
+      nhomHangHoaId: [null],
+      donViTinhId: [null, Validators.required]
     }, {
       validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
     });
@@ -120,18 +171,47 @@ export class EditComponent extends FormComponentBase implements OnInit {
       ghiChu: this.hangHoa.ghiChu,
       ngayHieuLuc: ngayHieuLuc,
       ngayHetHieuLuc: ngayHetHieuLuc,
-      nhomHangHoaId: this.hangHoa.nhomHangHoaId
+      nhomHangHoaId: this.hangHoa.nhomHangHoaId,
+      donViTinhId: this.hangHoa.donViTinhId
     };
 
     this.form.patchValue(formValues);
+    
+    // Load the selected unit information if donViTinhId exists
+    if (this.hangHoa.donViTinhId) {
+      this.loadSelectedDonViTinh(this.hangHoa.donViTinhId);
+    }
 
     this.originalFormValues = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
   }
 
-  preventSpaces(event: KeyboardEvent) {
-    if (event.key === ' ') {
-      event.preventDefault();
-    }
+  // Use the service to load the selected unit
+  loadSelectedDonViTinh(id: string): void {
+    this.donViTinhSelectionService.loadSelectedDonViTinh(id, this.donViTinhList)
+      .subscribe(unit => {
+        this.selectedDonViTinh = unit;
+      });
+  }
+
+  // Use the service to open the modal
+  openDonViTinhModal(): void {
+    this.iconFill = true;
+    this.isLoadingDonViTinh = true;
+    
+    this.donViTinhSelectionService.openDonViTinhModal(
+      this.form, 
+      (selectedUnit) => {
+        this.iconFill = false;
+        this.selectedDonViTinh = selectedUnit;
+        this.form.patchValue({ donViTinhId: selectedUnit.id });
+      }
+    );
+  }
+
+  // Helper method to check if control is invalid (for template)
+  isControlInvalid(controlName: string): boolean {
+    const control = this.form.get(controlName);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
   get isValidatingCode(): boolean {

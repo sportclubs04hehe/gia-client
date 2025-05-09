@@ -58,7 +58,19 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   tableColumns: TableColumn<HangHoa>[] = [
     { header: 'Mã mặt hàng', field: 'maMatHang', width: '15%' },
-    { header: 'Tên mặt hàng', field: 'tenMatHang', width: '30%' },
+    { 
+      header: 'Tên mặt hàng', 
+      field: 'tenMatHang', 
+      width: '20%'
+    },
+    { 
+      header: 'Đơn vị tính', 
+      field: 'donViTinhSelectDto.ten', 
+      width: '10%',
+      formatter: (item: HangHoa) => {
+        return item.donViTinhSelectDto?.ten || '';
+      }
+    },
     { header: 'Ghi chú', field: 'ghiChu', width: '20%' },
     {
       header: 'Ngày hiệu lực',
@@ -151,16 +163,11 @@ export class DmHangHoaThiTruongComponent implements OnInit {
           list.map(h => h.id === updated.id ? updated : h)
         );
         this.selectedHangHoa.set(updated);
-        setTimeout(() => {
-          const el = document.getElementById(`item-${updated.id}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        });
 
         this.toastr.success('Cập nhật thành công', 'Thành công');
       }
     );
+    
   }
 
   setupSearchStream(): void {

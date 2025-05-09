@@ -2,15 +2,15 @@
     max-width: 264px;
     min-width: 264px;
     transition: all 0.35s ease-in-out;
-    background-color: #000;
+    background: linear-gradient(135deg, #004aad, #01397a);
     display: flex;
     flex-direction: column;
     height: 100vh;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
 #sidebar.collapsed {
     margin-left: -264px;
-    /* This hides the sidebar when collapsed */
 }
 
 .sidebar-logo {
@@ -19,9 +19,11 @@
 }
 
 .sidebar-logo a {
-    color: #FFF;
+    color: #fff;
     font-weight: 800;
     font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .sidebar-nav {
@@ -29,9 +31,10 @@
 }
 
 .sidebar-header {
-    color: #FFF;
-    font-size: .75rem;
-    padding: 1.5rem 1.5rem .375rem;
+    color: #ffffff90;
+    font-size: 0.85rem;
+    padding: 1.5rem 1.5rem 0.375rem;
+    font-weight: 600;
 }
 
 .sidebar-item {
@@ -39,45 +42,68 @@
 }
 
 a.sidebar-link {
-    padding: .625rem 1.625rem;
-    color: #FFF;
+    padding: 0.75rem 1.625rem;
+    color: #ffffffdd;
     position: relative;
-    transition: all 0.35s;
+    transition: all 0.3s ease;
     display: block;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     text-decoration: none;
+    border-radius: 8px;
+    margin: 0.25rem 1rem;
 }
 
-a.sidebar-link:hover {
-    background-color: #f9f6f630;
+a.sidebar-link:hover, a.sidebar-link.active {
+    background-color: #0056b3;
+    color: #fff;
+    transform: translateX(5px);
+    box-shadow: inset 5px 0 #00bfff;
+}
+
+a.sidebar-link:hover i, a.sidebar-link.active i {
+    color: #00e0ff;
 }
 
 .sidebar-link[data-bs-toggle="collapse"]::after {
     border: solid;
-    border-width: 0 .075rem .075rem 0;
-    content: "";
+    border-width: 0 0.15rem 0.15rem 0;
+    content: '';
     display: inline-block;
     padding: 2px;
     position: absolute;
     right: 1.5rem;
     top: 1.4rem;
     transform: rotate(-135deg);
-    transition: all .2s ease-out;
+    transition: all 0.2s ease-out;
 }
 
 .sidebar-link[data-bs-toggle="collapse"].collapsed::after {
     transform: rotate(45deg);
-    transition: all .2s ease-out;
+}
+
+.sidebar-footer {
+    padding: 1.25rem 1.5rem;
+}
+
+.sidebar-footer a {
+    color: #ffffffdd;
+    font-size: 1.1rem;
+}
+
+.sidebar-footer a:hover {
+    color: #00e0ff;
 }
 
 @media (max-width: 768px) {
     #sidebar {
         margin-left: 0;
-        /* Sidebar is visible by default on small screens */
     }
 
     #sidebar.collapsed {
         margin-left: -264px !important;
-        /* Hide sidebar when collapsed on small screens */
     }
+}
+
+.text-menu {
+    font-size: 15px ;
 }

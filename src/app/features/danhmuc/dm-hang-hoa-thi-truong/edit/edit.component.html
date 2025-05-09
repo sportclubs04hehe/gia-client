@@ -1,73 +1,88 @@
-<div class="modal-header">
-  <h4 class="modal-title">{{ title }}</h4>
-  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
-</div>
-<div class="modal-body">
-  <form [formGroup]="form" class="row g-3">
-    <!-- Mã mặt hàng -->
-    <div class="col-md-6 mb-3">
-      <app-text-input
-        formControlName="maMatHang"
-        label="Mã mặt hàng"
-        [required]="true"
-        [preventSpaces]="true"
-        [isValidating]="isValidatingCode">
-      </app-text-input>
+<form [formGroup]="form" (ngSubmit)="update()" class="needs-validation">
+  <div class="modal-header bg-light">
+    <h5 class="modal-title">{{ title }}</h5>
+    <button type="button" class="btn-close" (click)="cancel()"></button>
+  </div>
+
+  <div class="modal-body">
+    <!-- Row 1: Mã và tên mặt hàng -->
+    <div class="row mb-4">
+      <div class="col-md-5">
+        <app-text-input formControlName="maMatHang" label="Mã mặt hàng" placeholder="Nhập mã mặt hàng" [required]="true"
+          [preventSpaces]="true" [isValidating]="isValidatingCode"></app-text-input>
+      </div>
+
+      <div class="col-md-7">
+        <app-text-input formControlName="tenMatHang" label="Tên mặt hàng" placeholder="Nhập tên mặt hàng"
+          [required]="true"></app-text-input>
+      </div>
     </div>
 
-    <!-- Tên mặt hàng -->
-    <div class="col-md-6 mb-3">
-      <app-text-input
-        formControlName="tenMatHang"
-        label="Tên mặt hàng"
-        [required]="true">
-      </app-text-input>
+    <!-- Row 2: Ghi chú -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <app-text-input formControlName="ghiChu" label="Ghi chú" placeholder="Nhập ghi chú" type="textarea"
+          [rows]="3"></app-text-input>
+      </div>
     </div>
 
-    <!-- Ghi chú -->
-    <div class="col-12 mb-3">
-      <app-text-input
-        formControlName="ghiChu"
-        label="Ghi chú"
-        type="textarea"
-        [rows]="3">
-      </app-text-input>
+    <!-- Row 3: Ngày hiệu lực và hết hiệu lực -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <app-date-input formControlName="ngayHieuLuc" label="Ngày hiệu lực" [required]="true" [showTodayButton]="true">
+        </app-date-input>
+      </div>
+
+      <div class="col-md-6">
+        <app-date-input formControlName="ngayHetHieuLuc" label="Ngày hết hiệu lực" [required]="true"
+          [showTodayButton]="true">
+        </app-date-input>
+      </div>
     </div>
 
-    <!-- Ngày hiệu lực -->
-    <div class="col-md-6 mb-3">
-      <app-date-input
-        formControlName="ngayHieuLuc"
-        label="Ngày hiệu lực"
-        [required]="true"
-        [showTodayButton]="true">
-      </app-date-input>
-    </div>
+    <!-- Row 4: Nhóm hàng hóa và Đơn vị tính -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <app-text-input formControlName="nhomHangHoaId" label="Nhóm hàng hóa"
+          placeholder="Nhập nhóm hàng hóa"></app-text-input>
+      </div>
 
-    <!-- Ngày hết hiệu lực -->
-    <div class="col-md-6 mb-3">
-      <app-date-input
-        formControlName="ngayHetHieuLuc"
-        label="Ngày hết hiệu lực"
-        [required]="true"
-        [showTodayButton]="true">
-      </app-date-input>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+          <div class="position-relative mb-3" (click)="openDonViTinhModal()">
+            <input type="text" class="form-control pe-5" 
+              [value]="selectedDonViTinh?.ten | truncate:25 " readonly
+              placeholder="Chọn đơn vị tính" 
+              (focus)="iconFill = true"
+              (blur)="iconFill = false"
+              [ngClass]="{'is-invalid': isControlInvalid('donViTinhId')}" />
+            <input type="hidden" formControlName="donViTinhId" />
+            
+            <!-- Box icon when not in invalid state -->
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" 
+                  style="color: #3498db;" 
+                  *ngIf="!isControlInvalid('donViTinhId')">
+              <i class="bi" [ngClass]="iconFill ? 'bi-box2-fill' : 'bi-box2'"></i>
+            </span>
+            
+            <!-- Error message -->
+            <div class="text-danger mt-1" *ngIf="isControlInvalid('donViTinhId')">
+              <small>Đơn vị tính không được để trống.</small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Nhóm hàng hóa -->
-    <div class="col-md-6 mb-3">
-      <label for="nhomHangHoaId" class="form-label">Nhóm hàng hóa</label>
-      <select class="form-select" id="nhomHangHoaId" formControlName="nhomHangHoaId">
-        <option [ngValue]="null">-- Chọn nhóm hàng hóa --</option>
-        <!-- Add nhóm hàng hóa options here if available -->
-      </select>
-    </div>
-  </form>
-</div>
-<div class="modal-footer">
-  <button type="button" class="btn btn-outline-dark" (click)="cancel()">Hủy</button>
-  <button type="button" class="btn btn-success" (click)="update()" [disabled]="form.invalid || isSaving">
-    <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-    Cập nhật
-  </button>
-</div>
+  <div class="modal-footer bg-light">
+    <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+      <i class="bi bi-x-circle me-1"></i> Hủy
+    </button>
+    <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+      <i class="bi" [ngClass]="isSaving ? 'bi-hourglass-split' : 'bi-save'"></i>
+      <span class="ms-1">{{ isSaving ? 'Đang lưu...' : 'Lưu' }}</span>
+    </button>
+  </div>
+</form>
