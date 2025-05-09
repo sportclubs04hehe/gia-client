@@ -89,11 +89,8 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
 
   // Check if form has unsaved changes
   hasUnsavedChanges(): boolean {
-    // Convert current form value to JSON string to make deep comparison
     const currentValue = JSON.stringify(this.form.value);
     const initialValue = JSON.stringify(this.initialFormValue);
-
-    // Return true if values are different and form is not pristine
     return currentValue !== initialValue && !this.form.pristine;
   }
 

@@ -17,7 +17,8 @@ import { ActiveButtonComponent } from '../../../shared/components/active-button/
 import { TableColumn } from '../../../shared/models/table-column';
 import { TableDataComponent } from '../../../shared/components/table-data/table-data.component';
 import { ImportExcelComponent } from './import-excel/import-excel.component';
-import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
+import { NgxSpinnerModule } from 'ngx-spinner';
+import { SpinnerService } from '../../../shared/services/spinner.service';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',
@@ -39,7 +40,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   private modalService = inject(NgbModal);
   private svc = inject(DmThitruongService);
   private toastr = inject(ToastrService);
-  private spinner = inject(NgxSpinnerService);
+  private spinner = inject(SpinnerService);
   private searchTerms = new Subject<string>();
 
   isLoadingList = signal(false);
@@ -108,18 +109,18 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   
     modalRef.componentInstance.onSave = (dto: HangHoaCreateDto): void => {
       this.isSaving.set(true);
-      this.spinner.show('savingSpinner');
+      this.spinner.showSavingSpinner();
   
       this.svc.add(dto).subscribe({
         next: () => {
           this.isSaving.set(false);
-          this.spinner.hide('savingSpinner');
+          this.spinner.hideSavingSpinner();
           this.toastr.success('Thêm mặt hàng thành công', 'Thành công');
           this.loadFirstPage();
         },
         error: (error) => {
           this.isSaving.set(false);
-          this.spinner.hide('savingSpinner');
+          this.spinner.hideSavingSpinner();
           this.toastr.error('Không thể thêm mặt hàng', 'Lỗi');
         }
       });
@@ -176,7 +177,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       distinctUntilChanged(),
       tap(term => {
         this.isLoadingList.set(true);
-        this.spinner.show('tableSpinner');
+        this.spinner.showTableSpinner();
         this.pageIndex.set(1);
         this.hangHoas.set([]);
         this.hasNextPage.set(true);
@@ -199,7 +200,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
         this.hasNextPage.set(res.pagination?.hasNextPage ?? false);
         this.pageIndex.set(2);
         this.isLoadingList.set(false);
-        this.spinner.hide('tableSpinner');
+        this.spinner.hideTableSpinner();
         
         if (this.searchBarComponent) {
           setTimeout(() => this.searchBarComponent.searchInput.nativeElement.focus(), 0);
@@ -207,7 +208,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       },
       error: () => {
         this.isLoadingList.set(false);
-        this.spinner.hide('tableSpinner');
+        this.spinner.hideTableSpinner();
         if (this.searchBarComponent) {
           setTimeout(() => this.searchBarComponent.searchInput.nativeElement.focus(), 0);
         }
@@ -228,7 +229,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     if (!this.hasNextPage() || this.isLoadingList()) return;
 
     this.isLoadingList.set(true);
-    this.spinner.show('tableSpinner');
+    this.spinner.showTableSpinner();
 
     const page = this.pageIndex();
     const searchParams = {
@@ -245,7 +246,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       next: this.handlePagedResult.bind(this),
       error: () => {
         this.isLoadingList.set(false);
-        this.spinner.hide('tableSpinner');
+        this.spinner.hideTableSpinner();
       }
     });
   }
@@ -261,7 +262,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     this.hasNextPage.set(pagination.hasNextPage || false);
     this.pageIndex.update(i => i + 1);
     this.isLoadingList.set(false);
-    this.spinner.hide('tableSpinner');
+    this.spinner.hideTableSpinner();
 
     if (isPlatformBrowser(this.platformId) && activeElement instanceof HTMLElement) {
       setTimeout(() => activeElement.focus(), 0);
@@ -305,19 +306,19 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       (result) => {
         if (result) {
           this.isSaving.set(true);
-          this.spinner.show('savingSpinner');
+          this.spinner.showSavingSpinner();
 
           this.svc.delete(hangHoa!.id!).subscribe({
             next: () => {
               this.isSaving.set(false);
-              this.spinner.hide('savingSpinner');
+              this.spinner.hideSavingSpinner();
               this.selectedHangHoa.set(null);
               this.loadFirstPage();
               this.toastr.success(`Đã xóa mặt hàng thành công`, 'Thành công');
             },
             error: (err) => {
               this.isSaving.set(false);
-              this.spinner.hide('savingSpinner');
+              this.spinner.hideSavingSpinner();
               console.error('Error deleting item:', err);
               this.toastr.error('Có lỗi xảy ra khi xóa mặt hàng. Vui lòng thử lại sau.', 'Lỗi');
             }

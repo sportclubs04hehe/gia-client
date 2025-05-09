@@ -1,6 +1,6 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ title }}</h4>
-  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cancel()"></button>
 </div>
 <div class="modal-body">
   <form [formGroup]="form" class="row g-3">
@@ -22,6 +22,24 @@
         label="Tên đơn vị tính"
         [required]="true">
       </app-text-input>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <app-date-input
+        formControlName="ngayHieuLuc"
+        label="Ngày hiệu lực"
+        [required]="true"
+        [showTodayButton]="true">
+      </app-date-input>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <app-date-input
+        formControlName="ngayHetHieuLuc"
+        label="Ngày hết hiệu lực"
+        [required]="true"
+        [showTodayButton]="true">
+      </app-date-input>
     </div>
 
     <!-- Mô tả -->

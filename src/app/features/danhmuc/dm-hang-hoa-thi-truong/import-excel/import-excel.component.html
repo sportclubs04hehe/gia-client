@@ -1,4 +1,22 @@
 <div class="modal-header">
+  <ngx-spinner name="loadingSpinner" 
+             bdColor="rgba(0, 0, 0, 0.8)" 
+             size="default" 
+             color="#fff" 
+             type="pacman" 
+             [fullScreen]="false">
+  <p style="color: white">Đang xử lý file...</p>
+</ngx-spinner>
+
+<!-- Saving spinner for server operations -->
+<ngx-spinner name="savingSpinner" 
+             bdColor="rgba(0, 0, 0, 0.8)" 
+             size="default" 
+             color="#fff" 
+             type="pacman" 
+             [fullScreen]="true">
+  <p style="color: white">Đang nhập dữ liệu...</p>
+</ngx-spinner>
     <h4 class="modal-title">{{title}}</h4>
     <button type="button" class="btn-close" (click)="dismiss()"></button>
   </div>
@@ -76,6 +94,17 @@
             <i class="bi bi-arrow-left me-1"></i> Quay lại tải file khác
           </button>
         </div>
+      </div>
+
+      <!-- Add this right after the duplicate items alert in Step 2 -->
+      <div *ngIf="newDonViTinhs.length > 0" class="alert alert-info mb-3">
+        <h6 class="alert-heading">Phát hiện đơn vị tính mới:</h6>
+        <p>Hệ thống sẽ tự động tạo {{newDonViTinhs.length}} đơn vị tính mới:</p>
+        <ul class="mb-0 ps-3">
+          <li *ngFor="let dvt of newDonViTinhs">
+            <strong>{{dvt.ma}}</strong> - {{dvt.ten}}
+          </li>
+        </ul>
       </div>
   
       <div class="table-responsive mb-3">

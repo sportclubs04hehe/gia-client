@@ -1,21 +1,25 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
+import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { SharedModule } from '../../../../shared/shared.module';
 import { DonViTinhDto } from '../../models/dm_donvitinh/don-ti-tinh.dto';
 import { DonViTinhUpdateDto } from '../../models/dm_donvitinh/don-vi-tinh_update.dto';
 import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
 import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
+import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
+import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 
 @Component({
   selector: 'app-edit-don-vi-tinh',
   standalone: true,
   imports: [
     SharedModule,
-    TextInputComponent
+    TextInputComponent,
+    DateInputComponent
   ],
   templateUrl: './edit-don-vi-tinh.component.html',
   styleUrl: './edit-don-vi-tinh.component.css'
@@ -27,16 +31,32 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
   activeModal = inject(NgbActiveModal);
   donViTinhService = inject(DmDonViTinhService);
   toastrService = inject(ToastrService);
+  notificationService = inject(ModalNotificationService);
+  calendar = inject(NgbCalendar);
 
   private originalFormValues: any;
+  today!: NgbDateStruct;
+  defaultNgayHetHieuLuc!: NgbDateStruct;
 
   constructor(fb: FormBuilder) {
     super(fb);
   }
 
   ngOnInit(): void {
+    this.setDefaultDates();
     this.buildForm();
     this.populateForm();
+  }
+
+  private isFormUnchanged(formData: any): boolean {
+    if (!this.originalFormValues) return false;
+    
+    return JSON.stringify(this.originalFormValues) === JSON.stringify(formData);
+  }
+
+  hasUnsavedChanges(): boolean {
+    const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
+    return !this.isFormUnchanged(formData);
   }
 
   update() {
@@ -49,7 +69,7 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
       return; 
     }
 
-    const formData = this.prepareFormData();
+    const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
     if (this.isFormUnchanged(formData)) {
       this.toastrService.success('Không có thay đổi', 'Thông báo');
       this.activeModal.close(false);
@@ -62,7 +82,7 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
       .subscribe({
         next: resp => {
           this.isSaving = false;
-          this.toastrService.success('Thêm mới thành công', 'Thành công');
+          this.toastrService.success('Cập nhật thành công', 'Thành công');
           this.activeModal.close(resp.data);
         },
         error: err => {
@@ -72,18 +92,19 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
       });
   }
 
-  private isFormUnchanged(currentValues: any): boolean {
-    for (const key in this.originalFormValues) {
-      if (typeof this.originalFormValues[key] === 'object') continue;
-      if (this.originalFormValues[key] !== currentValues[key]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   cancel(): void {
-    this.activeModal.dismiss();
+    if (this.hasUnsavedChanges()) {
+      this.notificationService.warning(
+        'Dữ liệu chưa được lưu. Bạn có chắc chắn muốn thoát không?',
+        'Xác nhận thoát'
+      ).subscribe(confirmed => {
+        if (confirmed) {
+          this.activeModal.dismiss();
+        }
+      });
+    } else {
+      this.activeModal.dismiss();
+    }
   }
 
   protected buildForm(): void {
@@ -93,12 +114,16 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
         asyncValidators: [uniqueDonViTinhCodeValidator(
           this.donViTinhService, 
           this.donViTinh?.ma,
-          this.donViTinh?.id  // Pass the ID to exclude
+          this.donViTinh?.id
         )],
         updateOn: 'blur'
       }],
       ten: ['', Validators.required],
-      ghiChu: ['']
+      ghiChu: [''],
+      ngayHieuLuc: [this.today, Validators.required],
+      ngayHetHieuLuc: [this.defaultNgayHetHieuLuc, Validators.required]
+    }, {
+      validators: dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
     });
   }
 
@@ -108,11 +133,22 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
     const formValues = {
       ma: this.donViTinh.ma,
       ten: this.donViTinh.ten,
-      ghiChu: this.donViTinh.ghiChu
+      ghiChu: this.donViTinh.ghiChu,
+      ngayHieuLuc: stringToDateStruct(this.donViTinh.ngayHieuLuc) || this.today,
+      ngayHetHieuLuc: stringToDateStruct(this.donViTinh.ngayHetHieuLuc) || this.defaultNgayHetHieuLuc
     };
 
     this.form.patchValue(formValues);
     this.originalFormValues = { ...formValues };
+  }
+
+  private setDefaultDates(): void {
+    this.today = this.calendar.getToday();
+    this.defaultNgayHetHieuLuc = {
+      year: this.today.year + 5,
+      month: this.today.month,
+      day: this.today.day
+    };
   }
 
   preventSpaces(event: KeyboardEvent) {

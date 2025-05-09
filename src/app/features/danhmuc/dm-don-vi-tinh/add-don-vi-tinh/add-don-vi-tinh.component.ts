@@ -9,6 +9,7 @@ import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
 import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
+import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 
 @Component({
   selector: 'app-add-don-vi-tinh',
@@ -21,16 +22,20 @@ import { dateRangeValidator } from '../../../../core/formatters/date-range-valid
   templateUrl: './add-don-vi-tinh.component.html',
   styleUrl: './add-don-vi-tinh.component.css'
 })
-export class ThemMoiDonViTinhComponent extends FormComponentBase implements OnInit {
+export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
   donViTinhService = inject(DmDonViTinhService);
   calendar = inject(NgbCalendar);
+  notificationService = inject(ModalNotificationService);
 
   @Input() title: string = '';
   @Input() onSave!: (dto: DonViTinhCreateDto) => void;
 
   today!: NgbDateStruct;
   defaultNgayHetHieuLuc!: NgbDateStruct;
+  
+  // Add a property to track initial form values
+  initialFormValue: any;
 
   constructor(fb: FormBuilder) {
     super(fb);
@@ -39,6 +44,16 @@ export class ThemMoiDonViTinhComponent extends FormComponentBase implements OnIn
   ngOnInit(): void {
     this.setDefaultDates();
     this.buildForm();
+    
+    // Store initial form value to track changes
+    this.initialFormValue = this.form.value;
+  }
+
+  // Check if form has unsaved changes
+  hasUnsavedChanges(): boolean {
+    const currentValue = JSON.stringify(this.form.value);
+    const initialValue = JSON.stringify(this.initialFormValue);
+    return currentValue !== initialValue && !this.form.pristine;
   }
 
   save(): void {
@@ -54,7 +69,18 @@ export class ThemMoiDonViTinhComponent extends FormComponentBase implements OnIn
   }
 
   cancel(): void {
-    this.activeModal.dismiss();
+    if (this.hasUnsavedChanges()) {
+      this.notificationService.warning(
+        'Dữ liệu chưa được lưu. Bạn có chắc chắn muốn thoát không?',
+        'Xác nhận thoát'
+      ).subscribe(confirmed => {
+        if (confirmed) {
+          this.activeModal.dismiss();
+        }
+      });
+    } else {
+      this.activeModal.dismiss();
+    }
   }
 
   protected buildForm(): void {

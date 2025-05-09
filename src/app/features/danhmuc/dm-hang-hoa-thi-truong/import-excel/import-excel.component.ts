@@ -6,12 +6,16 @@ import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
 import { DmThitruongService } from '../../services/dm-thitruong.service';
 import { ExcelImportResult, HHThiTruongExcelImportService } from '../../services/dm-hhthitruong-excel-import.service';
+import { DonViTinhCreateDto } from '../../models/dm_donvitinh/don-vi-tinh_create.dto';
+import { SpinnerService, SpinnerType } from '../../../../shared/services/spinner.service';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @Component({
   selector: 'app-import-excel',
   standalone: true,
   imports: [
-    SharedModule
+    SharedModule,
+    NgxSpinnerModule
   ],
   templateUrl: './import-excel.component.html',
   styleUrl: './import-excel.component.css'
@@ -21,23 +25,25 @@ export class ImportExcelComponent implements OnInit {
   private toastr = inject(ToastrService);
   private excelService = inject(HHThiTruongExcelImportService);
   private dmService = inject(DmThitruongService);
+  private spinner = inject(SpinnerService);
   
   title = 'Nhập dữ liệu từ Excel';
-  isProcessing = false;
+  isProcessing = false; // Keep this for backward compatibility
   selectedFile: File | null = null;
   parsedItems: HangHoaCreateDto[] = [];
   errorMessage = '';
-  step = 1; // 1: Upload, 2: Preview, 3: Success
+  step = 1; 
   
-  // Add these new properties for duplicate handling
+  // Duplicate handling
   duplicateItems: { code: string; rows: number[] }[] = [];
   hasDuplicates = false;
   
-  // Add these properties for server-side error handling
+  // Server-side error handling
   invalidItems: string[] = [];
   invalidItemCodes: Set<string> = new Set<string>();
   
-  // Rest of your component remains unchanged
+  // New donvitinh items
+  newDonViTinhs: DonViTinhCreateDto[] = [];
   
   ngOnInit(): void {}
   
@@ -64,7 +70,6 @@ export class ImportExcelComponent implements OnInit {
     }
   }
   
-  // Add a method to clear all data and error states
   resetState(): void {
     this.parsedItems = [];
     this.errorMessage = '';
@@ -74,30 +79,35 @@ export class ImportExcelComponent implements OnInit {
     this.invalidItemCodes = new Set();
   }
   
-  // Update the processFile method to reset all errors at the start
   async processFile(): Promise<void> {
     if (!this.selectedFile) {
       this.errorMessage = 'Vui lòng chọn file trước khi tải lên';
       return;
     }
     
+    // Start loading indicators
     this.isProcessing = true;
+    this.spinner.show(SpinnerType.Load);
+    
     // Reset all error states
     this.errorMessage = '';
     this.duplicateItems = [];
     this.hasDuplicates = false;
     this.invalidItems = [];
     this.invalidItemCodes = new Set();
+    this.newDonViTinhs = [];
     
     try {
       const result: ExcelImportResult = await this.excelService.importHangHoaFromExcel(this.selectedFile);
       this.parsedItems = result.items;
       this.duplicateItems = result.duplicates;
       this.hasDuplicates = this.duplicateItems.length > 0;
+      this.newDonViTinhs = result.newDonViTinhs;
       
       if (this.parsedItems.length === 0) {
         this.errorMessage = 'Không tìm thấy dữ liệu trong file Excel';
         this.isProcessing = false;
+        this.spinner.hide(SpinnerType.Load);
         return;
       }
       
@@ -112,6 +122,7 @@ export class ImportExcelComponent implements OnInit {
       console.error('Excel import error:', error);
     } finally {
       this.isProcessing = false;
+      this.spinner.hide(SpinnerType.Load);
     }
   }
   
@@ -124,6 +135,7 @@ export class ImportExcelComponent implements OnInit {
     }
     
     this.isProcessing = true;
+    this.spinner.show(SpinnerType.Save); // Use saving spinner for server operations
     this.errorMessage = '';
     this.invalidItems = [];
     this.invalidItemCodes = new Set();
@@ -131,11 +143,13 @@ export class ImportExcelComponent implements OnInit {
     this.dmService.addBatch(this.parsedItems).subscribe({
       next: (result) => {
         this.isProcessing = false;
+        this.spinner.hide(SpinnerType.Save);
         this.step = 3; 
         this.toastr.success(`Đã nhập thành công ${result.length} mặt hàng`, 'Nhập dữ liệu thành công');
       },
       error: (error) => {
         this.isProcessing = false;
+        this.spinner.hide(SpinnerType.Save);
         
         if (error.errors && error.errors.invalidItems) {
           const batchError = error as ApiResponse<HangHoaCreateDto[]>;
@@ -162,6 +176,7 @@ export class ImportExcelComponent implements OnInit {
     });
   }
   
+  // Other methods remain unchanged...
   downloadTemplate(): void {
     this.excelService.generateTemplate();
   }
@@ -183,17 +198,14 @@ export class ImportExcelComponent implements OnInit {
     return allowedTypes.includes(file.type) || file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
   }
   
-  // Add method to check if an item code is duplicate in the Excel file
   isDuplicateInExcel(code: string): boolean {
     return this.duplicateItems.some(item => item.code === code);
   }
   
-  // Update existing hasError method to include Excel duplicates
   hasError(itemCode: string): boolean {
     return this.invalidItemCodes.has(itemCode) || this.isDuplicateInExcel(itemCode);
   }
   
-  // Add this method to go back to step 1 and reset all errors
   backToUpload(): void {
     this.step = 1;
     this.resetState();

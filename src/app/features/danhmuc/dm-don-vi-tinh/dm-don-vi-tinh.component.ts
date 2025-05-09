@@ -13,8 +13,8 @@ import { DonViTinhDto } from '../models/dm_donvitinh/don-ti-tinh.dto';
 import { FormsModule } from '@angular/forms';
 import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
 import { DonViTinhCreateDto } from '../models/dm_donvitinh/don-vi-tinh_create.dto';
-import { ThemMoiDonViTinhComponent } from './add-don-vi-tinh/add-don-vi-tinh.component';
 import { EditDonViTinhComponent } from './edit-don-vi-tinh/edit-don-vi-tinh.component';
+import { AddDonViTinhComponent } from './add-don-vi-tinh/add-don-vi-tinh.component';
 
 @Component({
   selector: 'app-dm-don-vi-tinh',
@@ -188,7 +188,7 @@ export class DmDonViTinhComponent implements OnInit {
   }
 
   openModal() {
-    const modalRef = this.modalService.open(ThemMoiDonViTinhComponent, {
+    const modalRef = this.modalService.open(AddDonViTinhComponent, {
       size: 'xl',
       backdrop: 'static',
       keyboard: false

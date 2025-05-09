@@ -16,6 +16,7 @@ import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { Subscription } from 'rxjs';
 import { DonViTinhSelectionService } from '../../services/don-vi-tinh-selection.service';
+import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 
 @Component({
   selector: 'app-edit',
@@ -38,6 +39,7 @@ export class EditComponent extends FormComponentBase implements OnInit, OnDestro
   toastrService = inject(ToastrService);
   donViTinhService = inject(DmDonViTinhService);
   donViTinhSelectionService = inject(DonViTinhSelectionService);
+  notificationService = inject(ModalNotificationService);
 
   private originalFormValues: any;
   private searchSubscription: Subscription | null = null;
@@ -138,7 +140,24 @@ export class EditComponent extends FormComponentBase implements OnInit, OnDestro
   }
 
   cancel(): void {
-    this.activeModal.dismiss();
+    if (this.hasUnsavedChanges()) {
+      this.notificationService.warning(
+        'Dữ liệu chưa được lưu. Bạn có chắc chắn muốn thoát không?',
+        'Xác nhận thoát'
+      ).subscribe(confirmed => {
+        if (confirmed) {
+          this.activeModal.dismiss();
+        }
+      });
+    } else {
+      this.activeModal.dismiss();
+    }
+  }
+
+  hasUnsavedChanges(): boolean {
+    const currentValues = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
+    
+    return !this.isFormUnchanged(currentValues);
   }
 
   protected buildForm(): void {
