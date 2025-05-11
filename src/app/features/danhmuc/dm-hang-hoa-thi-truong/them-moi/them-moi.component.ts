@@ -6,13 +6,13 @@ import { SharedModule } from '../../../../shared/shared.module';
 import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
-import { DmThitruongService } from '../../services/dm-thitruong.service';
+import { DmThitruongService } from '../../services/api/dm-thitruong.service';
 import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
-import { DonViTinhSelectionService } from '../../services/don-vi-tinh-selection.service';
+import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -130,6 +130,7 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
       }],
       tenMatHang: ['', [Validators.required, Validators.maxLength(200)]],
       ghiChu: [''],
+      dacTinh: [''],
       ngayHieuLuc: [this.today, Validators.required],
       ngayHetHieuLuc: [this.defaultNgayHetHieuLuc, Validators.required],
       nhomHangHoaId: [null],

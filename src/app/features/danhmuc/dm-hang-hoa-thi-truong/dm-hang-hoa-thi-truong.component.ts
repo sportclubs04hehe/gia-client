@@ -2,7 +2,7 @@ import { Component, ElementRef, inject, OnInit, signal, ViewChild, WritableSigna
 import { isPlatformBrowser } from '@angular/common';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ThemMoiComponent } from './them-moi/them-moi.component';
-import { DmThitruongService } from '../services/dm-thitruong.service';
+import { DmThitruongService } from '../services/api/dm-thitruong.service';
 import { HangHoa } from '../models/dm_hanghoathitruong/dm-thitruong';
 import { PagedResult } from '../models/paged-result';
 import { HangHoaCreateDto } from '../models/dm_hanghoathitruong/hh-thitruong-create';
@@ -72,7 +72,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
         return item.donViTinhSelectDto?.ten || '';
       }
     },
-    { header: 'Ghi chú', field: 'ghiChu', width: '20%' },
+    { header: 'Đặc tính', field: 'dacTinh', width: '20%' },
     {
       header: 'Ngày hiệu lực',
       field: 'ngayHieuLuc',
@@ -129,7 +129,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   openImportModal() {
     const modalRef = this.modalService.open(ImportExcelComponent, {
-      size: 'lg',
+      size: 'xl',
       centered: true,
       backdrop: 'static',
     });

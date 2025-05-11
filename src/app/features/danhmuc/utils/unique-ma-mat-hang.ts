@@ -1,6 +1,6 @@
 import { AsyncValidatorFn, AbstractControl, ValidationErrors } from "@angular/forms";
 import { Observable, of, timer, switchMap, map, catchError } from "rxjs";
-import { DmThitruongService } from "../services/dm-thitruong.service";
+import { DmThitruongService } from "../services/api/dm-thitruong.service";
 
 export function uniqueItemCodeValidator(
     service: DmThitruongService, 

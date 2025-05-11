@@ -1,6 +1,6 @@
 import { AbstractControl, AsyncValidatorFn, ValidationErrors } from '@angular/forms';
 import { Observable, of, map, catchError } from 'rxjs';
-import { DmDonViTinhService } from '../services/dm-don-vi-tinh.service';
+import { DmDonViTinhService } from '../services/api/dm-don-vi-tinh.service';
 
 /**
  * Validator to check if a mã đơn vị tính already exists in the system

@@ -4,7 +4,6 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
 import { SharedModule } from '../../../shared/shared.module';
-import { DmDonViTinhService } from '../services/dm-don-vi-tinh.service';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { TableDataComponent } from '../../../shared/components/table-data/table-data.component';
@@ -15,6 +14,7 @@ import { DeleteConfirmationComponent } from '../../../shared/components/notifica
 import { DonViTinhCreateDto } from '../models/dm_donvitinh/don-vi-tinh_create.dto';
 import { EditDonViTinhComponent } from './edit-don-vi-tinh/edit-don-vi-tinh.component';
 import { AddDonViTinhComponent } from './add-don-vi-tinh/add-don-vi-tinh.component';
+import { DmDonViTinhService } from '../services/api/dm-don-vi-tinh.service';
 
 @Component({
   selector: 'app-dm-don-vi-tinh',

@@ -8,10 +8,10 @@ import { DateInputComponent } from '../../../../shared/components/forms/date-inp
 import { SharedModule } from '../../../../shared/shared.module';
 import { DonViTinhDto } from '../../models/dm_donvitinh/don-ti-tinh.dto';
 import { DonViTinhUpdateDto } from '../../models/dm_donvitinh/don-vi-tinh_update.dto';
-import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
 import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
+import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
 
 @Component({
   selector: 'app-edit-don-vi-tinh',

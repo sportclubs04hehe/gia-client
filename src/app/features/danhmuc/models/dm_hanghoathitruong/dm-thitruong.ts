@@ -5,6 +5,7 @@ export class HangHoa extends DanhMucBase {
     maMatHang!: string;
     tenMatHang!: string;
     ghiChu?: string;
+    dacTinh?: string;
     ngayHieuLuc!: Date;
     ngayHetHieuLuc!: Date;
     nhomHangHoaId?: string;

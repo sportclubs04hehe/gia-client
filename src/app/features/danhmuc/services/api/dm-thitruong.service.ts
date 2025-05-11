@@ -1,16 +1,17 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
-import { HangHoa } from '../models/dm_hanghoathitruong/dm-thitruong';
-import { HangHoaCreateDto } from '../models/dm_hanghoathitruong/hh-thitruong-create';
-import { HangHoaUpdateDto } from '../models/dm_hanghoathitruong/hh-thitruong-update';
-import { PaginationParams } from '../models/pagination-params ';
-import { SearchParams } from '../models/search-params';
-import { SpecificationParams } from '../models/specification-params';
-import { buildHttpParams } from '../utils/build-http-params';
-import { PagedResult } from '../models/paged-result';
-import { ApiResponse } from '../models/dm_hanghoathitruong/api-response';
+import { environment } from '../../../../../environments/environment.development';
+import { HangHoa } from '../../models/dm_hanghoathitruong/dm-thitruong';
+import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
+import { HangHoaUpdateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-update';
+import { PaginationParams } from '../../models/pagination-params ';
+import { SearchParams } from '../../models/search-params';
+import { SpecificationParams } from '../../models/specification-params';
+import { buildHttpParams } from '../../utils/build-http-params';
+import { PagedResult } from '../../models/paged-result';
+import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
+import { HangHoaImportDto } from '../../models/dm_hanghoathitruong/hanghoa-import.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -32,10 +33,23 @@ export class DmThitruongService {
       createDtos
     );
   }
-  
+
+  // Thêm phương thức mới để import từ Excel
+
+  /**
+   * Import hàng hóa từ Excel (có hỗ trợ đơn vị tính)
+   * @param importDtos Danh sách hàng hóa từ Excel với tên đơn vị tính
+   */
+  importFromExcel(importDtos: HangHoaImportDto[]): Observable<ApiResponse<HangHoa[]>> {
+    return this.http.post<ApiResponse<HangHoa[]>>(
+      `${this.apiUrl}/${this.endpoint}/import-from-excel`,
+      importDtos
+    );
+  }
+
   search(searchParams: SearchParams): Observable<PagedResult<HangHoa>> {
     const params = buildHttpParams(searchParams);
-    
+
     return this.http.get<PagedResult<HangHoa>>(
       `${this.apiUrl}/${this.endpoint}/search`,
       { params }
@@ -138,6 +152,14 @@ export class DmThitruongService {
    */
   existsByMaMatHang(maMatHang: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/${this.endpoint}/exists-by-ma/${maMatHang}`);
+  }
+
+  // Thêm phương thức mới để kiểm tra nhiều mã hàng hóa cùng lúc
+  checkExistingCodes(maCodes: string[]): Observable<{ [key: string]: boolean }> {
+    return this.http.post<{ [key: string]: boolean }>(
+      `${this.apiUrl}/${this.endpoint}/check-existing-codes`,
+      maCodes
+    );
   }
 
   /**

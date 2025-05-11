@@ -16,6 +16,7 @@
         [attr.aria-invalid]="ngControl.invalid && (ngControl.touched || ngControl.dirty)"
         (blur)="onInputBlur()"
         (keydown)="onKeyDown($event)"
+        (keyup)="onKeyUp($event)"
       />
       <button
         class="btn btn-outline-secondary calendar-button"

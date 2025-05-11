@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { DmThitruongService } from '../../services/dm-thitruong.service';
+import { DmThitruongService } from '../../services/api/dm-thitruong.service';
 import { HangHoa } from '../../models/dm_hanghoathitruong/dm-thitruong';
 import { HangHoaUpdateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-update';
 import { SharedModule } from '../../../../shared/shared.module';
@@ -11,12 +11,12 @@ import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatt
 import { ToastrService } from 'ngx-toastr';
 import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
-import { DmDonViTinhService } from '../../services/dm-don-vi-tinh.service';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { Subscription } from 'rxjs';
-import { DonViTinhSelectionService } from '../../services/don-vi-tinh-selection.service';
+import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
+import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
 
 @Component({
   selector: 'app-edit',
@@ -169,6 +169,7 @@ export class EditComponent extends FormComponentBase implements OnInit, OnDestro
       }],
       tenMatHang: ['', Validators.required],
       ghiChu: [''],
+      dacTinh: [''],
       ngayHieuLuc: [null, Validators.required],
       ngayHetHieuLuc: [null, Validators.required],
       nhomHangHoaId: [null],
@@ -188,6 +189,7 @@ export class EditComponent extends FormComponentBase implements OnInit, OnDestro
       maMatHang: this.hangHoa.maMatHang,
       tenMatHang: this.hangHoa.tenMatHang,
       ghiChu: this.hangHoa.ghiChu,
+      dacTinh: this.hangHoa.dacTinh,
       ngayHieuLuc: ngayHieuLuc,
       ngayHetHieuLuc: ngayHetHieuLuc,
       nhomHangHoaId: this.hangHoa.nhomHangHoaId,

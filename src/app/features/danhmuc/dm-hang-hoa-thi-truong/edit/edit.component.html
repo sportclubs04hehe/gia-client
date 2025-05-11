@@ -19,10 +19,17 @@
     </div>
 
     <!-- Row 2: Ghi chú -->
-    <div class="row mb-4">
-      <div class="col-12">
+     <div class="row mb-4">
+      <div class="col-6">
         <app-text-input formControlName="ghiChu" label="Ghi chú" placeholder="Nhập ghi chú" type="textarea"
           [rows]="3"></app-text-input>
+      </div>
+
+      <div class="col-6">
+        <app-text-input formControlName="dacTinh" label="Đặc điểm kinh tế, kỹ thuật, quy cách"
+          placeholder="Ví dụ: Cải ngọt hoặc cải cay theo mùa..." type="textarea"
+          [rows]="3">
+        </app-text-input>
       </div>
     </div>
 
