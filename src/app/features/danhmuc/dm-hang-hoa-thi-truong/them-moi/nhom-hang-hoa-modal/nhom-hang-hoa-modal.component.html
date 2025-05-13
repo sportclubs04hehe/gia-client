@@ -1,0 +1,97 @@
+<div class="modal-header bg-light">
+  <h4 class="modal-title">
+    <i class="bi bi-folder2 me-2 text-primary"></i>
+    Chọn nhóm hàng hóa
+  </h4>
+  <button type="button" class="btn-close" (click)="dismiss()"></button>
+</div>
+
+<div class="modal-body p-3">
+  <!-- Reuse SearchBarComponent instead of custom implementation -->
+  <app-search-bar
+    [isLoading]="isSearching"
+    [searchTerm]="searchTerm"
+    [placeholder]="'Tìm kiếm ..'"
+    (search)="onSearch($event)"
+    (clear)="clearSearch()">
+  </app-search-bar>
+  
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading" class="text-center my-4 py-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+    <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+  </div>
+  
+  <!-- Search results with improved styling and text highlighting -->
+  <div *ngIf="searchResults.length > 0 && searchTerm" class="mb-3">
+    <h6 class="d-flex align-items-center mb-2 pt-3 pb-3 text-primary">
+      <i class="bi bi-search me-2"></i>
+      Kết quả tìm kiếm
+    </h6>
+    <div class="list-group shadow-sm">
+      <button 
+        *ngFor="let item of searchResults"
+        type="button"
+        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+        [class.active]="selectedNode?.id === item.id"
+        (click)="selectNode(item)">
+        <div>
+          <i class="bi bi-folder me-2"></i>
+          <span class="fw-medium me-2" [innerHTML]="item.maNhom | textHighlight:searchTerm"></span>
+          <span [innerHTML]="item.tenNhom | textHighlight:searchTerm"></span>
+        </div>
+        <i *ngIf="selectedNode?.id === item.id" class="bi bi-check-circle-fill ms-2"></i>
+      </button>
+    </div>
+    <button class="btn btn-sm btn-link d-flex align-items-center w-100 mt-3 justify-content-center" (click)="clearSearch()">
+      <i class="bi bi-arrow-left me-1"></i> Quay lại cây nhóm hàng hóa
+    </button>
+  </div>
+  
+  <!-- No search results message -->
+  <div *ngIf="searchResults.length === 0 && searchTerm && !isLoading" class="alert alert-info d-flex align-items-center mt-3">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    Không tìm thấy nhóm hàng hóa phù hợp với từ khóa "{{ searchTerm }}"
+  </div>
+  
+  <!-- Tree view with card container -->
+  <div *ngIf="!searchTerm && !isLoading" class="card border shadow-sm mt-3">
+    <div class="card-body p-2">
+      <app-nhom-hang-hoa-tree
+        [nhomList]="treeData"
+        [selectedNhomId]="selectedNode?.id || null"
+        [expandedNodes]="expandedNodes"
+        (nodeSelected)="selectNode($event)"
+        (nodeToggled)="toggleNode($event)">
+      </app-nhom-hang-hoa-tree>
+    </div>
+  </div>
+  
+  <!-- Empty state message -->
+  <div *ngIf="treeData.length === 0 && !searchTerm && !isLoading" class="alert alert-info d-flex align-items-center">
+    <i class="bi bi-info-circle-fill me-2"></i> Không có dữ liệu nhóm hàng hóa
+  </div>
+</div>
+
+<div class="modal-footer bg-light d-flex justify-content-between">
+  <div>
+    <span *ngIf="selectedNode" class="text-primary d-flex align-items-center">
+      <i class="bi bi-check-circle-fill me-1"></i>
+      Đã chọn: <strong class="ms-1">{{ selectedNode.maNhom }} - {{ selectedNode.tenNhom }}</strong>
+    </span>
+  </div>
+  <div>
+    <button type="button" class="btn btn-outline-secondary me-2" (click)="dismiss()">
+      <i class="bi bi-x-circle me-1"></i> Đóng
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-primary" 
+      [disabled]="!selectedNode" 
+      (click)="confirm()">
+      <i class="bi bi-check2 me-1"></i> Xác nhận
+    </button>
+  </div>
+</div>

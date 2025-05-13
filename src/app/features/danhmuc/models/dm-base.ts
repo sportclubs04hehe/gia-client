@@ -1,5 +1,5 @@
 export class DanhMucBase {
-  id?: string;          
+  id!: string;          
   isDelete?: boolean;
   createdBy?: string;
   createdDate?: string;     

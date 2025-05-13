@@ -14,6 +14,8 @@ import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
 import { Subscription } from 'rxjs';
+import { NhomHangHoaDto } from '../../models/dm_nhomhanghoathitruong/NhomHangHoaDto';
+import { NhomHangHoaSelectionService } from '../../services/utils/nhom-hang-hoa-selection.service';
 
 @Component({
   selector: 'app-them-moi',
@@ -33,23 +35,31 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
   dmService = inject(DmThitruongService);
   notificationService = inject(ModalNotificationService);
   donViTinhSelectionService = inject(DonViTinhSelectionService);
+  selectedNhomHangHoa: NhomHangHoaDto | null = null;
+
+  private nhomHangHoaSearchSubscription: Subscription | null = null;
 
   selectedDonViTinh: DonViTinhSelectDto | null = null;
 
   @Input() title: string = '';
   @Input() onSave!: (dto: HangHoaCreateDto) => void;
+  @Input() existingData?: HangHoaCreateDto; // Thêm dòng này
 
   today!: NgbDateStruct;
   defaultNgayHetHieuLuc!: NgbDateStruct;
   donViTinhList: DonViTinhSelectDto[] = [];
   iconFill = false;
+  nhomHangHoaIconFill = false;
   isLoadingDonViTinh = false;
 
   // Add a property to track initial form values
   initialFormValue: any;
   private searchSubscription: Subscription | null = null;
 
-  constructor(fb: FormBuilder) {
+  constructor(fb: FormBuilder,
+    private nhomHangHoaSelectionService: NhomHangHoaSelectionService,
+
+  ) {
     super(fb);
   }
 
@@ -59,6 +69,12 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
 
     // Store initial form value to track changes
     this.initialFormValue = this.form.value;
+
+    // Subscribe to donViTinhId value changes - nên đặt ở ngoài block if
+    this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
+      if (id) this.loadSelectedDonViTinh(id);
+      else this.selectedDonViTinh = null;
+    });
 
     // Subscribe to the search stream from the service
     this.searchSubscription = this.donViTinhSelectionService
@@ -74,16 +90,32 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
         }
       });
 
-    this.form.get('donViTinhId')?.valueChanges.subscribe(id => {
-      if (id) this.loadSelectedDonViTinh(id);
-      else this.selectedDonViTinh = null;
-    });
+    // Load data if editing existing item
+    if (this.existingData) {
+      this.form.patchValue(this.existingData);
+
+      // Load nhóm hàng hóa information if available
+      if (this.existingData.nhomHangHoaId) {
+        this.nhomHangHoaSelectionService
+          .loadSelectedNhomHangHoa(this.existingData.nhomHangHoaId)
+          .subscribe(group => {
+            this.selectedNhomHangHoa = group;
+          });
+      }
+
+      // Load đơn vị tính if available - thông qua valueChanges sẽ tự động kích hoạt
+    }
   }
 
   override ngOnDestroy(): void {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
+
+    if (this.nhomHangHoaSearchSubscription) {
+      this.nhomHangHoaSearchSubscription.unsubscribe();
+    }
+
     super.ngOnDestroy();
   }
 
@@ -162,13 +194,33 @@ export class ThemMoiComponent extends FormComponentBase implements OnInit, OnDes
     };
   }
 
+  // Thay đổi phương thức openNhomHangHoaModal()
+  openNhomHangHoaModal(): void {
+    // Hiển thị icon folder khi mở modal
+    this.nhomHangHoaIconFill = true;
+
+    const modalRef = this.nhomHangHoaSelectionService.openNhomHangHoaModal(this.form, (group) => {
+      this.selectedNhomHangHoa = group;
+      this.form.get('nhomHangHoaId')?.setValue(group.id);
+      this.form.get('nhomHangHoaId')?.markAsDirty();
+
+      // Reset icon khi modal đóng
+      this.nhomHangHoaIconFill = false;
+    });
+
+    // Xử lý khi modal bị đóng
+    modalRef.dismissed.subscribe(() => {
+      this.nhomHangHoaIconFill = false;
+    });
+  }
+
   // Use the service to open the modal
   openDonViTinhModal(): void {
     this.iconFill = true;
     this.isLoadingDonViTinh = true;
-    
+
     this.donViTinhSelectionService.openDonViTinhModal(
-      this.form, 
+      this.form,
       (selectedUnit) => {
         this.iconFill = false;
         this.selectedDonViTinh = selectedUnit;

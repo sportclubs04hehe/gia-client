@@ -5,6 +5,26 @@
   </div>
 
   <div class="modal-body">
+        <div class="col-md-12">
+        <div class="form-group">
+          <label class="form-label">Nhóm hàng hóa</label>
+          <div class="position-relative mb-3" (click)="openNhomHangHoaModal()">
+            <input type="text" class="form-control pe-5" 
+              [value]="selectedNhomHangHoa?.tenNhom" readonly
+              placeholder="Chọn nhóm hàng hóa" 
+              [ngClass]="{'is-invalid': isControlInvalid('nhomHangHoaId')}" />
+            <input type="hidden" formControlName="nhomHangHoaId" />
+            
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" 
+                  style="color: #2980b9; font-size: 1.3rem;">
+              <i class="bi" [ngClass]="nhomHangHoaIconFill ? 'bi-folder-fill' : 'bi-folder2-open'"></i>
+            </span>
+          </div>
+          <div *ngIf="isControlInvalid('nhomHangHoaId')" class="invalid-feedback d-block">
+            Vui lòng chọn nhóm hàng hóa
+          </div>
+        </div>
+      </div>
     <!-- Row 1: Mã và tên mặt hàng -->
     <div class="row mb-4">
       <div class="col-md-5">
@@ -46,13 +66,10 @@
       </div>
     </div>
 
-    <!-- Row 4: Nhóm hàng hóa và Đơn vị tính -->
+    <!-- Row 4: Nhóm hàng hóa -->
     <div class="row mb-3">
-      <div class="col-md-6">
-        <app-text-input formControlName="nhomHangHoaId" label="Nhóm hàng hóa"
-          placeholder="Nhập nhóm hàng hóa"></app-text-input>
-      </div>
-
+ 
+      <!-- Đơn vị tính column remains the same -->
       <div class="col-md-6">
         <div class="form-group">
           <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>

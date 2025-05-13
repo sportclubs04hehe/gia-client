@@ -16,9 +16,9 @@
 }
 
 :host ::ng-deep .highlight-text {
-  background-color: #2980b9 !important;
+  background-color: rgba(255, 193, 7, 0.5) !important;
   font-weight: bold !important;
-  color: #fff !important;
+  color: #495057 !important;
   padding: 0 2px;
   border-radius: 2px;
 }

@@ -1,0 +1,64 @@
+.tree-view {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.tree-root {
+  padding-left: 0;
+}
+
+.node-header {
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.node-header:hover {
+  background-color: rgba(13, 110, 253, 0.08);
+}
+
+.node-header.selected {
+  background-color: rgba(13, 110, 253, 0.15);
+  border-left: 3px solid #0d6efd;
+}
+
+.node-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+}
+
+.node-code {
+  font-weight: 500;
+  margin-right: 8px;
+  color: #495057;
+}
+
+.node-name {
+  color: #212529;
+}
+
+.node-select-btn {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.node-header:hover .node-select-btn {
+  opacity: 1;
+}
+
+.node-header.selected .node-select-btn {
+  opacity: 1;
+  background-color: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
+}
+
+.folder-icon {
+  color: #ffc107;
+}
