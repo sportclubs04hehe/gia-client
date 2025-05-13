@@ -1,11 +1,15 @@
 <form [formGroup]="form" (ngSubmit)="save()" class="needs-validation">
+  <!-- Header stays fixed at top -->
   <div class="modal-header bg-light">
     <h5 class="modal-title">{{ title }}</h5>
     <button type="button" class="btn-close" (click)="cancel()"></button>
   </div>
 
+  <!-- This section will scroll when content overflows -->
   <div class="modal-body">
-        <div class="col-md-12">
+    <!-- Nhóm hàng hóa -->
+    <div class="row mb-4">
+      <div class="col-md-12">
         <div class="form-group">
           <label class="form-label">Nhóm hàng hóa</label>
           <div class="position-relative mb-3" (click)="openNhomHangHoaModal()">
@@ -25,7 +29,9 @@
           </div>
         </div>
       </div>
-    <!-- Row 1: Mã và tên mặt hàng -->
+    </div>
+    
+    <!-- Mã và tên mặt hàng -->
     <div class="row mb-4">
       <div class="col-md-5">
         <app-text-input formControlName="maMatHang" label="Mã mặt hàng" placeholder="Nhập mã mặt hàng" [required]="true"
@@ -38,13 +44,14 @@
       </div>
     </div>
 
-    <!-- Row 2: Ghi chú -->
+    <!-- Ghi chú và đặc tính -->
     <div class="row mb-4">
-            <div class="col-6">
+      <div class="col-md-6">
         <app-text-input formControlName="ghiChu" label="Ghi chú" placeholder="Nhập ghi chú" type="textarea"
           [rows]="3"></app-text-input>
       </div>
-      <div class="col-6">
+      
+      <div class="col-md-6">
         <app-text-input formControlName="dacTinh" label="Đặc điểm kinh tế, kỹ thuật, quy cách"
           placeholder="Ví dụ: Cải ngọt hoặc cải cay theo mùa..." type="textarea"
           [rows]="3">
@@ -52,7 +59,7 @@
       </div>
     </div>
 
-    <!-- Row 3: Ngày hiệu lực và hết hiệu lực -->
+    <!-- Ngày hiệu lực và hết hiệu lực -->
     <div class="row mb-4">
       <div class="col-md-6">
         <app-date-input formControlName="ngayHieuLuc" label="Ngày hiệu lực" [required]="true" [showTodayButton]="true">
@@ -66,10 +73,8 @@
       </div>
     </div>
 
-    <!-- Row 4: Nhóm hàng hóa -->
-    <div class="row mb-3">
- 
-      <!-- Đơn vị tính column remains the same -->
+    <!-- Đơn vị tính -->
+    <div class="row mb-4">
       <div class="col-md-6">
         <div class="form-group">
           <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
@@ -82,14 +87,12 @@
               [ngClass]="{'is-invalid': isControlInvalid('donViTinhId')}" />
             <input type="hidden" formControlName="donViTinhId" />
             
-            <!-- Only show the box icon when NOT in invalid state -->
             <span class="position-absolute top-50 end-0 translate-middle-y pe-3" 
                   style="color: #2980b9;" 
                   *ngIf="!isControlInvalid('donViTinhId')">
               <i class="bi" [ngClass]="iconFill ? 'bi-box2-fill' : 'bi-box2'"></i>
             </span>
             
-            <!-- Error message remains the same -->
             <div class="text-danger mt-1" *ngIf="isControlInvalid('donViTinhId')">
               <small>Đơn vị tính không được để trống.</small>
             </div>
@@ -99,12 +102,14 @@
     </div>
   </div>
 
+  <!-- Footer stays fixed at bottom -->
   <div class="modal-footer bg-light">
     <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
       <i class="bi bi-x-circle me-1"></i> Hủy
     </button>
-    <button type="submit" class="btn btn-primary">
-      <i class="bi bi-save me-1"></i> Lưu
+    <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+      <i class="bi" [ngClass]="isSaving ? 'bi-hourglass-split' : 'bi-save'"></i>
+      <span class="ms-1">{{ isSaving ? 'Đang lưu...' : 'Lưu' }}</span>
     </button>
   </div>
 </form>

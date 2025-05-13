@@ -50,23 +50,23 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
 
   private isFormUnchanged(formData: any): boolean {
     if (!this.originalFormValues) return false;
-    
+
     return JSON.stringify(this.originalFormValues) === JSON.stringify(formData);
   }
 
   hasUnsavedChanges(): boolean {
-    const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
-    return !this.isFormUnchanged(formData);
-  }
+  const currentFormData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
+  return !this.isFormUnchanged(currentFormData);
+}
 
   update() {
     if (this.form.invalid) {
       this.markFormTouched();
       return;
     }
-    if (!this.donViTinh.id) { 
-      console.error('Missing ID'); 
-      return; 
+    if (!this.donViTinh.id) {
+      console.error('Missing ID');
+      return;
     }
 
     const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
@@ -112,7 +112,7 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
       ma: ['', {
         validators: [Validators.required],
         asyncValidators: [uniqueDonViTinhCodeValidator(
-          this.donViTinhService, 
+          this.donViTinhService,
           this.donViTinh?.ma,
           this.donViTinh?.id
         )],
@@ -139,7 +139,10 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
     };
 
     this.form.patchValue(formValues);
-    this.originalFormValues = { ...formValues };
+
+    // Store the form values directly from the form after patching
+    // This will match the format returned by form.getRawValue()
+    this.originalFormValues = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
   }
 
   private setDefaultDates(): void {
@@ -156,6 +159,7 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
       event.preventDefault();
     }
   }
+
 
   get isValidatingCode(): boolean {
     const control = this.form?.get('ma');

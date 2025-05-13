@@ -102,7 +102,11 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     const modalRef = this.modalService.open(ThemMoiComponent, { 
       size: 'xl',
       backdrop: 'static', 
-      keyboard: false    
+      keyboard: false,
+      centered: true,
+      fullscreen: 'lg', 
+      scrollable: true, 
+      windowClass: 'custom-modal-window' 
     });
     
     modalRef.componentInstance.title = 'Thêm mặt hàng';
@@ -140,7 +144,9 @@ export class DmHangHoaThiTruongComponent implements OnInit {
           this.loadFirstPage();
         }
       }
-    );
+    ).catch(() => {
+      // Modal was dismissed - no action needed
+    });
   }
 
   openModalEdit(): void {
@@ -167,8 +173,9 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
         this.toastr.success('Cập nhật thành công', 'Thành công');
       }
-    );
-    
+    ).catch(() => {
+      // Modal was dismissed - no action needed
+    });
   }
 
   setupSearchStream(): void {

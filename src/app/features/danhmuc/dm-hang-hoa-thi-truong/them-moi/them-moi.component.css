@@ -1,16 +1,64 @@
 /* component.scss */
 .position-relative {
     cursor: pointer;
-    /* cả vùng click được */
 }
 
 .form-control {
     background-color: #fff;
-    /* trắng, rõ ràng */
 }
 
 .form-control.pe-5 {
     padding-right: 2.5rem;
-    /* đủ chừa chỗ cho icon */
+}
+
+/* Remove ViewEncapsulation to ensure these styles apply globally */
+:host ::ng-deep .modal-dialog {
+    display: flex !important;
+    flex-direction: column !important;
+    max-width: 95% !important;
+    width: auto !important;
+    margin: 1.75rem auto !important;
+    max-height: 90vh !important;
+}
+
+:host ::ng-deep .modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    border-radius: 0.5rem !important;
+}
+
+:host ::ng-deep .modal-header,
+:host ::ng-deep .modal-footer {
+    flex-shrink: 0 !important;
+    padding: 1rem !important;
+}
+
+:host ::ng-deep .modal-body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex: 1 1 auto !important;
+    max-height: calc(90vh - 130px) !important; /* Adjust based on your header/footer */
+    padding: 1rem !important;
+}
+
+/* Scrollbar styling */
+:host ::ng-deep .modal-body::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+:host ::ng-deep .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 4px !important;
+}
+
+:host ::ng-deep .modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1 !important;
+    border-radius: 4px !important;
+}
+
+:host ::ng-deep .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8 !important;
 }
 
