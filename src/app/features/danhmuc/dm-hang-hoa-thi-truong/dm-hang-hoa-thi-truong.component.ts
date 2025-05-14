@@ -110,24 +110,12 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     });
     
     modalRef.componentInstance.title = 'Thêm mặt hàng';
-  
-    modalRef.componentInstance.onSave = (dto: HangHoaCreateDto): void => {
-      this.isSaving.set(true);
-      this.spinner.showSavingSpinner();
-  
-      this.svc.add(dto).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.spinner.hideSavingSpinner();
-          this.toastr.success('Thêm mặt hàng thành công', 'Thành công');
-          this.loadFirstPage();
-        },
-        error: (error) => {
-          this.isSaving.set(false);
-          this.spinner.hideSavingSpinner();
-          this.toastr.error('Không thể thêm mặt hàng', 'Lỗi');
-        }
-      });
+
+    modalRef.componentInstance.onSaveCallback = (data: any, isHangHoa: boolean): void => {
+      this.isSaving.set(false);
+      this.spinner.hideSavingSpinner();
+      
+      this.loadFirstPage();
     };
   }
 

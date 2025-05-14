@@ -7,20 +7,19 @@
 
   <!-- This section will scroll when content overflows -->
   <div class="modal-body">
+
     <!-- Nhóm hàng hóa -->
     <div class="row mb-4">
       <div class="col-md-12">
         <div class="form-group">
           <label class="form-label">Nhóm hàng hóa</label>
           <div class="position-relative mb-3" (click)="openNhomHangHoaModal()">
-            <input type="text" class="form-control pe-5" 
-              [value]="selectedNhomHangHoa?.tenNhom" readonly
-              placeholder="Chọn nhóm hàng hóa" 
-              [ngClass]="{'is-invalid': isControlInvalid('nhomHangHoaId')}" />
+            <input type="text" class="form-control pe-5" [value]="selectedNhomHangHoa?.tenNhom" readonly
+              placeholder="Chọn nhóm hàng hóa" [ngClass]="{'is-invalid': isControlInvalid('nhomHangHoaId')}" />
             <input type="hidden" formControlName="nhomHangHoaId" />
-            
-            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" 
-                  style="color: #2980b9; font-size: 1.3rem;">
+
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3"
+              style="color: #2980b9; font-size: 1.3rem;">
               <i class="bi" [ngClass]="nhomHangHoaIconFill ? 'bi-folder-fill' : 'bi-folder2-open'"></i>
             </span>
           </div>
@@ -30,33 +29,30 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Mã và tên mặt hàng -->
     <div class="row mb-4">
       <div class="col-md-5">
-        <app-text-input formControlName="maMatHang" label="Mã mặt hàng" placeholder="Nhập mã mặt hàng" [required]="true"
-          [preventSpaces]="true" [isValidating]="isValidatingCode"></app-text-input>
+        <app-text-input formControlName="maMatHang" [label]="isHangHoa ? 'Mã mặt hàng' : 'Mã nhóm'"
+          [placeholder]="isHangHoa ? 'Nhập mã mặt hàng' : 'Nhập mã nhóm'" [required]="true" [preventSpaces]="true"
+          [isValidating]="isValidatingCode">
+        </app-text-input>
       </div>
 
       <div class="col-md-7">
-        <app-text-input formControlName="tenMatHang" label="Tên mặt hàng" placeholder="Nhập tên mặt hàng"
-          [required]="true"></app-text-input>
+        <app-text-input formControlName="tenMatHang" [label]="isHangHoa ? 'Tên mặt hàng' : 'Tên nhóm'"
+          [placeholder]="isHangHoa ? 'Nhập tên mặt hàng' : 'Nhập tên nhóm'" [required]="true">
+        </app-text-input>
       </div>
     </div>
 
-    <!-- Ghi chú và đặc tính -->
+    <!-- Ghi chú và đặc tính (đặc tính chỉ hiển thị khi là hàng hóa) -->
     <div class="row mb-4">
-      <div class="col-md-6">
-        <app-text-input formControlName="ghiChu" label="Ghi chú" placeholder="Nhập ghi chú" type="textarea"
-          [rows]="3"></app-text-input>
-      </div>
-      
-      <div class="col-md-6">
-        <app-text-input formControlName="dacTinh" label="Đặc điểm kinh tế, kỹ thuật, quy cách"
-          placeholder="Ví dụ: Cải ngọt hoặc cải cay theo mùa..." type="textarea"
-          [rows]="3">
+      <div class="col-md-12">
+        <app-text-input formControlName="ghiChu" label="Ghi chú" placeholder="Nhập ghi chú" type="textarea" [rows]="3">
         </app-text-input>
       </div>
+
     </div>
 
     <!-- Ngày hiệu lực và hết hiệu lực -->
@@ -73,31 +69,46 @@
       </div>
     </div>
 
-    <!-- Đơn vị tính -->
+    <!-- Form type toggle -->
     <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" [checked]="isHangHoa" (change)="toggleIsHangHoa()"
+            id="isHangHoaSwitch">
+          <label class="form-check-label" for="isHangHoaSwitch">
+            Là hàng hóa / tài sản
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Đơn vị tính (chỉ hiển thị khi là hàng hóa) -->
+    <div class="row mb-4" *ngIf="isHangHoa">
       <div class="col-md-6">
         <div class="form-group">
           <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
           <div class="position-relative mb-3" (click)="openDonViTinhModal()">
-            <input type="text" class="form-control pe-5" 
-              [value]="selectedDonViTinh?.ten | truncate:25 " readonly
-              placeholder="Chọn đơn vị tính" 
-              (focus)="iconFill = true"
-              (blur)="iconFill = false"
+            <input type="text" class="form-control pe-5" [value]="selectedDonViTinh?.ten | truncate:25" readonly
+              placeholder="Chọn đơn vị tính" (focus)="iconFill = true" (blur)="iconFill = false"
               [ngClass]="{'is-invalid': isControlInvalid('donViTinhId')}" />
             <input type="hidden" formControlName="donViTinhId" />
-            
-            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" 
-                  style="color: #2980b9;" 
-                  *ngIf="!isControlInvalid('donViTinhId')">
+
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;"
+              *ngIf="!isControlInvalid('donViTinhId')">
               <i class="bi" [ngClass]="iconFill ? 'bi-box2-fill' : 'bi-box2'"></i>
             </span>
-            
+
             <div class="text-danger mt-1" *ngIf="isControlInvalid('donViTinhId')">
               <small>Đơn vị tính không được để trống.</small>
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="col-md-6">
+        <app-text-input formControlName="dacTinh" label="Đặc điểm kinh tế, kỹ thuật, quy cách"
+          placeholder="Ví dụ: Cải ngọt hoặc cải cay theo mùa..." type="textarea" [rows]="3">
+        </app-text-input>
       </div>
     </div>
   </div>

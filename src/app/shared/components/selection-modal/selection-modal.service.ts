@@ -8,15 +8,15 @@ import { SelectionModalComponent } from './selection-modal.component';
   providedIn: 'root'
 })
 export class SelectionModalService {
-  constructor(private modalService: NgbModal) {}
+  constructor(private modalService: NgbModal) { }
 
   open<T>(options: SelectionModalOptions<T>): Observable<T | null> {
-    const modalRef = this.modalService.open(SelectionModalComponent, { 
+    const modalRef = this.modalService.open(SelectionModalComponent, {
       centered: true,
     });
-    
+
     const component = modalRef.componentInstance as SelectionModalComponent;
-    
+
     // Set inputs
     component.title = options.title;
     component.items = options.items;
@@ -27,27 +27,27 @@ export class SelectionModalService {
     component.noDataMessage = options.noDataMessage || 'Không có dữ liệu';
     component.loadingMessage = options.loadingMessage || 'Đang tải...';
     component.selectedId = options.selectedId || null;
-    
+
     // Set up event handlers
     if (options.searchFn) {
       component.search.subscribe(term => options.searchFn!(term));
     }
-    
+
     if (options.clearSearchFn) {
       component.clearSearch.subscribe(() => options.clearSearchFn!());
     }
-    
+
     // Return an observable that resolves when the modal is closed
     return from(modalRef.result.catch(() => null));
   }
 
   openWithRef<T>(options: SelectionModalOptions<T>): any {
-    const modalRef = this.modalService.open(SelectionModalComponent, { 
+    const modalRef = this.modalService.open(SelectionModalComponent, {
       centered: true,
     });
-    
+
     const component = modalRef.componentInstance as SelectionModalComponent;
-    
+
     // Set inputs
     component.title = options.title;
     component.items = options.items;
@@ -58,16 +58,15 @@ export class SelectionModalService {
     component.noDataMessage = options.noDataMessage || 'Không có dữ liệu';
     component.loadingMessage = options.loadingMessage || 'Đang tải...';
     component.selectedId = options.selectedId || null;
-    
+
     // Set up event handlers
     if (options.searchFn) {
       component.search.subscribe(term => options.searchFn!(term));
     }
-    
+
     if (options.clearSearchFn) {
       component.clearSearch.subscribe(() => options.clearSearchFn!());
     }
-    
     // Return the modal reference directly
     return modalRef;
   }

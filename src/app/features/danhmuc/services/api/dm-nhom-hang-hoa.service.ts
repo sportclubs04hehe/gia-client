@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, of, shareReplay } from 'rxjs';
+import { Observable, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../../../environments/environment.development';
 import { buildHttpParams } from '../../utils/build-http-params';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
@@ -151,15 +151,12 @@ export class DmNhomHangHoaService {
    * Tạo mới nhóm hàng hóa
    */
   create(createDto: CreateNhomHangHoaDto): Observable<ApiResponse<NhomHangHoaDto>> {
-    const observable = this.http.post<ApiResponse<NhomHangHoaDto>>(
+    return this.http.post<ApiResponse<NhomHangHoaDto>>(
       `${this.apiUrl}/${this.endpoint}`,
       createDto
+    ).pipe(
+      tap(() => this.invalidateRootNodesCache())
     );
-    
-    // Invalidate cache when creating new nhóm hàng hóa
-    observable.subscribe(() => this.invalidateRootNodesCache());
-    
-    return observable;
   }
 
   /**

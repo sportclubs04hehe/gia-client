@@ -100,6 +100,8 @@ export class DonViTinhSelectionService {
         // Open the modal and store reference
         this.modalRef = this.selectionModalService.openWithRef(options);
 
+        this.setupDonViTinhSearchStream().subscribe();
+
         // Handle modal result
         this.modalRef.result.then((result: DonViTinhSelectDto) => {
           if (result) {
