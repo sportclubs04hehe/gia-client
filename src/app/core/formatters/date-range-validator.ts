@@ -40,6 +40,30 @@ export function dateRangeValidator(startKey: string, endKey: string): ValidatorF
     }
 }
 
+/**
+ * Generates a default date range with start date as today and end date as today + years
+ * @param years Number of years to add to today for the end date (default: 5)
+ * @returns An object with startDate and endDate as NgbDateStruct
+ */
+export function generateDefaultDateRange(years: number = 5): { startDate: NgbDateStruct, endDate: NgbDateStruct } {
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setFullYear(today.getFullYear() + years);
+    
+    const startDate: NgbDateStruct = {
+        year: today.getFullYear(),
+        month: today.getMonth() + 1, 
+        day: today.getDate()
+    };
+    
+    const endDate: NgbDateStruct = {
+        year: futureDate.getFullYear(),
+        month: futureDate.getMonth() + 1,
+        day: futureDate.getDate()
+    };
+    
+    return { startDate, endDate };
+}
 
 /**
  * Helper function to convert NgbDateStruct to string in YYYY-MM-DD format
@@ -49,7 +73,6 @@ export function dateStructToString(date: NgbDateStruct | null): string | null {
     return `${date.year}-${date.month.toString()
         .padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
 }
-
 
 /**
 * Helper function to convert string date in YYYY-MM-DD format to NgbDateStruct

@@ -43,7 +43,6 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
   }
 
   ngOnInit(): void {
-    this.setDefaultDates();
     this.buildForm();
     this.populateForm();
   }
@@ -144,22 +143,6 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
     // This will match the format returned by form.getRawValue()
     this.originalFormValues = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
   }
-
-  private setDefaultDates(): void {
-    this.today = this.calendar.getToday();
-    this.defaultNgayHetHieuLuc = {
-      year: this.today.year + 5,
-      month: this.today.month,
-      day: this.today.day
-    };
-  }
-
-  preventSpaces(event: KeyboardEvent) {
-    if (event.key === ' ') {
-      event.preventDefault();
-    }
-  }
-
 
   get isValidatingCode(): boolean {
     const control = this.form?.get('ma');

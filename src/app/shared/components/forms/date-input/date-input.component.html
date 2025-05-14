@@ -36,7 +36,8 @@
           Ngày hiệu lực không được lớn hơn ngày hết hiệu lực
         </ng-container>
         <ng-container *ngIf="ngControl?.errors?.['ngbDate']?.invalid">
-          Định dạng ngày không hợp lệ. Vui lòng nhập theo định dạng {{ placeholder }}.
+          Định dạng ngày/tháng/năm không hợp lệ. Vui lòng kiểm tra lại
+           <!-- {{ placeholder }}. -->
         </ng-container>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 import { DonViTinhCreateDto } from '../../models/dm_donvitinh/don-vi-tinh_create.dto';
 import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
-import { dateRangeValidator } from '../../../../core/formatters/date-range-validator';
+import { dateRangeValidator, generateDefaultDateRange } from '../../../../core/formatters/date-range-validator';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
 
@@ -33,7 +33,7 @@ export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
 
   today!: NgbDateStruct;
   defaultNgayHetHieuLuc!: NgbDateStruct;
-  
+
   // Add a property to track initial form values
   initialFormValue: any;
 
@@ -44,7 +44,7 @@ export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
   ngOnInit(): void {
     this.setDefaultDates();
     this.buildForm();
-    
+
     // Store initial form value to track changes
     this.initialFormValue = this.form.value;
   }
@@ -63,7 +63,7 @@ export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
     }
 
     const formData = this.prepareFormData(['ngayHieuLuc', 'ngayHetHieuLuc']);
-    
+
     this.onSave(formData as DonViTinhCreateDto);
     this.activeModal.close();
   }
@@ -104,18 +104,13 @@ export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
     return control?.pending === true;
   }
 
-  private setDefaultDates(): void {
-    this.today = this.calendar.getToday();
-    this.defaultNgayHetHieuLuc = {
-      year: this.today.year + 5,
-      month: this.today.month,
-      day: this.today.day
-    };
-  }
+  setDefaultDates(): void {
+    const { startDate, endDate } = generateDefaultDateRange(5);
 
-  preventSpaces(event: KeyboardEvent) {
-    if (event.key === ' ') {
-      event.preventDefault();
-    }
+    this.form.patchValue({
+      ngayHieuLuc: startDate,
+      ngayHetHieuLuc: endDate
+    });
   }
+  
 }

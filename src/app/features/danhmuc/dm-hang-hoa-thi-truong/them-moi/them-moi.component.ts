@@ -1,6 +1,7 @@
-import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, OnInit, Output, Renderer2 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { dateRangeValidator, generateDefaultDateRange } from '../../../../core/formatters/date-range-validator';
 import { DmNhomHangHoaService } from '../../services/api/dm-nhom-hang-hoa.service';
 import { DmThitruongService } from '../../services/api/dm-thitruong.service';
 import { CreateNhomHangHoaDto } from '../../models/dm_nhomhanghoathitruong/CreateNhomHangHoaDto';
@@ -14,6 +15,7 @@ import { TextInputComponent } from '../../../../shared/components/forms/text-inp
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { NhomHangHoaSelectionService } from '../../services/utils/nhom-hang-hoa-selection.service';
 import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
+import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
 
 @Component({
   selector: 'app-them-moi',
@@ -23,6 +25,7 @@ import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-sele
     DateInputComponent,
     TextInputComponent,
     TruncatePipe,
+    FormFooterComponent,
   ],
   templateUrl: './them-moi.component.html',
   styleUrls: ['./them-moi.component.css']
@@ -38,6 +41,7 @@ export class ThemMoiComponent extends BaseItemFormComponent implements OnInit {
   private hangHoaSvc = inject(DmThitruongService);
   private nhomHangHoaSelectionService = inject(NhomHangHoaSelectionService);
   donViTinhSelectionService = inject(DonViTinhSelectionService);
+  private elementRef = inject(ElementRef);
   
   isHangHoa = false; 
   isValidatingCode = false;
@@ -54,17 +58,31 @@ export class ThemMoiComponent extends BaseItemFormComponent implements OnInit {
   }
   
   ngOnInit(): void {
+    this.setDefaultDates();
   }
 
   toggleIsHangHoa(): void {
     this.isHangHoa = !this.isHangHoa;
+
+    const nhomHangHoaIdControl = this.form.get('nhomHangHoaId');
+    
     if (this.isHangHoa) {
+      nhomHangHoaIdControl?.setValidators(Validators.required);
+
       this.form.addControl('donViTinhId', this.fb.control(null, Validators.required));
       this.form.addControl('dacTinh', this.fb.control(''));
+      
+      setTimeout(() => {
+        this.scrollToBottom();
+      }, 100);
     } else {
+      nhomHangHoaIdControl?.clearValidators();
+      
       this.form.removeControl('donViTinhId');
       this.form.removeControl('dacTinh');
     }
+     
+    nhomHangHoaIdControl?.updateValueAndValidity();
   }
   
   protected override buildForm(): void {
@@ -74,7 +92,12 @@ export class ThemMoiComponent extends BaseItemFormComponent implements OnInit {
       ghiChu: this.commonFields.ghiChu,
       ngayHieuLuc: this.commonFields.ngayHieuLuc,
       ngayHetHieuLuc: this.commonFields.ngayHetHieuLuc,
+      // Initialize without required validator - it will be added later if needed
       nhomHangHoaId: [null]
+    }, {
+      validators: [
+        dateRangeValidator('ngayHieuLuc', 'ngayHetHieuLuc')
+      ]
     });
   }
   
@@ -175,5 +198,21 @@ export class ThemMoiComponent extends BaseItemFormComponent implements OnInit {
         this.form.patchValue({ donViTinhId: selectedUnit.id });
       }
     );
+  }
+  
+  private scrollToBottom(): void {
+    const modalBody = this.elementRef.nativeElement.querySelector('.modal-body');
+    if (modalBody) {
+      modalBody.scrollTop = modalBody.scrollHeight;
+    }
+  }
+  
+  setDefaultDates(): void {
+    const { startDate, endDate } = generateDefaultDateRange(5);
+    
+    this.form.patchValue({
+      ngayHieuLuc: startDate,
+      ngayHetHieuLuc: endDate
+    });
   }
 }
