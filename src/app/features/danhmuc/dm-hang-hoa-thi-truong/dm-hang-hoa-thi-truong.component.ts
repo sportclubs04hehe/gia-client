@@ -290,9 +290,9 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   clearSearch(): void {
     this.searchTermModel = '';
+    this.searchTerm.set('');
+    this.selectedItem.set(null);
     this.searchTerms.next('');
-    this.selectedItem.set(null); 
-    this.loadRootCategories();
   }
 
   selectItem(item: TreeNode): void {
