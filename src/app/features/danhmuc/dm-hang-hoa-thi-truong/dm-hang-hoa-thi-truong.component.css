@@ -26,3 +26,98 @@
 ::ng-deep .ngx-spinner .loading-text {
   display: block !important;
 }
+
+.tree-table-container {
+  overflow-x: auto;
+}
+
+.table tr.selected {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+.folder-icon, .file-icon {
+  display: inline-block;
+  width: 20px;
+}
+
+.action-row {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 767.98px) {
+  .table thead {
+    display: none;
+  }
+  
+  .table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+  }
+  
+  .table tbody td {
+    display: block;
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+  
+  .table tbody td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 45%;
+    padding-left: 15px;
+    font-weight: bold;
+    text-align: left;
+  }
+}
+
+/* CSS cho nút mở rộng */
+.btn-icon {
+  padding: 0.1rem 0.2rem;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: #6c757d;
+}
+
+.btn-icon:hover {
+  color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Điều chỉnh khoảng cách và hiển thị icon */
+.bi-folder-fill, .bi-file-earmark {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+/* CSS cho hàng được chọn */
+.table tr.selected {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+:host ::ng-deep .highlight-text {
+  background-color: rgba(255, 193, 7, 0.5);
+  font-weight: bold;
+  padding: 0 2px;
+  border-radius: 2px;
+}

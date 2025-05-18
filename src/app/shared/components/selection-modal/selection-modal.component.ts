@@ -85,7 +85,7 @@ export class SelectionModalComponent {
     this.isLoading = status;
   }
 
-  getFieldValue(item: any, field: string): any {
-    return item[field];
+  getFieldValue(item: any, field: string | number | symbol): any {
+    return item[field as string];
   }
 }

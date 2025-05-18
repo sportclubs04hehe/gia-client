@@ -30,10 +30,10 @@
           style="cursor: pointer"
         >
           <td *ngFor="let col of columns">
-            <ng-container *ngIf="col.truncateLength">
+            <ng-container *ngIf="col.truncateLength !== undefined">
               <span [innerHTML]="getFieldValue(item, col.field) | truncate:col.truncateLength | textHighlight:searchTerm"></span>
             </ng-container>
-            <ng-container *ngIf="!col.truncateLength">
+            <ng-container *ngIf="col.truncateLength === undefined">
               <span [innerHTML]="getFieldValue(item, col.field) | textHighlight:searchTerm"></span>
             </ng-container>
           </td>

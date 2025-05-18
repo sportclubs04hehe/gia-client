@@ -1,0 +1,36 @@
+<div class="tree-table-container">
+  <table class="table table-bordered table-hover">
+    <thead>
+      <tr>
+        <th *ngFor="let col of columns" [style.width]="col.width">{{ col.header }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of items" 
+          [class.selected]="selectedItem && selectedItem.id === item.id"
+          (click)="onRowClick(item)">
+        <td *ngFor="let col of columns" [attr.data-label]="col.header">
+          <!-- Cell with Level Padding -->
+          <div *ngIf="!col.isButton" [style]="col.paddingFunction ? col.paddingFunction(item) : ''">
+            {{ getDisplayValue(item, col) }}
+          </div>
+          
+          <!-- Button Cell -->
+          <div *ngIf="col.isButton" class="text-center">
+            <button *ngIf="col.buttonClass?.(item) !== 'd-none'"
+                    [class]="getButtonClass(item, col)"
+                    (click)="$event.stopPropagation(); col.buttonClick?.(item)">
+              <i *ngIf="col.buttonIcon" [class]="getButtonIcon(item, col)"></i>
+              {{ col.buttonText ? col.buttonText(item) : '' }}
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr *ngIf="items.length === 0">
+        <td [attr.colspan]="columns.length" class="text-center">
+          {{ isLoading ? 'Đang tải dữ liệu...' : emptyMessage }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

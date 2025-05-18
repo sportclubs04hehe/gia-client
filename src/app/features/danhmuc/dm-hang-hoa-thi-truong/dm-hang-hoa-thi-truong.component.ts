@@ -1,24 +1,21 @@
-import { Component, ElementRef, inject, OnInit, signal, ViewChild, WritableSignal, PLATFORM_ID, Inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, inject, signal, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ThemMoiComponent } from './them-moi/them-moi.component';
-import { DmThitruongService } from '../services/api/dm-thitruong.service';
-import { HangHoa } from '../models/dm_hanghoathitruong/dm-thitruong';
-import { PagedResult } from '../models/paged-result';
-import { HangHoaCreateDto } from '../models/dm_hanghoathitruong/hh-thitruong-create';
 import { EditComponent } from './edit/edit.component';
 import { ToastrService } from 'ngx-toastr';
 import { SharedModule } from '../../../shared/shared.module';
-import { debounceTime, distinctUntilChanged, Subject, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, of, Subject, switchMap, tap, Observable, forkJoin, catchError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { TableColumn } from '../../../shared/models/table-column';
-import { TableDataComponent } from '../../../shared/components/table-data/table-data.component';
-import { ImportExcelComponent } from './import-excel/import-excel.component';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { SpinnerService } from '../../../shared/services/spinner.service';
+import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
+import { TreeNode } from '../models/tree-node';
+import { TextHighlightPipe } from '../../../shared/pipes/text-highlight.pipe';
+import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',
@@ -28,8 +25,8 @@ import { SpinnerService } from '../../../shared/services/spinner.service';
     FormsModule,
     SearchBarComponent,
     ActiveButtonComponent,
-    TableDataComponent,
     NgxSpinnerModule, 
+    TextHighlightPipe,
   ],
   templateUrl: './dm-hang-hoa-thi-truong.component.html',
   styleUrl: './dm-hang-hoa-thi-truong.component.css'
@@ -38,56 +35,38 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   @ViewChild(SearchBarComponent) searchBarComponent!: SearchBarComponent;
 
   private modalService = inject(NgbModal);
-  private svc = inject(DmThitruongService);
+  private hhThiTruongService = inject(DmHangHoaThiTruongService);
   private toastr = inject(ToastrService);
   private spinner = inject(SpinnerService);
   private searchTerms = new Subject<string>();
 
   isLoadingList = signal(false);
-
   isSaving = signal(false);
-
-  selectedHangHoa = signal<HangHoa | null>(null);
-
-  hangHoas: WritableSignal<HangHoa[]> = signal([]);
-  pageIndex = signal(1);
-  readonly pageSize = 50;
-  hasNextPage = signal(true);
-
+  selectedItem = signal<TreeNode | null>(null);
+  flattenedItems = signal<TreeNode[]>([]);
   searchTerm = signal<string>('');
   searchTermModel: string = '';
 
-  tableColumns: TableColumn<HangHoa>[] = [
-    { header: 'Mã mặt hàng', field: 'maMatHang', width: '15%' },
+  tableColumns: TableColumn<TreeNode>[] = [
     { 
-      header: 'Tên mặt hàng', 
-      field: 'tenMatHang', 
-      width: '20%'
+      header: 'Mã mặt hàng', 
+      field: 'ma', 
+      width: '25%',
+      paddingFunction: (item: TreeNode) => `padding-left: ${(item.level + 1) * 20}px`
+    },
+    { header: 'Tên mặt hàng', field: 'ten', width: '45%' },
+    { 
+      header: 'Loại', 
+      field: 'loaiMatHang', 
+      width: '15%',
+      formatter: (item: TreeNode) => {
+        return item.loaiMatHang === 0 ? 'Nhóm' : 'Mặt hàng';
+      }
     },
     { 
       header: 'Đơn vị tính', 
-      field: 'donViTinhSelectDto.ten', 
-      width: '10%',
-      formatter: (item: HangHoa) => {
-        return item.donViTinhSelectDto?.ten || '';
-      }
-    },
-    { header: 'Đặc tính', field: 'dacTinh', width: '20%' },
-    {
-      header: 'Ngày hiệu lực',
-      field: 'ngayHieuLuc',
-      width: '15%',
-      formatter: (item: HangHoa) => {
-        return new Date(item.ngayHieuLuc).toLocaleDateString('vi-VN');
-      }
-    },
-    {
-      header: 'Ngày hết hiệu lực',
-      field: 'ngayHetHieuLuc',
-      width: '15%',
-      formatter: (item: HangHoa) => {
-        return new Date(item.ngayHetHieuLuc).toLocaleDateString('vi-VN');
-      }
+      field: 'tenDonViTinh', 
+      width: '15%'
     }
   ];
 
@@ -95,7 +74,229 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   ngOnInit() {
     this.setupSearchStream();
-    this.loadMore();
+    this.loadRootCategories();
+  }
+
+  loadRootCategories() {
+    this.isLoadingList.set(true);
+    this.spinner.showTableSpinner();
+    
+    this.hhThiTruongService.getAllParentCategories().subscribe({
+      next: (categories) => {
+        const rootNodes: TreeNode[] = categories.map(cat => ({
+          ...cat,
+          level: 0,
+          expanded: false,
+          children: [], // Khởi tạo mảng rỗng
+          loadedChildren: false
+        }));
+        
+        this.flattenedItems.set(rootNodes);
+        this.isLoadingList.set(false);
+        this.spinner.hideTableSpinner();
+      },
+      error: (err) => {
+        console.error('Lỗi khi tải danh mục gốc:', err);
+        this.toastr.error('Không thể tải danh sách hàng hóa', 'Lỗi');
+        this.isLoadingList.set(false);
+        this.spinner.hideTableSpinner();
+      }
+    });
+  }
+
+  toggleNode(node: TreeNode) {
+    if (node.loading) return;
+    
+    if (node.expanded) {
+      // Thu gọn node
+      this.collapseNode(node);
+    } else {
+      // Mở rộng node
+      if (!node.loadedChildren) {
+        this.loadChildrenForNode(node);
+      } else {
+        this.expandNode(node);
+      }
+    }
+  }
+
+  loadChildrenForNode(node: TreeNode) {
+    node.loading = true;
+    
+    this.hhThiTruongService.getChildrenByParent(node.id).subscribe({
+      next: (children) => {
+        const childNodes: TreeNode[] = children.map(child => ({
+          ...child,
+          level: node.level + 1,
+          expanded: false,
+          parent: node,
+          children: [],
+          loadedChildren: false
+        }));
+
+        node.children = childNodes;
+        node.loadedChildren = true;
+        node.loading = false;
+        node.expanded = true;
+        
+        this.updateFlattenedItems();
+      },
+      error: (err) => {
+        console.error(`Lỗi khi tải con của node ${node.id}:`, err);
+        node.loading = false;
+      }
+    });
+  }
+
+  expandNode(node: TreeNode) {
+    node.expanded = true;
+    this.updateFlattenedItems();
+  }
+
+  collapseNode(node: TreeNode) {
+    node.expanded = false;
+    this.updateFlattenedItems();
+  }
+
+  updateFlattenedItems() {
+    // Lấy các node gốc không có parent
+    const rootNodes = this.flattenedItems().filter(item => !item.parent);
+    
+    // Tạo danh sách phẳng mới bằng cách duyệt đệ quy tất cả các node
+    const newFlattenedItems: TreeNode[] = [];
+    
+    for (const rootNode of rootNodes) {
+      this.flattenNodeWithChildren(rootNode, newFlattenedItems);
+    }
+    
+    this.flattenedItems.set(newFlattenedItems);
+  }
+
+  flattenNodeWithChildren(node: TreeNode, result: TreeNode[]) {
+    result.push(node);
+    
+    if (node.expanded && node.children && node.children.length) {
+      for (const child of node.children) {
+        this.flattenNodeWithChildren(child as TreeNode, result);
+      }
+    }
+  }
+
+  onSearchChange(term: string): void {
+    this.searchTerms.next(term);
+  }
+
+  // Thay đổi cách xử lý kết quả tìm kiếm
+  setupSearchStream(): void {
+    this.searchTerms.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      tap(term => {
+        this.isLoadingList.set(true);
+        this.spinner.showTableSpinner();
+        this.searchTerm.set(term);
+      }),
+      switchMap(term => {
+        if (!term) {
+          return this.hhThiTruongService.getAllParentCategories().pipe(
+            map(items => items.map(item => this.mapToTreeNode(item, 0)))
+          );
+        } else {
+          // Sử dụng API tìm kiếm phân cấp mới
+          return this.hhThiTruongService.searchHierarchical(term);
+        }
+      })
+    ).subscribe({
+      next: (items) => {
+        // Chuyển đổi dữ liệu thành cấu trúc cây phẳng
+        const flattenedNodes = this.processFlattenedTreeNodes(items);
+        this.flattenedItems.set(flattenedNodes);
+        this.isLoadingList.set(false);
+        this.spinner.hideTableSpinner();
+      },
+      error: (error) => {
+        console.error('Lỗi khi tìm kiếm:', error);
+        this.isLoadingList.set(false);
+        this.spinner.hideTableSpinner();
+        this.toastr.error('Không thể thực hiện tìm kiếm', 'Lỗi');
+      }
+    });
+  }
+
+  // Sửa phương thức processFlattenedTreeNodes để đánh dấu node có thể còn con chưa tải
+  private processFlattenedTreeNodes(nodes: HHThiTruongTreeNodeDto[]): TreeNode[] {
+    const treeNodes: TreeNode[] = [];
+    
+    // Đệ quy xử lý node và con của nó
+    const processNode = (node: HHThiTruongTreeNodeDto, level: number, parent?: TreeNode): TreeNode => {
+      // Loại node = 0 là nhóm, có thể có con
+      const isGroup = node.loaiMatHang === 0;
+      
+      const treeNode: TreeNode = {
+        ...node,
+        level,
+        expanded: !!node.matHangCon?.length, // Tự động mở rộng nếu có con
+        // Chỉ đánh dấu đã tải nếu là hàng hóa (loaiMatHang=1), còn nhóm có thể còn con chưa tải
+        loadedChildren: !isGroup || !!node.matHangCon?.length,
+        children: [],
+        parent
+      };
+      
+      // Xử lý con - thêm kiểm tra node.matHangCon tồn tại
+      if (node.matHangCon && node.matHangCon.length > 0) {
+        treeNode.children = node.matHangCon.map(child => 
+          processNode(child, level + 1, treeNode)
+        );
+      }
+      
+      return treeNode;
+    };
+    
+    // Xử lý từng node gốc
+    for (const rootNode of nodes) {
+      const processedNode = processNode(rootNode, 0);
+      treeNodes.push(processedNode);
+      
+      // Thêm các nút con vào danh sách phẳng
+      if (processedNode.expanded && processedNode.children?.length) {
+        this.addExpandedChildrenToList(processedNode.children, treeNodes);
+      }
+    }
+    
+    return treeNodes;
+  }
+
+  // Thêm tất cả các nút con đã mở rộng vào danh sách
+  private addExpandedChildrenToList(children: TreeNode[], list: TreeNode[]): void {
+    for (const child of children) {
+      list.push(child);
+      if (child.expanded && child.children?.length) {
+        this.addExpandedChildrenToList(child.children, list);
+      }
+    }
+  }
+
+  // Hàm tạo TreeNode từ dữ liệu API
+  private mapToTreeNode(item: any, level: number, parent?: TreeNode): TreeNode {
+    return {
+      ...item,
+      level,
+      expanded: false,
+      children: [],
+      loadedChildren: false,
+      parent
+    };
+  }
+
+  clearSearch(): void {
+    this.searchTermModel = '';
+    this.searchTerms.next('');
+    this.selectedItem.set(null); 
+    this.loadRootCategories();
+  }
+
+  selectItem(item: TreeNode): void {
+    this.selectedItem.set(item);
   }
 
   openModal() {
@@ -105,31 +306,17 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       keyboard: false,
       centered: true,
       fullscreen: 'lg', 
-      scrollable: true, 
-      windowClass: 'custom-modal-window' 
+      scrollable: true
     });
     
     modalRef.componentInstance.title = 'Thêm mặt hàng';
-
-    modalRef.componentInstance.onSaveCallback = (data: any, isHangHoa: boolean): void => {
-      this.isSaving.set(false);
-      this.spinner.hideSavingSpinner();
-      
-      this.loadFirstPage();
-    };
-  }
-
-  openImportModal() {
-    const modalRef = this.modalService.open(ImportExcelComponent, {
-      size: 'xl',
-      centered: true,
-      backdrop: 'static',
-    });
+    modalRef.componentInstance.parentId = this.selectedItem()?.id;
 
     modalRef.result.then(
-      (refreshList: boolean) => {
-        if (refreshList) {
-          this.loadFirstPage();
+      (result) => {
+        if (result) {
+          this.loadRootCategories();
+          this.toastr.success('Thêm mặt hàng thành công', 'Thành công');
         }
       }
     ).catch(() => {
@@ -138,7 +325,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   }
 
   openModalEdit(): void {
-    if (!this.selectedHangHoa()) {
+    if (!this.selectedItem()) {
       this.toastr.warning('Vui lòng chọn một mặt hàng để sửa', 'Thông báo');
       return;
     }
@@ -150,147 +337,27 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     });
 
     modalRef.componentInstance.title = 'Cập nhật mặt hàng';
-    modalRef.componentInstance.hangHoa = this.selectedHangHoa();
+    modalRef.componentInstance.item = this.selectedItem();
 
     modalRef.result.then(
-      (updated: HangHoa) => {
-        this.hangHoas.update(list =>
-          list.map(h => h.id === updated.id ? updated : h)
-        );
-        this.selectedHangHoa.set(updated);
-
-        this.toastr.success('Cập nhật thành công', 'Thành công');
+      (updated) => {
+        if (updated) {
+          this.loadRootCategories();
+          this.toastr.success('Cập nhật thành công', 'Thành công');
+        }
       }
     ).catch(() => {
       // Modal was dismissed - no action needed
     });
   }
 
-  setupSearchStream(): void {
-    this.searchTerms.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      tap(term => {
-        this.isLoadingList.set(true);
-        this.spinner.showTableSpinner();
-        this.pageIndex.set(1);
-        this.hangHoas.set([]);
-        this.hasNextPage.set(true);
-      }),
-      switchMap(term => {
-        this.searchTerm.set(term);
-        const params = {
-          pageIndex: 1,
-          pageSize: this.pageSize,
-          searchTerm: term
-        };
-        return term
-          ? this.svc.search(params)
-          : this.svc.getAll(params);
-      })
-    ).subscribe({
-      next: res => {
-        const items = Array.isArray(res.data) ? res.data : [];
-        this.hangHoas.set(items);
-        this.hasNextPage.set(res.pagination?.hasNextPage ?? false);
-        this.pageIndex.set(2);
-        this.isLoadingList.set(false);
-        this.spinner.hideTableSpinner();
-        
-        if (this.searchBarComponent) {
-          setTimeout(() => this.searchBarComponent.searchInput.nativeElement.focus(), 0);
-        }
-      },
-      error: () => {
-        this.isLoadingList.set(false);
-        this.spinner.hideTableSpinner();
-        if (this.searchBarComponent) {
-          setTimeout(() => this.searchBarComponent.searchInput.nativeElement.focus(), 0);
-        }
-      }
-    });
-  }
-
-  onSearchChange(term: string): void {
-    this.searchTerms.next(term);
-  }
-
-  clearSearch(): void {
-    this.searchTermModel = '';
-    this.searchTerms.next('');
-  }
-
-  loadMore() {
-    if (!this.hasNextPage() || this.isLoadingList()) return;
-
-    this.isLoadingList.set(true);
-    this.spinner.showTableSpinner();
-
-    const page = this.pageIndex();
-    const searchParams = {
-      pageIndex: page,
-      pageSize: this.pageSize,
-      searchTerm: this.searchTerm()
-    };
-
-    const service = this.searchTerm()
-      ? this.svc.search(searchParams)
-      : this.svc.getAll(searchParams);
-
-    service.subscribe({
-      next: this.handlePagedResult.bind(this),
-      error: () => {
-        this.isLoadingList.set(false);
-        this.spinner.hideTableSpinner();
-      }
-    });
-  }
-
-  private handlePagedResult(res: PagedResult<HangHoa>): void {
-    const activeElement = isPlatformBrowser(this.platformId) ? document.activeElement : null;
-
-    const items = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
-
-    this.hangHoas.update(arr => [...arr, ...items]);
-
-    const pagination = res.pagination || {};
-    this.hasNextPage.set(pagination.hasNextPage || false);
-    this.pageIndex.update(i => i + 1);
-    this.isLoadingList.set(false);
-    this.spinner.hideTableSpinner();
-
-    if (isPlatformBrowser(this.platformId) && activeElement instanceof HTMLElement) {
-      setTimeout(() => activeElement.focus(), 0);
-    }
-  }
-
-  private loadFirstPage(): void {
-    const activeElement = isPlatformBrowser(this.platformId) ? document.activeElement : null;
-
-    this.pageIndex.set(1);
-    this.hangHoas.set([]);
-    this.hasNextPage.set(true);
-    this.loadMore();
-
-    if (isPlatformBrowser(this.platformId) && activeElement instanceof HTMLElement) {
-      setTimeout(() => activeElement.focus(), 0);
-    }
-  }
-
-  onScroll() {
-    this.loadMore();
-  }
-  selectHangHoa(hangHoa: HangHoa): void {
-    this.selectedHangHoa.set(hangHoa);
-  }
-
-  deleteHangHoa(): void {
-    if (!this.selectedHangHoa()) {
+  deleteItem(): void {
+    if (!this.selectedItem()) {
       this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Thông báo');
       return;
     }
 
-    const hangHoa = this.selectedHangHoa();
+    const item = this.selectedItem();
 
     const modalRef = this.modalService.open(DeleteConfirmationComponent, {
       centered: false,
@@ -303,12 +370,12 @@ export class DmHangHoaThiTruongComponent implements OnInit {
           this.isSaving.set(true);
           this.spinner.showSavingSpinner();
 
-          this.svc.delete(hangHoa!.id!).subscribe({
+          this.hhThiTruongService.delete(item!.id).subscribe({
             next: () => {
               this.isSaving.set(false);
               this.spinner.hideSavingSpinner();
-              this.selectedHangHoa.set(null);
-              this.loadFirstPage();
+              this.selectedItem.set(null);
+              this.loadRootCategories();
               this.toastr.success(`Đã xóa mặt hàng thành công`, 'Thành công');
             },
             error: (err) => {
@@ -335,11 +402,19 @@ export class DmHangHoaThiTruongComponent implements OnInit {
         this.openModalEdit();
         break;
       case 'delete':
-        this.deleteHangHoa();
+        this.deleteItem();
         break;
-      case 'import':
-        this.openImportModal();
+      case 'refresh':
+        this.loadRootCategories();
         break;
     }
+  }
+
+  // Thêm hàm này vào component của bạn
+  getStringValue(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    return String(value);
   }
 }
