@@ -1,21 +1,13 @@
 <div class="page-container">
   <!-- Table loading spinner -->
-  <ngx-spinner name="tableSpinner" 
-               bdColor="rgba(0, 0, 0, 0.8)" 
-               size="default" 
-               color="#fff" 
-               type="pacman" 
-               [fullScreen]="true">
+  <ngx-spinner name="tableSpinner" bdColor="rgba(0, 0, 0, 0.8)" size="default" color="#fff" type="pacman"
+    [fullScreen]="true">
     <p style="color: white">Đang tải dữ liệu...</p>
   </ngx-spinner>
-  
+
   <!-- Save/delete operations spinner -->
-  <ngx-spinner name="savingSpinner" 
-               bdColor="rgba(0, 0, 0, 0.8)" 
-               size="default" 
-               color="#fff" 
-               type="pacman" 
-               [fullScreen]="true">
+  <ngx-spinner name="savingSpinner" bdColor="rgba(0, 0, 0, 0.8)" size="default" color="#fff" type="pacman"
+    [fullScreen]="true">
     <p style="color: white">Đang xử lý...</p>
   </ngx-spinner>
 
@@ -39,7 +31,8 @@
       </div>
 
       <!-- Tree Table Component -->
-      <div class="tree-table-container">
+      <div class="tree-table-container" infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="50"
+        [scrollWindow]="false" (scrolled)="onTableScroll()">
         <table class="table table-bordered table-hover">
           <thead>
             <tr>
@@ -47,35 +40,31 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of flattenedItems()" 
-                [class.selected]="selectedItem() && selectedItem()?.id === item.id"
-                (click)="selectItem(item)">
+            <tr *ngFor="let item of flattenedItems()"
+              [class.row-selected]="selectedItem() && selectedItem()?.id === item.id" (click)="selectItem(item)">
               <td *ngFor="let col of tableColumns" [attr.data-label]="col.header">
                 <div [style]="col.paddingFunction ? col.paddingFunction(item) : ''">
                   <span *ngIf="col.field === 'ma'">
-                    <button *ngIf="item.loaiMatHang === 0" 
-                            class="btn btn-sm btn-icon expand-btn me-1"
-                            (click)="$event.stopPropagation(); toggleNode(item)">
+                    <button *ngIf="item.loaiMatHang === 0" class="btn btn-sm btn-icon expand-btn me-1"
+                      (click)="$event.stopPropagation(); toggleNode(item)">
                       <i *ngIf="item.loading" class="bi bi-arrow-repeat spinner"></i>
-                      <i *ngIf="!item.loading" class="bi" 
-                        [class.bi-chevron-right]="!item.expanded"
+                      <i *ngIf="!item.loading" class="bi" [class.bi-chevron-right]="!item.expanded"
                         [class.bi-chevron-down]="item.expanded"></i>
                     </button>
-                    
+
                     <!-- Icon showing item type -->
-                    <i class="bi me-1" 
-                      [class.bi-folder-fill]="item.loaiMatHang === 0" 
-                      [class.text-warning]="item.loaiMatHang === 0"
-                      [class.bi-box2]="item.loaiMatHang === 1"
+                    <i class="bi me-1" [class.bi-folder-fill]="item.loaiMatHang === 0"
+                      [class.text-warning]="item.loaiMatHang === 0" [class.bi-box2]="item.loaiMatHang === 1"
                       [class.text-info]="item.loaiMatHang === 1"></i>
-                      
+
                     <!-- Display the actual value with highlighting - convert to string explicitly -->
                     <span [innerHTML]="getStringValue(item.ma) | textHighlight: searchTerm()"></span>
                   </span>
-                  
+
                   <!-- For all other columns -->
                   <span *ngIf="col.field !== 'ma' && col.field !== 'tenDonViTinh'">
-                    <span *ngIf="!col.formatter" [innerHTML]="getStringValue(item[col.field] || '') | textHighlight: searchTerm()"></span>
+                    <span *ngIf="!col.formatter"
+                      [innerHTML]="getStringValue(item[col.field] || '') | textHighlight: searchTerm()"></span>
                     <span *ngIf="col.formatter">{{ col.formatter(item) }}</span>
                   </span>
 
@@ -85,9 +74,22 @@
                 </div>
               </td>
             </tr>
+
+            <!-- Add loading indicator row at the bottom -->
+            <tr *ngIf="isLoadingMore()" class="loading-row">
+              <td [attr.colspan]="tableColumns.length" class="text-center">
+                <div class="d-flex justify-content-center align-items-center py-2">
+                  <i class="bi bi-arrow-repeat spinner me-2"></i>
+                  <span>Đang tải thêm mặt hàng...</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- No data row -->
             <tr *ngIf="flattenedItems().length === 0">
               <td [attr.colspan]="tableColumns.length" class="text-center">
-                {{ isLoadingList() ? 'Đang tải dữ liệu...' : (searchTerm() ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu') }}
+                {{ isLoadingList() ? 'Đang tải dữ liệu...' : (searchTerm() ? 'Không tìm thấy kết quả' : 'Chưa có dữ
+                liệu') }}
               </td>
             </tr>
           </tbody>

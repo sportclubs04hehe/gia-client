@@ -16,6 +16,7 @@ import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truon
 import { TreeNode } from '../models/tree-node';
 import { TextHighlightPipe } from '../../../shared/pipes/text-highlight.pipe';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
+import { PagedResult } from '../models/paged-result';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',
@@ -25,11 +26,12 @@ import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTre
     FormsModule,
     SearchBarComponent,
     ActiveButtonComponent,
-    NgxSpinnerModule, 
+    NgxSpinnerModule,
     TextHighlightPipe,
   ],
   templateUrl: './dm-hang-hoa-thi-truong.component.html',
-  styleUrl: './dm-hang-hoa-thi-truong.component.css'
+  styleUrl: './dm-hang-hoa-thi-truong.component.css',
+  
 })
 export class DmHangHoaThiTruongComponent implements OnInit {
   @ViewChild(SearchBarComponent) searchBarComponent!: SearchBarComponent;
@@ -42,30 +44,31 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   isLoadingList = signal(false);
   isSaving = signal(false);
+  isLoadingMore = signal(false);
   selectedItem = signal<TreeNode | null>(null);
   flattenedItems = signal<TreeNode[]>([]);
   searchTerm = signal<string>('');
   searchTermModel: string = '';
 
   tableColumns: TableColumn<TreeNode>[] = [
-    { 
-      header: 'Mã mặt hàng', 
-      field: 'ma', 
+    {
+      header: 'Mã mặt hàng',
+      field: 'ma',
       width: '25%',
       paddingFunction: (item: TreeNode) => `padding-left: ${(item.level + 1) * 20}px`
     },
     { header: 'Tên mặt hàng', field: 'ten', width: '45%' },
-    { 
-      header: 'Loại', 
-      field: 'loaiMatHang', 
+    {
+      header: 'Loại',
+      field: 'loaiMatHang',
       width: '15%',
       formatter: (item: TreeNode) => {
         return item.loaiMatHang === 0 ? 'Nhóm' : 'Mặt hàng';
       }
     },
-    { 
-      header: 'Đơn vị tính', 
-      field: 'tenDonViTinh', 
+    {
+      header: 'Đơn vị tính',
+      field: 'tenDonViTinh',
       width: '15%'
     }
   ];
@@ -80,7 +83,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   loadRootCategories() {
     this.isLoadingList.set(true);
     this.spinner.showTableSpinner();
-    
+
     this.hhThiTruongService.getAllParentCategories().subscribe({
       next: (categories) => {
         const rootNodes: TreeNode[] = categories.map(cat => ({
@@ -88,9 +91,13 @@ export class DmHangHoaThiTruongComponent implements OnInit {
           level: 0,
           expanded: false,
           children: [], // Khởi tạo mảng rỗng
-          loadedChildren: false
+          loadedChildren: false,
+          // Add required pagination properties
+          currentPage: 1,
+          hasMoreChildren: false,
+          totalChildrenCount: 0
         }));
-        
+
         this.flattenedItems.set(rootNodes);
         this.isLoadingList.set(false);
         this.spinner.hideTableSpinner();
@@ -106,7 +113,7 @@ export class DmHangHoaThiTruongComponent implements OnInit {
 
   toggleNode(node: TreeNode) {
     if (node.loading) return;
-    
+
     if (node.expanded) {
       // Thu gọn node
       this.collapseNode(node);
@@ -120,32 +127,71 @@ export class DmHangHoaThiTruongComponent implements OnInit {
     }
   }
 
-  loadChildrenForNode(node: TreeNode) {
-    node.loading = true;
-    
-    this.hhThiTruongService.getChildrenByParent(node.id).subscribe({
-      next: (children) => {
-        const childNodes: TreeNode[] = children.map(child => ({
+  loadChildrenForNode(node: TreeNode, isLoadingMore: boolean = false) {
+    if (!isLoadingMore) {
+      node.loading = true;
+      node.currentPage = 1;
+      node.children = []; // Reset children when first loading
+    } else {
+      node.loadingMore = true;
+    }
+
+    const pageSize = 100; // Number of items per page
+
+    this.hhThiTruongService.getChildrenByParent(node.id, node.currentPage, pageSize).subscribe({
+      next: (response: PagedResult<HHThiTruongTreeNodeDto>) => {
+        // Process data
+        const childrenArray = response.data || [];
+        const pagination = response.pagination;
+
+        // Create TreeNode objects from the fetched items
+        const childNodes: TreeNode[] = childrenArray.map((child: HHThiTruongTreeNodeDto) => ({
           ...child,
           level: node.level + 1,
           expanded: false,
           parent: node,
           children: [],
-          loadedChildren: false
+          loadedChildren: false,
+          currentPage: 1,
+          hasMoreChildren: false
         }));
 
-        node.children = childNodes;
+        // Append new children to existing ones if loading more
+        if (isLoadingMore) {
+          node.children = [...node.children, ...childNodes];
+        } else {
+          node.children = childNodes;
+        }
+
+        // Update pagination state
+        node.currentPage = pagination.currentPage;
+        node.hasMoreChildren = pagination.hasNextPage;
+        node.totalChildrenCount = pagination.totalItems;
+
+        // Update node state
         node.loadedChildren = true;
         node.loading = false;
+        node.loadingMore = false;
         node.expanded = true;
-        
+
         this.updateFlattenedItems();
       },
       error: (err) => {
         console.error(`Lỗi khi tải con của node ${node.id}:`, err);
         node.loading = false;
+        node.loadingMore = false;
       }
     });
+  }
+
+  // Add method to load more children for a node
+  loadMoreChildrenForNode(node: TreeNode) {
+    if (!node.hasMoreChildren || node.loadingMore) {
+      return;
+    }
+
+    node.currentPage += 1;
+    this.loadChildrenForNode(node, true);
   }
 
   expandNode(node: TreeNode) {
@@ -161,20 +207,21 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   updateFlattenedItems() {
     // Lấy các node gốc không có parent
     const rootNodes = this.flattenedItems().filter(item => !item.parent);
-    
+
     // Tạo danh sách phẳng mới bằng cách duyệt đệ quy tất cả các node
     const newFlattenedItems: TreeNode[] = [];
-    
+
     for (const rootNode of rootNodes) {
       this.flattenNodeWithChildren(rootNode, newFlattenedItems);
     }
-    
+
     this.flattenedItems.set(newFlattenedItems);
+    this.isLoadingMore.set(false);
   }
 
   flattenNodeWithChildren(node: TreeNode, result: TreeNode[]) {
     result.push(node);
-    
+
     if (node.expanded && node.children && node.children.length) {
       for (const child of node.children) {
         this.flattenNodeWithChildren(child as TreeNode, result);
@@ -226,43 +273,43 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   // Sửa phương thức processFlattenedTreeNodes để đánh dấu node có thể còn con chưa tải
   private processFlattenedTreeNodes(nodes: HHThiTruongTreeNodeDto[]): TreeNode[] {
     const treeNodes: TreeNode[] = [];
-    
+
     // Đệ quy xử lý node và con của nó
     const processNode = (node: HHThiTruongTreeNodeDto, level: number, parent?: TreeNode): TreeNode => {
       // Loại node = 0 là nhóm, có thể có con
       const isGroup = node.loaiMatHang === 0;
-      
+
       const treeNode: TreeNode = {
         ...node,
         level,
-        expanded: !!node.matHangCon?.length, // Tự động mở rộng nếu có con
-        // Chỉ đánh dấu đã tải nếu là hàng hóa (loaiMatHang=1), còn nhóm có thể còn con chưa tải
+        expanded: !!node.matHangCon?.length, 
         loadedChildren: !isGroup || !!node.matHangCon?.length,
         children: [],
-        parent
+        parent,
+        currentPage: 1,
+        hasMoreChildren: isGroup && (!node.matHangCon || node.matHangCon.length === 0)
       };
-      
       // Xử lý con - thêm kiểm tra node.matHangCon tồn tại
       if (node.matHangCon && node.matHangCon.length > 0) {
-        treeNode.children = node.matHangCon.map(child => 
+        treeNode.children = node.matHangCon.map(child =>
           processNode(child, level + 1, treeNode)
         );
       }
-      
+
       return treeNode;
     };
-    
+
     // Xử lý từng node gốc
     for (const rootNode of nodes) {
       const processedNode = processNode(rootNode, 0);
       treeNodes.push(processedNode);
-      
+
       // Thêm các nút con vào danh sách phẳng
       if (processedNode.expanded && processedNode.children?.length) {
         this.addExpandedChildrenToList(processedNode.children, treeNodes);
       }
     }
-    
+
     return treeNodes;
   }
 
@@ -284,7 +331,9 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       expanded: false,
       children: [],
       loadedChildren: false,
-      parent
+      parent,
+      currentPage: 1,
+      hasMoreChildren: false
     };
   }
 
@@ -300,15 +349,15 @@ export class DmHangHoaThiTruongComponent implements OnInit {
   }
 
   openModal() {
-    const modalRef = this.modalService.open(ThemMoiComponent, { 
+    const modalRef = this.modalService.open(ThemMoiComponent, {
       size: 'xl',
-      backdrop: 'static', 
+      backdrop: 'static',
       keyboard: false,
       centered: true,
-      fullscreen: 'lg', 
+      fullscreen: 'lg',
       scrollable: true
     });
-    
+
     modalRef.componentInstance.title = 'Thêm mặt hàng';
     modalRef.componentInstance.parentId = this.selectedItem()?.id;
 
@@ -416,5 +465,20 @@ export class DmHangHoaThiTruongComponent implements OnInit {
       return '';
     }
     return String(value);
+  }
+
+  onTableScroll() {
+    // Find expanded nodes with more children to load
+    const expandedNodesWithMoreChildren = this.flattenedItems()
+      .filter(node => node.expanded && node.hasMoreChildren && !node.loadingMore);
+
+    if (expandedNodesWithMoreChildren.length > 0) {
+      // Only load more for the last expanded node with more children
+      // This gives a more natural loading experience
+      const nodeToLoadMore = expandedNodesWithMoreChildren[expandedNodesWithMoreChildren.length - 1];
+
+      this.isLoadingMore.set(true);
+      this.loadMoreChildrenForNode(nodeToLoadMore);
+    }
   }
 }

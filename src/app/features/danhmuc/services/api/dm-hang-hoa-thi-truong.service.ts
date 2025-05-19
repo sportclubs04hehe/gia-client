@@ -94,17 +94,21 @@ export class DmHangHoaThiTruongService {
   }
 
   /**
-   * Lấy danh sách con theo ID cha
-   */
-  getChildrenByParent(parentId: string): Observable<HHThiTruongTreeNodeDto[]> {
-    return this.http.get<HHThiTruongTreeNodeDto[]>(`${this.apiUrl}/${this.endpoint}/children/${parentId}`);
-  }
-
-  /**
    * Tìm kiếm phân cấp với các nút được mở rộng tự động
    */
   searchHierarchical(searchTerm: string): Observable<HHThiTruongTreeNodeDto[]> {
     const params = new HttpParams().set('searchTerm', searchTerm);
     return this.http.get<HHThiTruongTreeNodeDto[]>(`${this.apiUrl}/${this.endpoint}/search-hierarchical`, { params });
+  }
+
+  /**
+   * Lấy danh sách con theo ID cha với phân trang
+   */
+  getChildrenByParent(parentId: string, pageIndex: number = 1, pageSize: number = 100): Observable<PagedResult<HHThiTruongTreeNodeDto>> {
+    const params = new HttpParams()
+      .set('pageIndex', pageIndex.toString())
+      .set('pageSize', pageSize.toString());
+    
+    return this.http.get<PagedResult<HHThiTruongTreeNodeDto>>(`${this.apiUrl}/${this.endpoint}/children/${parentId}`, { params });
   }
 }

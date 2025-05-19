@@ -1,123 +1,174 @@
-.page-container {
-  position: relative;
-  min-height: 400px;
-}
-
-/* Cập nhật CSS cho spinner */
-::ng-deep .ngx-spinner {
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  z-index: 99999 !important;
-}
-
-::ng-deep .ngx-spinner p {
-  font-size: 16px !important;
-  margin-top: 60px !important;
-  font-weight: 500 !important;
-  color: white !important;
-  display: block !important;
-}
-
-::ng-deep .ngx-spinner .loading-text {
-  display: block !important;
-}
-
-.tree-table-container {
-  overflow-x: auto;
-}
-
-.table tr.selected {
-  background-color: rgba(0, 123, 255, 0.1);
-}
-
-.table td, .table th {
-  vertical-align: middle;
-}
-
-.folder-icon, .file-icon {
-  display: inline-block;
-  width: 20px;
-}
-
-.action-row {
-  margin-bottom: 1rem;
-}
-
-@media (max-width: 767.98px) {
-  .table thead {
-    display: none;
-  }
-  
-  .table tbody tr {
-    display: block;
-    margin-bottom: 1rem;
-    border: 1px solid #dee2e6;
-  }
-  
-  .table tbody td {
-    display: block;
-    text-align: right;
-    padding-left: 50%;
+  .page-container {
     position: relative;
   }
-  
-  .table tbody td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 0;
-    width: 45%;
-    padding-left: 15px;
-    font-weight: bold;
-    text-align: left;
+
+  /* Spinner styling */
+  ::ng-deep .ngx-spinner {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 99999 !important;
   }
+
+  ::ng-deep .ngx-spinner p {
+    font-size: 16px !important;
+    margin-top: 60px !important;
+    font-weight: 500 !important;
+    color: white !important;
+    display: block !important;
+  }
+
+  ::ng-deep .ngx-spinner .loading-text {
+    display: block !important;
+  }
+
+  /* Table container - match TableDataComponent height calculation */
+ .tree-table-container {
+    height: auto;
+    max-height: calc(100vh - 210px);
+    min-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    position: relative;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem; 
 }
 
-/* CSS cho nút mở rộng */
-.btn-icon {
-  padding: 0.1rem 0.2rem;
-  line-height: 1;
-  background: transparent;
-  border: none;
-  color: #6c757d;
-}
 
-.btn-icon:hover {
-  color: #007bff;
-  background-color: rgba(0, 123, 255, 0.1);
-}
+  /* Table styling */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
 
-.spinner {
-  animation: spin 1s linear infinite;
-}
+  /* Table header styling - match TableDataComponent */
+  .table thead {
+    background-color: #f1f5f9; /* Match TableDataComponent header background */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+  .table thead th {
+    font-weight: 600;
+    color: #495057;
+    border: none;
+    padding: 1rem;
+    box-shadow: 0 2px 2px -2px rgba(0,0,0,.2);
+  }
 
-/* Điều chỉnh khoảng cách và hiển thị icon */
-.bi-folder-fill, .bi-file-earmark {
-  font-size: 1rem;
-  vertical-align: middle;
-}
+  /* Row styling - match TableDataComponent transitions and hover */
+  .table tbody tr {
+    transition: all 0.2s;
+    cursor: pointer;
+  }
 
-/* CSS cho hàng được chọn */
-.table tr.selected {
-  background-color: rgba(0, 123, 255, 0.1);
-}
+  .table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.05);
+  }
 
-.table td, .table th {
-  vertical-align: middle;
-}
+  .table tbody td {
+    padding: 0.85rem 1rem;
+    border-top: 1px solid #dee2e6;
+    vertical-align: middle;
+  }
 
-:host ::ng-deep .highlight-text {
-  background-color: rgba(255, 193, 7, 0.5);
-  font-weight: bold;
-  padding: 0 2px;
-  border-radius: 2px;
+  /* Selected row styling - match TableDataComponent */
+  .table tr.selected {
+    background-color: #3498db;
+    box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.5);
+    font-weight: 500;
+    color: #fff;
+  }
+
+  /* Selected row text color fix */
+  .table tr.selected td {
+    color: #3498db;
+  }
+
+  .table tr.selected i {
+    color: #3498db;
+  }
+
+  /* Tree-specific styling */
+  .btn-icon {
+    padding: 0.1rem 0.2rem;
+    line-height: 1;
+    background: transparent;
+    border: none;
+    color: #6c757d;
+  }
+
+  .btn-icon:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+  }
+
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Loading row styling */
+  .loading-row td {
+    border-top: 1px dashed #dee2e6;
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  /* Text highlight styling */
+  :host ::ng-deep .highlight-text {
+    background-color: rgba(255, 193, 7, 0.5);
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  /* Responsive styling */
+  @media (max-width: 767.98px) {
+    .table thead {
+      display: none;
+    }
+    
+    .table tbody tr {
+      display: block;
+      margin-bottom: 1rem;
+      border: 1px solid #dee2e6;
+    }
+    
+    .table tbody td {
+      display: block;
+      text-align: right;
+      padding-left: 50%;
+      position: relative;
+    }
+    
+    .table tbody td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0;
+      width: 45%;
+      padding-left: 15px;
+      font-weight: bold;
+      text-align: left;
+    }
+  }
+
+  /* Ensure the card doesn't constrain the table */
+  .card-body {
+    padding-bottom: 1rem; /* Reduce bottom padding */
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: 1px solid #dee2e6; /* Đảm bảo có border cho hàng cuối */
 }
