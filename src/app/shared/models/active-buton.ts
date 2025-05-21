@@ -5,5 +5,5 @@ export interface ActionButton {
     class: string;
     requiresSelection?: boolean;
     visible?: boolean;
-  }
+}
   

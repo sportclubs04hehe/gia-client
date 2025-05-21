@@ -6,7 +6,7 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxj
 import { SharedModule } from '../../../shared/shared.module';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
-import { TableDataComponent } from '../../../shared/components/table-data/table-data.component';
+import { TableDataComponent } from '../../../shared/components/table/table-data/table-data.component';
 import { TableColumn } from '../../../shared/models/table-column';
 import { DonViTinhDto } from '../models/dm_donvitinh/don-ti-tinh.dto';
 import { FormsModule } from '@angular/forms';

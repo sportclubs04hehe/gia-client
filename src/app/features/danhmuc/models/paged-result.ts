@@ -7,5 +7,6 @@ export interface PagedResult<T> {
         totalPages: number;
         hasPreviousPage: boolean;
         hasNextPage: boolean;
+        pageSize: number;
     };
 }

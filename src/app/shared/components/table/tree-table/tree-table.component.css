@@ -1,0 +1,114 @@
+/* Table Styling */
+.table-container {
+  height: calc(100vh - 180px);
+  min-height: 300px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  position: relative;
+  padding-bottom: 50px;
+}
+
+.custom-table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-header {
+  background-color: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table-header th {
+  font-weight: 600;
+  color: #495057;
+  border: none;
+  padding: 1rem;
+}
+
+.table-row {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  will-change: background-color;
+  height: 54px;
+  box-sizing: border-box;
+}
+
+.table-row:hover {
+  background-color: rgba(52, 152, 219, 0.05);
+}
+
+.table-row td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.table-row.selected td {
+  background-color: rgba(52, 152, 219, 0.15);
+  color: #333;
+  position: relative;
+}
+
+/* Thanh chỉ báo khi chọn */
+.table-row.selected td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #3498db;
+}
+
+/* Định dạng cho tree view */
+.tree-toggle {
+  cursor: pointer;
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+}
+
+.tree-toggle:hover {
+  color: #3498db;
+}
+
+/* Hiệu ứng hiển thị mặt hàng con */
+.child-row td {
+  background-color: rgba(247, 250, 252, 0.7);
+}
+
+/* Định dạng khoảng cách giữa các cấp */
+.child-row td {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  border-top: none !important;
+}
+
+/* Hiệu ứng quay cho icon loading */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Hàng hiển thị trạng thái */
+.loading-row td, .empty-row td, .loading-more-row td, .end-of-data-row td {
+  background-color: rgba(247, 250, 252, 0.5);
+  border-top: none !important;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  font-size: 0.85rem;
+}
+
+.end-of-data-row td {
+  font-style: italic;
+  color: #6c757d !important;
+}

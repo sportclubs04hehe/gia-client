@@ -2,6 +2,7 @@ export interface TableColumn<T> {
   header: string;
   field: keyof T;
   width?: string;
+  renderer?: (item: any) => string; 
   formatter?: (item: T) => string;
   paddingFunction?: (item: T) => string;
   isButton?: boolean;

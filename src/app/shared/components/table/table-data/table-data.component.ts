@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { SharedModule } from '../../shared.module';
-import { TextHighlightPipe } from '../../pipes/text-highlight.pipe';
-import { TableColumn } from '../../models/table-column';
+import { SharedModule } from '../../../shared.module';
+import { TextHighlightPipe } from '../../../pipes/text-highlight.pipe';
+import { TableColumn } from '../../../models/table-column';
 
 @Component({
   selector: 'app-table-data',

@@ -1,0 +1,167 @@
+<div class="table-container" 
+     infiniteScroll
+     [infiniteScrollDistance]="2"
+     [infiniteScrollThrottle]="300"
+     (scrolled)="onTableScroll()"
+     [scrollWindow]="false">
+  <table class="table custom-table">
+    <thead class="table-header">
+      <tr>
+        <!-- Sinh cột tự động từ cấu hình -->
+        <th *ngFor="let column of columns" [style.width]="column.width">{{ column.header }}</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <!-- Hiển thị không có dữ liệu nếu mảng rỗng -->
+      <ng-container *ngIf="rootData.length > 0; else noData">
+        <!-- Nodes cấp cao nhất -->
+        <ng-container *ngFor="let node of rootData">
+          <!-- Node cha giữ nguyên -->
+          <ng-container 
+            [ngTemplateOutlet]="treeNodeTemplate" 
+            [ngTemplateOutletContext]="{node: node, level: 0}">
+          </ng-container>
+          
+          <!-- Hiển thị con khi mở rộng -->
+          <ng-container *ngIf="isNodeExpanded(node[keyField])">
+            <!-- Hiển thị trạng thái đang tải -->
+            <tr *ngIf="isLoadingChildren(node[keyField])" class="loading-row">
+              <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
+                <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải...</small>
+              </td>
+            </tr>
+            
+            <!-- Hiển thị danh sách con -->
+            <ng-container *ngIf="!isLoadingChildren(node[keyField])">
+              <!-- Container cho infinite scroll -->
+              <ng-container 
+                infiniteScroll
+                [infiniteScrollDistance]="2"
+                [infiniteScrollThrottle]="300"
+                [infiniteScrollDisabled]="!hasMoreData(node[keyField]) || isLoadingMore(node[keyField])"
+                (scrolled)="onScrollDown(node[keyField])"
+                [scrollWindow]="false">
+                
+                <!-- Danh sách các node con đã tải -->
+                <ng-container *ngFor="let child of getNodeChildren(node[keyField])">
+                  <!-- Template hiển thị node con -->
+                  <ng-container 
+                    [ngTemplateOutlet]="treeNodeTemplate" 
+                    [ngTemplateOutletContext]="{node: child, level: 1}">
+                  </ng-container>
+
+                  <!-- Phần con của node con (đệ quy) -->
+                  <ng-container *ngIf="isNodeExpanded(child[keyField])">
+                    <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
+                      parentId: child[keyField],
+                      level: 2
+                    }"></ng-container>
+                  </ng-container>
+                </ng-container>
+                
+                <!-- Hiển thị trạng thái tải thêm -->
+                <tr *ngIf="isLoadingMore(node[keyField])" class="loading-more-row">
+                  <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
+                    <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải thêm...</small>
+                  </td>
+                </tr>
+                
+                <!-- Không còn dữ liệu -->
+                <tr *ngIf="!hasMoreData(node[keyField]) && getNodeChildren(node[keyField]).length > 0" class="end-of-data-row">
+                  <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
+                    <small><i class="bi bi-check-circle me-2"></i> Đã hiển thị tất cả</small>
+                  </td>
+                </tr>
+                
+                <!-- Không có dữ liệu con -->
+                <tr *ngIf="getNodeChildren(node[keyField]).length === 0" class="empty-row">
+                  <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
+                    <small><i class="bi bi-info-circle me-2"></i> Không có dữ liệu con</small>
+                  </td>
+                </tr>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+      
+      <!-- Không có dữ liệu -->
+      <ng-template #noData>
+        <tr class="text-center">
+          <td [attr.colspan]="columns.length" class="py-3 text-muted">
+            <i class="bi bi-inbox me-2"></i>
+            Chưa có dữ liệu
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Template hiển thị một node trong cây -->
+      <ng-template #treeNodeTemplate let-node="node" let-level="level">
+        <tr class="table-row" 
+            [class.child-row]="level > 0"
+            [class.selected]="isRowSelected(node[keyField])"
+            (click)="selectRow(node, $event)">
+          <!-- Cột đầu tiên (cột chính) có phần mở rộng/thu gọn -->
+          <td *ngIf="columns.length > 0">
+            <div class="d-flex align-items-center">
+              <div [style.width]="calculateIndent(level)"></div>
+              
+              <!-- Icon mở rộng/thu gọn -->
+              <ng-container *ngIf="hasChildren(node)">
+                <span class="tree-toggle me-2" (click)="toggleNode($event, node)">
+                  <i *ngIf="isNodeExpanded(node[keyField])" class="bi bi-dash-square"></i>
+                  <i *ngIf="!isNodeExpanded(node[keyField])" class="bi bi-plus-square"></i>
+                </span>
+              </ng-container>
+              
+              <!-- Hiển thị giá trị cột đầu tiên -->
+              <span>{{ renderCellValue(node, columns[0]) }}</span>
+            </div>
+          </td>
+          
+          <!-- Các cột còn lại -->
+          <td *ngFor="let column of columns.slice(1)">
+            {{ renderCellValue(node, column) }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Template đệ quy để hiển thị cây nhiều cấp -->
+      <ng-template #recursiveListTemplate let-parentId="parentId" let-level="level">
+        <!-- Hiển thị trạng thái đang tải -->
+        <tr *ngIf="isLoadingChildren(parentId)" class="loading-row">
+          <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
+            <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải...</small>
+          </td>
+        </tr>
+        
+        <!-- Hiển thị các node con -->
+        <ng-container *ngIf="!isLoadingChildren(parentId)">
+          <ng-container *ngFor="let child of getNodeChildren(parentId)">
+            <!-- Hiển thị node -->
+            <ng-container 
+              [ngTemplateOutlet]="treeNodeTemplate" 
+              [ngTemplateOutletContext]="{node: child, level: level}">
+            </ng-container>
+            
+            <!-- Tiếp tục đệ quy nếu node này đang mở rộng -->
+            <ng-container *ngIf="isNodeExpanded(child[keyField])">
+              <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
+                parentId: child[keyField],
+                level: level + 1
+              }"></ng-container>
+            </ng-container>
+          </ng-container>
+          
+          <!-- Không có dữ liệu con -->
+          <tr *ngIf="getNodeChildren(parentId).length === 0" class="empty-row">
+            <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
+              <small><i class="bi bi-info-circle me-2"></i> Không có dữ liệu con</small>
+            </td>
+          </tr>
+        </ng-container>
+      </ng-template>
+    </tbody>
+  </table>
+</div>
