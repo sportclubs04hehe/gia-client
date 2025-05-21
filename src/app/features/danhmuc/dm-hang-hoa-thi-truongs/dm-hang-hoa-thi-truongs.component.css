@@ -50,3 +50,49 @@
   font-weight: 500;
   color: #fff;
 }
+
+/* Additional Styles */
+/* Định dạng icon mở rộng/thu gọn */
+.tree-toggle {
+  cursor: pointer;
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+}
+
+.tree-toggle:hover {
+  color: #3498db;
+}
+
+/* Định dạng hàng con */
+.child-row td {
+  background-color: rgba(247, 250, 252, 0.7);
+  border-top: none !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* Hiệu ứng thụt lề cho mặt hàng con */
+.child-indent {
+  padding-left: 20px;
+  display: inline-block;
+}
+
+/* Hiệu ứng quay cho icon loading */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Định dạng hàng hiển thị trạng thái loading của con */
+.child-loading-row td, .child-empty-row td {
+  background-color: rgba(247, 250, 252, 0.5);
+  border-top: none !important;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  font-size: 0.85rem;
+}

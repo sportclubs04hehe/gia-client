@@ -11,7 +11,7 @@
         </div>
       </div>
 
-      <!-- Custom Table with static data -->
+      <!-- Bảng dữ liệu với khả năng mở rộng để hiển thị các mặt hàng con -->
       <div class="table-container" style="flex: 1;">
         <table class="table custom-table">
           <thead class="table-header">
@@ -24,49 +24,83 @@
           </thead>
 
           <tbody>
-            <tr class="table-row">
-              <td>DV001</td>
-              <td>Đơn vị tính A</td>
-              <td>Cái</td>
-              <td>Hehe</td>
-            </tr>
-            <tr class="table-row selected">
-              <td>DV002</td>
-              <td>Đơn vị tính B</td>
-              <td>Chiếc</td>
-              <td>Hehe</td>
-            </tr>
-            <tr class="table-row">
-              <td>DV003</td>
-              <td>Đơn vị tính C</td>
-              <td>Thùng</td>
-              <td>Hehe</td>
-            </tr>
-            <tr>
-              <td colspan="4" class="text-center  py-3 text-muted">Đang tải…</td>
-            </tr>
+            <!-- Trạng thái đang tải -->
+            <ng-container *ngIf="isLoading">
+              <tr>
+                <td colspan="4" class="text-center py-3 text-muted">Đang tải…</td>
+              </tr>
+            </ng-container>
 
-            <tr class="text-center">
-              <td colspan="4" class="py-3 text-muted">
-                <i class="bi bi-search me-2"></i>
-                Không tìm thấy kết quả phù hợp với từ khóa ""
-              </td>
-            </tr>
-
-            <tr class="text-center">
-              <td colspan="4" class="py-3 text-muted">
-                <i class="bi bi-inbox me-2"></i>
-                Chưa có dữ liệu
-              </td>
-            </tr>
-            <tr>
-
-              <td colspan="4" class="text-center py-3 text-muted">
-                <i class="bi bi-inbox me-2"></i>
-                Đã hiển thị tất cả kết quả
-              </td>
-            </tr>
-
+            <!-- Dữ liệu các hàng cha -->
+            <ng-container *ngIf="!isLoading">
+              <ng-container *ngIf="parentCategories.length > 0; else noData">
+                <ng-container *ngFor="let item of parentCategories">
+                  <!-- Hàng cha -->
+                  <tr class="table-row parent-row"
+                      [class.selected]="selectedRow === item"
+                      (click)="selectRow(item)">
+                    <td>
+                      <!-- Icon mở rộng/thu gọn dạng cây -->
+                      <span class="tree-toggle me-2" (click)="toggleRow($event, item)">
+                        <i *ngIf="isRowExpanded(item.id)" class="bi bi-dash-square"></i>
+                        <i *ngIf="!isRowExpanded(item.id)" class="bi bi-plus-square"></i>
+                      </span>
+                      {{ item.ma }}
+                    </td>
+                    <td>{{ item.ten }}</td>
+                    <td>{{ item.tenDonViTinh || 'N/A' }}</td>
+                    <td>{{ item.dacTinh || 'N/A' }}</td>
+                  </tr>
+                  
+                  <!-- Dòng hiển thị các mặt hàng con -->
+                  <ng-container *ngIf="isRowExpanded(item.id)">
+                    <!-- Trạng thái đang tải con -->
+                    <tr *ngIf="isLoadingChildren(item.id)" class="child-loading-row">
+                      <td colspan="4" class="text-center py-2 text-muted">
+                        <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải dữ liệu con...</small>
+                      </td>
+                    </tr>
+                    
+                    <!-- Các mặt hàng con -->
+                    <ng-container *ngIf="!isLoadingChildren(item.id)">
+                      <tr *ngFor="let child of getChildren(item.id)" 
+                          class="table-row child-row"
+                          (click)="selectChildRow($event, child)">
+                        <td><span class="child-indent">└─ {{ child.ma }}</span></td>
+                        <td>{{ child.ten }}</td>
+                        <td>{{ child.tenDonViTinh || 'N/A' }}</td>
+                        <td>N/A</td>
+                      </tr>
+                      
+                      <!-- Thông báo không có dữ liệu con -->
+                      <tr *ngIf="getChildren(item.id).length === 0" class="child-empty-row">
+                        <td colspan="4" class="text-center py-2 text-muted">
+                          <small><i class="bi bi-info-circle me-2"></i> Không có mặt hàng con</small>
+                        </td>
+                      </tr>
+                    </ng-container>
+                  </ng-container>
+                </ng-container>
+                
+                <!-- Thông báo hiển thị tất cả kết quả -->
+                <tr>
+                  <td colspan="4" class="text-center py-3 text-muted">
+                    <i class="bi bi-inbox me-2"></i>
+                    Đã hiển thị tất cả kết quả
+                  </td>
+                </tr>
+              </ng-container>
+              
+              <!-- Không có dữ liệu -->
+              <ng-template #noData>
+                <tr class="text-center">
+                  <td colspan="4" class="py-3 text-muted">
+                    <i class="bi bi-inbox me-2"></i>
+                    Chưa có dữ liệu
+                  </td>
+                </tr>
+              </ng-template>
+            </ng-container>
           </tbody>
         </table>
       </div>
