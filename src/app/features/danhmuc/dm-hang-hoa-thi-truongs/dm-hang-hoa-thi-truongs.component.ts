@@ -6,6 +6,8 @@ import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truon
 import { HHThiTruongDto } from '../models/dm-hh-thitruong/HHThiTruongDto';
 import { ToastrService } from 'ngx-toastr';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
+import { SpinnerService, SpinnerType } from '../../../shared/services/spinner.service';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -14,16 +16,17 @@ import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTre
     CommonModule,
     ActiveButtonComponent,
     SearchBarComponent,
+    NgxSpinnerModule
   ],
   templateUrl: './dm-hang-hoa-thi-truongs.component.html',
   styleUrl: './dm-hang-hoa-thi-truongs.component.css'
 })
 export class DmHangHoaThiTruongsComponent implements OnInit {
   private toastr = inject(ToastrService);
+  private spinnerService = inject(SpinnerService);
 
   // Danh sách mặt hàng cha (cấp đầu tiên)
   parentCategories: HHThiTruongDto[] = [];
-  isLoading = false;
   
   // Map để lưu trữ trạng thái mở rộng của từng node
   expandedRows = new Map<string, boolean>();
@@ -35,7 +38,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   nodeLoadingMap = new Map<string, boolean>();
   
   // Hàng đang được chọn
-  selectedRowId: string | null = null; // Chỉ lưu ID thay vì cả đối tượng
+  selectedRowId: string | null = null;
   
   constructor(private dmHangHoaThiTruongService: DmHangHoaThiTruongService) {}
   
@@ -45,17 +48,20 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   
   // Tải danh sách mặt hàng cha (cấp cao nhất)
   loadParentCategories(): void {
-    this.isLoading = true;
+    // Hiển thị spinner khi bắt đầu tải dữ liệu
+    this.spinnerService.showTableSpinner();
     
     this.dmHangHoaThiTruongService.getAllParentCategories().subscribe({
       next: (data) => {
         this.parentCategories = data;
-        this.isLoading = false;
+        // Ẩn spinner khi tải xong
+        this.spinnerService.hideTableSpinner();
       },
       error: (error) => {
         console.error('Lỗi khi tải danh sách mặt hàng cha:', error);
         this.toastr.error('Không thể tải danh sách mặt hàng', 'Lỗi');
-        this.isLoading = false;
+        // Ẩn spinner khi có lỗi
+        this.spinnerService.hideTableSpinner();
       }
     });
   }
