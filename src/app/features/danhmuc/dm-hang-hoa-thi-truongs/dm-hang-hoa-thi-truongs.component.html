@@ -11,7 +11,7 @@
         </div>
       </div>
 
-      <!-- Bảng dữ liệu với khả năng mở rộng để hiển thị các mặt hàng con -->
+      <!-- Bảng dữ liệu -->
       <div class="table-container" style="flex: 1;">
         <table class="table custom-table">
           <thead class="table-header">
@@ -27,53 +27,50 @@
             <!-- Trạng thái đang tải -->
             <ng-container *ngIf="isLoading">
               <tr>
-                <td colspan="4" class="text-center py-3 text-muted">Đang tải…</td>
+                <td colspan="4" class="text-center py-3 text-muted">Đang tải dữ liệu...</td>
               </tr>
             </ng-container>
 
-            <!-- Dữ liệu các hàng cha -->
+            <!-- Hiển thị dữ liệu cây đa cấp -->
             <ng-container *ngIf="!isLoading">
               <ng-container *ngIf="parentCategories.length > 0; else noData">
-                <ng-container *ngFor="let item of parentCategories">
-                  <!-- Hàng cha -->
-                  <tr class="table-row parent-row"
-                      [class.selected]="selectedRow === item"
-                      (click)="selectRow(item)">
-                    <td>
-                      <!-- Icon mở rộng/thu gọn dạng cây -->
-                      <span class="tree-toggle me-2" (click)="toggleRow($event, item)">
-                        <i *ngIf="isRowExpanded(item.id)" class="bi bi-dash-square"></i>
-                        <i *ngIf="!isRowExpanded(item.id)" class="bi bi-plus-square"></i>
-                      </span>
-                      {{ item.ma }}
-                    </td>
-                    <td>{{ item.ten }}</td>
-                    <td>{{ item.tenDonViTinh || 'N/A' }}</td>
-                    <td>{{ item.dacTinh || 'N/A' }}</td>
-                  </tr>
+                <!-- Mặt hàng cha cấp cao nhất -->
+                <ng-container *ngFor="let parent of parentCategories">
+                  <!-- Template đệ quy để hiển thị node cha -->
+                  <ng-container 
+                    [ngTemplateOutlet]="treeNodeTemplate" 
+                    [ngTemplateOutletContext]="{node: parent, level: 0}">
+                  </ng-container>
                   
-                  <!-- Dòng hiển thị các mặt hàng con -->
-                  <ng-container *ngIf="isRowExpanded(item.id)">
-                    <!-- Trạng thái đang tải con -->
-                    <tr *ngIf="isLoadingChildren(item.id)" class="child-loading-row">
+                  <!-- Khi node cha được mở rộng, hiển thị các con của nó -->
+                  <ng-container *ngIf="isNodeExpanded(parent.id)">
+                    <!-- Hiển thị trạng thái đang tải -->
+                    <tr *ngIf="isLoadingChildren(parent.id)" class="loading-row">
                       <td colspan="4" class="text-center py-2 text-muted">
-                        <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải dữ liệu con...</small>
+                        <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải...</small>
                       </td>
                     </tr>
                     
-                    <!-- Các mặt hàng con -->
-                    <ng-container *ngIf="!isLoadingChildren(item.id)">
-                      <tr *ngFor="let child of getChildren(item.id)" 
-                          class="table-row child-row"
-                          (click)="selectChildRow($event, child)">
-                        <td><span class="child-indent">└─ {{ child.ma }}</span></td>
-                        <td>{{ child.ten }}</td>
-                        <td>{{ child.tenDonViTinh || 'N/A' }}</td>
-                        <td>N/A</td>
-                      </tr>
+                    <!-- Hiển thị các node con -->
+                    <ng-container *ngIf="!isLoadingChildren(parent.id)">
+                      <ng-container *ngFor="let child of getNodeChildren(parent.id)">
+                        <!-- Template đệ quy để hiển thị node con -->
+                        <ng-container 
+                          [ngTemplateOutlet]="treeNodeTemplate" 
+                          [ngTemplateOutletContext]="{node: child, level: 1}">
+                        </ng-container>
+
+                        <!-- Hiệu ứng đệ quy để hiển thị cây nhiều cấp -->
+                        <ng-container *ngIf="isNodeExpanded(child.id)">
+                          <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
+                            parentId: child.id,
+                            level: 2
+                          }"></ng-container>
+                        </ng-container>
+                      </ng-container>
                       
-                      <!-- Thông báo không có dữ liệu con -->
-                      <tr *ngIf="getChildren(item.id).length === 0" class="child-empty-row">
+                      <!-- Không có dữ liệu con -->
+                      <tr *ngIf="getNodeChildren(parent.id).length === 0" class="empty-row">
                         <td colspan="4" class="text-center py-2 text-muted">
                           <small><i class="bi bi-info-circle me-2"></i> Không có mặt hàng con</small>
                         </td>
@@ -101,6 +98,70 @@
                 </tr>
               </ng-template>
             </ng-container>
+
+            <!-- Template hiển thị một node trong cây -->
+            <ng-template #treeNodeTemplate let-node="node" let-level="level">
+              <tr class="table-row" 
+                  [class.child-row]="level > 0"
+                  [class.selected]="selectedRow === node"
+                  (click)="selectRow(node)">
+                <td>
+                  <!-- Thụt lề dựa vào cấp độ -->
+                  <div class="d-flex align-items-center">
+                    <div [style.width]="calculateIndent(level)"></div>
+                    
+                    <!-- Icon mở rộng/thu gọn -->
+                    <ng-container *ngIf="hasChildren(node)">
+                      <span class="tree-toggle me-2" (click)="toggleNode($event, node)">
+                        <i *ngIf="isNodeExpanded(node.id)" class="bi bi-dash-square"></i>
+                        <i *ngIf="!isNodeExpanded(node.id)" class="bi bi-plus-square"></i>
+                      </span>
+                    </ng-container>
+                    <!-- Hiển thị mã -->
+                    <span>{{ node.ma }}</span>
+                  </div>
+                </td>
+                <td>{{ node.ten }}</td>
+                <td>{{ node.tenDonViTinh || 'N/A' }}</td>
+                <td>{{ node.dacTinh || 'N/A' }}</td>
+              </tr>
+            </ng-template>
+
+            <!-- Template đệ quy để hiển thị cây nhiều cấp -->
+            <ng-template #recursiveListTemplate let-parentId="parentId" let-level="level">
+              <!-- Hiển thị trạng thái đang tải -->
+              <tr *ngIf="isLoadingChildren(parentId)" class="loading-row">
+                <td colspan="4" class="text-center py-2 text-muted">
+                  <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải...</small>
+                </td>
+              </tr>
+              
+              <!-- Hiển thị các node con -->
+              <ng-container *ngIf="!isLoadingChildren(parentId)">
+                <ng-container *ngFor="let child of getNodeChildren(parentId)">
+                  <!-- Hiển thị node -->
+                  <ng-container 
+                    [ngTemplateOutlet]="treeNodeTemplate" 
+                    [ngTemplateOutletContext]="{node: child, level: level}">
+                  </ng-container>
+                  
+                  <!-- Tiếp tục đệ quy nếu node này đang mở rộng -->
+                  <ng-container *ngIf="isNodeExpanded(child.id)">
+                    <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
+                      parentId: child.id,
+                      level: level + 1
+                    }"></ng-container>
+                  </ng-container>
+                </ng-container>
+                
+                <!-- Không có dữ liệu con -->
+                <tr *ngIf="getNodeChildren(parentId).length === 0" class="empty-row">
+                  <td colspan="4" class="text-center py-2 text-muted">
+                    <small><i class="bi bi-info-circle me-2"></i> Không có mặt hàng con</small>
+                  </td>
+                </tr>
+              </ng-container>
+            </ng-template>
           </tbody>
         </table>
       </div>

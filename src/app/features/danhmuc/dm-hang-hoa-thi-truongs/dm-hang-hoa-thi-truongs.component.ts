@@ -21,13 +21,21 @@ import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTre
 export class DmHangHoaThiTruongsComponent implements OnInit {
   private toastr = inject(ToastrService);
 
+  // Danh sách mặt hàng cha (cấp đầu tiên)
   parentCategories: HHThiTruongDto[] = [];
   isLoading = false;
   
-  // Map để lưu trữ trạng thái mở rộng và danh sách con của từng hàng cha
+  // Map để lưu trữ trạng thái mở rộng của từng node
   expandedRows = new Map<string, boolean>();
-  childrenMap = new Map<string, HHThiTruongTreeNodeDto[]>();
-  childLoadingMap = new Map<string, boolean>();
+  
+  // Map để lưu trữ các node con đã tải cho từng mặt hàng
+  nodeChildrenMap = new Map<string, HHThiTruongTreeNodeDto[]>();
+  
+  // Map theo dõi trạng thái đang tải của mỗi node
+  nodeLoadingMap = new Map<string, boolean>();
+  
+  // Hàng đang được chọn
+  selectedRow: HHThiTruongTreeNodeDto | HHThiTruongDto | null = null;
   
   constructor(private dmHangHoaThiTruongService: DmHangHoaThiTruongService) {}
   
@@ -35,6 +43,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     this.loadParentCategories();
   }
   
+  // Tải danh sách mặt hàng cha (cấp cao nhất)
   loadParentCategories(): void {
     this.isLoading = true;
     
@@ -44,87 +53,91 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading parent categories:', error);
+        console.error('Lỗi khi tải danh sách mặt hàng cha:', error);
         this.toastr.error('Không thể tải danh sách mặt hàng', 'Lỗi');
         this.isLoading = false;
       }
     });
   }
 
-  // Phương thức kiểm tra hàng cha có mở rộng hay không
-  isRowExpanded(itemId: string): boolean {
-    return this.expandedRows.get(itemId) === true;
+  // Kiểm tra node có đang mở rộng không
+  isNodeExpanded(nodeId: string): boolean {
+    return this.expandedRows.get(nodeId) === true;
   }
 
-  // Phương thức kiểm tra đang tải con hay không
-  isLoadingChildren(itemId: string): boolean {
-    return this.childLoadingMap.get(itemId) === true;
+  // Kiểm tra đang tải con cho node không
+  isLoadingChildren(nodeId: string): boolean {
+    return this.nodeLoadingMap.get(nodeId) === true;
   }
 
-  // Phương thức lấy danh sách con đã tải
-  getChildren(itemId: string): HHThiTruongTreeNodeDto[] {
-    return this.childrenMap.get(itemId) || [];
+  // Lấy danh sách con của node
+  getNodeChildren(nodeId: string): HHThiTruongTreeNodeDto[] {
+    return this.nodeChildrenMap.get(nodeId) || [];
   }
 
-  // Phương thức để toggle mở rộng/thu gọn hàng
-  toggleRow(event: Event, item: HHThiTruongDto): void {
-    // Ngăn chặn sự kiện lan đến hàng (tránh chọn hàng khi nhấp vào biểu tượng)
+  // Kiểm tra node có con không hoặc có thể có con không
+  hasChildren(item: HHThiTruongTreeNodeDto | HHThiTruongDto): boolean {
+    // Nếu là nhóm mặt hàng (loại 0) thì có thể có con
+    return item.loaiMatHang === 0 || 
+           // Hoặc đã có dữ liệu con được tải
+           (this.nodeChildrenMap.has(item.id) && this.getNodeChildren(item.id).length > 0);
+  }
+
+  // Mở rộng/thu gọn một node
+  toggleNode(event: Event, item: HHThiTruongTreeNodeDto | HHThiTruongDto): void {
+    // Ngăn chặn sự kiện lan đến hàng
     event.stopPropagation();
     
-    const itemId = item.id;
-    const isCurrentlyExpanded = this.isRowExpanded(itemId);
+    const nodeId = item.id;
+    const isCurrentlyExpanded = this.isNodeExpanded(nodeId);
     
     // Đảo ngược trạng thái mở rộng
-    this.expandedRows.set(itemId, !isCurrentlyExpanded);
+    this.expandedRows.set(nodeId, !isCurrentlyExpanded);
     
     // Nếu đang mở rộng và chưa tải dữ liệu con, thì tải dữ liệu
-    if (!isCurrentlyExpanded && !this.childrenMap.has(itemId)) {
-      this.loadChildrenForParent(itemId);
+    if (!isCurrentlyExpanded && !this.nodeChildrenMap.has(nodeId)) {
+      this.loadChildrenForNode(nodeId);
     }
   }
 
-  // Phương thức tải dữ liệu con cho mặt hàng cha
-  loadChildrenForParent(parentId: string): void {
+  // Tải dữ liệu con cho một node
+  loadChildrenForNode(nodeId: string): void {
     // Đánh dấu đang tải
-    this.childLoadingMap.set(parentId, true);
+    this.nodeLoadingMap.set(nodeId, true);
     
-    this.dmHangHoaThiTruongService.getChildrenByParent(parentId).subscribe({
+    this.dmHangHoaThiTruongService.getChildrenByParent(nodeId).subscribe({
       next: (result) => {
-        // Lưu danh sách con vào map
+        let children: HHThiTruongTreeNodeDto[] = [];
+        
+        // Xử lý kết quả API trả về
         if (Array.isArray(result)) {
-          // Nếu API trả về mảng trực tiếp
-          this.childrenMap.set(parentId, result);
+          children = result;
         } else if (result && 'data' in result) {
-          // Nếu API trả về đối tượng phân trang
-          this.childrenMap.set(parentId, result.data || []);
-        } else {
-          // Trường hợp khác
-          this.childrenMap.set(parentId, []);
+          children = result.data || [];
         }
         
+        // Lưu danh sách con vào map
+        this.nodeChildrenMap.set(nodeId, children);
+        
         // Đánh dấu đã tải xong
-        this.childLoadingMap.set(parentId, false);
+        this.nodeLoadingMap.set(nodeId, false);
       },
       error: (error) => {
-        console.error(`Lỗi khi tải danh sách con cho mặt hàng ${parentId}:`, error);
+        console.error(`Lỗi khi tải danh sách con cho mặt hàng ${nodeId}:`, error);
         this.toastr.error('Không thể tải danh sách mặt hàng con', 'Lỗi');
-        this.childLoadingMap.set(parentId, false);
-        this.childrenMap.set(parentId, []);
+        this.nodeLoadingMap.set(nodeId, false);
+        this.nodeChildrenMap.set(nodeId, []);
       }
     });
   }
 
   // Xử lý chọn hàng
-  selectedRow: HHThiTruongDto | null = null;
-  
-  selectRow(item: HHThiTruongDto): void {
+  selectRow(item: HHThiTruongDto | HHThiTruongTreeNodeDto): void {
     this.selectedRow = item;
   }
   
-  // Phương thức chọn mặt hàng con
-  selectChildRow(event: Event, child: HHThiTruongTreeNodeDto): void {
-    event.stopPropagation();
-    // Gán selected cho child item nếu cần
-    // Có thể mở rộng để hỗ trợ chọn cả mặt hàng con
+  // Tính toán độ thụt lề dựa vào cấp độ
+  calculateIndent(level: number): string {
+    return `${level * 20}px`;
   }
 }
