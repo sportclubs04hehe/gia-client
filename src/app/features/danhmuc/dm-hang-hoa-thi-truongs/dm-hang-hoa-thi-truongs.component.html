@@ -18,7 +18,12 @@
       </div>
 
       <!-- Bảng dữ liệu -->
-      <div class="table-container" style="flex: 1;">
+      <div class="table-container" 
+           infiniteScroll
+           [infiniteScrollDistance]="2"
+           [infiniteScrollThrottle]="300"
+           (scrolled)="onTableScroll()"
+           [scrollWindow]="false">
         <table class="table custom-table">
           <thead class="table-header">
             <tr>
@@ -35,13 +40,13 @@
             <ng-container *ngIf="parentCategories.length > 0; else noData">
               <!-- Mặt hàng cha cấp cao nhất -->
               <ng-container *ngFor="let parent of parentCategories">
-                <!-- Template đệ quy để hiển thị node cha -->
+                <!-- Node cha giữ nguyên -->
                 <ng-container 
                   [ngTemplateOutlet]="treeNodeTemplate" 
                   [ngTemplateOutletContext]="{node: parent, level: 0}">
                 </ng-container>
                 
-                <!-- Khi node cha được mở rộng, hiển thị các con của nó -->
+                <!-- Cập nhật phần hiển thị con -->
                 <ng-container *ngIf="isNodeExpanded(parent.id)">
                   <!-- Hiển thị trạng thái đang tải -->
                   <tr *ngIf="isLoadingChildren(parent.id)" class="loading-row">
@@ -50,30 +55,55 @@
                     </td>
                   </tr>
                   
-                  <!-- Hiển thị các node con -->
+                  <!-- Container cho infinite scroll -->
                   <ng-container *ngIf="!isLoadingChildren(parent.id)">
-                    <ng-container *ngFor="let child of getNodeChildren(parent.id)">
-                      <!-- Template đệ quy để hiển thị node con -->
-                      <ng-container 
-                        [ngTemplateOutlet]="treeNodeTemplate" 
-                        [ngTemplateOutletContext]="{node: child, level: 1}">
-                      </ng-container>
+                    <!-- Hiển thị danh sách con với khả năng cuộn vô hạn -->
+                    <ng-container 
+                      infiniteScroll
+                      [infiniteScrollDistance]="2"
+                      [infiniteScrollThrottle]="300"
+                      [infiniteScrollDisabled]="!hasMoreData(parent.id) || isLoadingMore(parent.id)"
+                      (scrolled)="onScrollDown(parent.id)"
+                      [scrollWindow]="false">
+                      
+                      <!-- Hiển thị các node con đã tải -->
+                      <ng-container *ngFor="let child of getNodeChildren(parent.id)">
+                        <!-- Template hiển thị node con -->
+                        <ng-container 
+                          [ngTemplateOutlet]="treeNodeTemplate" 
+                          [ngTemplateOutletContext]="{node: child, level: 1}">
+                        </ng-container>
 
-                      <!-- Hiệu ứng đệ quy để hiển thị cây nhiều cấp -->
-                      <ng-container *ngIf="isNodeExpanded(child.id)">
-                        <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
-                          parentId: child.id,
-                          level: 2
-                        }"></ng-container>
+                        <!-- Phần con của node con (đệ quy) -->
+                        <ng-container *ngIf="isNodeExpanded(child.id)">
+                          <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
+                            parentId: child.id,
+                            level: 2
+                          }"></ng-container>
+                        </ng-container>
                       </ng-container>
+                      
+                      <!-- Hiển thị trạng thái tải thêm -->
+                      <tr *ngIf="isLoadingMore(parent.id)" class="loading-more-row">
+                        <td colspan="4" class="text-center py-2 text-muted">
+                          <small><i class="bi bi-arrow-clockwise me-2 spin"></i> Đang tải thêm...</small>
+                        </td>
+                      </tr>
+                      
+                      <!-- Thông báo không còn dữ liệu -->
+                      <tr *ngIf="!hasMoreData(parent.id) && getNodeChildren(parent.id).length > 0" class="end-of-data-row">
+                        <td colspan="4" class="text-center py-2 text-muted">
+                          <small><i class="bi bi-check-circle me-2"></i> Đã hiển thị tất cả</small>
+                        </td>
+                      </tr>
+                      
+                      <!-- Không có dữ liệu con -->
+                      <tr *ngIf="getNodeChildren(parent.id).length === 0" class="empty-row">
+                        <td colspan="4" class="text-center py-2 text-muted">
+                          <small><i class="bi bi-info-circle me-2"></i> Không có mặt hàng con</small>
+                        </td>
+                      </tr>
                     </ng-container>
-                    
-                    <!-- Không có dữ liệu con -->
-                    <tr *ngIf="getNodeChildren(parent.id).length === 0" class="empty-row">
-                      <td colspan="4" class="text-center py-2 text-muted">
-                        <small><i class="bi bi-info-circle me-2"></i> Không có mặt hàng con</small>
-                      </td>
-                    </tr>
                   </ng-container>
                 </ng-container>
               </ng-container>

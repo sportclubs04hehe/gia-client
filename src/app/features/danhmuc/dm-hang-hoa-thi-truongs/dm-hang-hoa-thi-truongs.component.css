@@ -6,6 +6,7 @@
   overflow-x: auto;
   border-radius: 0.5rem;
   position: relative; /* Important for proper scrolling */
+  padding-bottom: 50px; /* Thêm padding để tránh nội dung bị che khuất khi cuộn đến cuối */
 }
 
 .custom-table {
@@ -105,4 +106,18 @@
   padding-top: 0.4rem !important;
   padding-bottom: 0.4rem !important;
   font-size: 0.85rem;
+}
+
+/* Bổ sung style cho hàng tải thêm */
+.loading-more-row td, .end-of-data-row td {
+  background-color: rgba(247, 250, 252, 0.5);
+  border-top: none !important;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  font-size: 0.85rem;
+}
+
+.end-of-data-row td {
+  font-style: italic;
+  color: #6c757d !important;
 }

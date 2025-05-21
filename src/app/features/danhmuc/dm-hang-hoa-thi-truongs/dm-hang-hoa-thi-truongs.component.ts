@@ -6,8 +6,9 @@ import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truon
 import { HHThiTruongDto } from '../models/dm-hh-thitruong/HHThiTruongDto';
 import { ToastrService } from 'ngx-toastr';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
-import { SpinnerService, SpinnerType } from '../../../shared/services/spinner.service';
+import { SpinnerService } from '../../../shared/services/spinner.service';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -16,7 +17,8 @@ import { NgxSpinnerModule } from 'ngx-spinner';
     CommonModule,
     ActiveButtonComponent,
     SearchBarComponent,
-    NgxSpinnerModule
+    NgxSpinnerModule,
+    InfiniteScrollDirective  // Thêm module vào imports
   ],
   templateUrl: './dm-hang-hoa-thi-truongs.component.html',
   styleUrl: './dm-hang-hoa-thi-truongs.component.css'
@@ -25,20 +27,20 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   private toastr = inject(ToastrService);
   private spinnerService = inject(SpinnerService);
 
-  // Danh sách mặt hàng cha (cấp đầu tiên)
+  // Các thuộc tính hiện tại...
   parentCategories: HHThiTruongDto[] = [];
-  
-  // Map để lưu trữ trạng thái mở rộng của từng node
   expandedRows = new Map<string, boolean>();
-  
-  // Map để lưu trữ các node con đã tải cho từng mặt hàng
   nodeChildrenMap = new Map<string, HHThiTruongTreeNodeDto[]>();
-  
-  // Map theo dõi trạng thái đang tải của mỗi node
   nodeLoadingMap = new Map<string, boolean>();
-  
-  // Hàng đang được chọn
   selectedRowId: string | null = null;
+  
+  // Thêm Map để lưu trữ thông tin phân trang cho mỗi node
+  nodePaginationMap = new Map<string, {
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    isLoadingMore: boolean;
+  }>();
   
   constructor(private dmHangHoaThiTruongService: DmHangHoaThiTruongService) {}
   
@@ -102,28 +104,82 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     
     // Nếu đang mở rộng và chưa tải dữ liệu con, thì tải dữ liệu
     if (!isCurrentlyExpanded && !this.nodeChildrenMap.has(nodeId)) {
-      this.loadChildrenForNode(nodeId);
+      // Khởi tạo thông tin phân trang
+      this.nodePaginationMap.set(nodeId, {
+        currentPage: 1,
+        totalPages: 1,
+        hasNextPage: true,
+        isLoadingMore: false
+      });
+      
+      this.loadChildrenForNode(nodeId, 1);
     }
   }
-
-  // Tải dữ liệu con cho một node
-  loadChildrenForNode(nodeId: string): void {
-    // Đánh dấu đang tải
-    this.nodeLoadingMap.set(nodeId, true);
+  
+  // Cập nhật phương thức để hỗ trợ phân trang
+  loadChildrenForNode(nodeId: string, pageIndex: number = 1): void {
+    // Lấy thông tin phân trang
+    const pagination = this.nodePaginationMap.get(nodeId);
     
-    this.dmHangHoaThiTruongService.getChildrenByParent(nodeId).subscribe({
+    // Nếu đang tải thêm, đặt cờ
+    if (pageIndex > 1) {
+      if (pagination) {
+        pagination.isLoadingMore = true;
+        this.nodePaginationMap.set(nodeId, pagination);
+      }
+    } else {
+      // Đánh dấu đang tải (chỉ khi tải trang đầu tiên)
+      this.nodeLoadingMap.set(nodeId, true);
+    }
+    
+    // Gọi API với phân trang
+    this.dmHangHoaThiTruongService.getChildrenByParent(nodeId, pageIndex, 100).subscribe({
       next: (result) => {
+        // Xử lý dữ liệu trả về
         let children: HHThiTruongTreeNodeDto[] = [];
+        let paginationInfo = null;
         
-        // Xử lý kết quả API trả về
         if (Array.isArray(result)) {
+          // Trường hợp API trả về mảng trực tiếp
           children = result;
+          
+          // Kiểm tra pagination header nếu có (xử lý ở interceptor)
         } else if (result && 'data' in result) {
+          // Trường hợp API trả về đối tượng PagedResult
           children = result.data || [];
+          paginationInfo = result.pagination;
         }
         
-        // Lưu danh sách con vào map
-        this.nodeChildrenMap.set(nodeId, children);
+        // Xử lý dữ liệu dựa trên pageIndex
+        if (pageIndex === 1) {
+          // Nếu là trang đầu tiên, thay thế dữ liệu cũ
+          this.nodeChildrenMap.set(nodeId, children);
+        } else {
+          // Nếu là trang tiếp theo, nối vào dữ liệu hiện có
+          const existingChildren = this.nodeChildrenMap.get(nodeId) || [];
+          this.nodeChildrenMap.set(nodeId, [...existingChildren, ...children]);
+        }
+        
+        // Cập nhật thông tin phân trang
+        if (paginationInfo) {
+          this.nodePaginationMap.set(nodeId, {
+            currentPage: paginationInfo.currentPage,
+            totalPages: paginationInfo.totalPages,
+            hasNextPage: paginationInfo.hasNextPage,
+            isLoadingMore: false
+          });
+        } else {
+          // Nếu không có thông tin phân trang, giả định không còn dữ liệu nếu ít hơn pageSize
+          const pagination = this.nodePaginationMap.get(nodeId);
+          if (pagination) {
+            this.nodePaginationMap.set(nodeId, {
+              ...pagination,
+              currentPage: pageIndex,
+              hasNextPage: children.length === 100, // Còn dữ liệu nếu trả về đủ 100 bản ghi
+              isLoadingMore: false
+            });
+          }
+        }
         
         // Đánh dấu đã tải xong
         this.nodeLoadingMap.set(nodeId, false);
@@ -132,11 +188,67 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
         console.error(`Lỗi khi tải danh sách con cho mặt hàng ${nodeId}:`, error);
         this.toastr.error('Không thể tải danh sách mặt hàng con', 'Lỗi');
         this.nodeLoadingMap.set(nodeId, false);
-        this.nodeChildrenMap.set(nodeId, []);
+        
+        // Cập nhật trạng thái phân trang khi có lỗi
+        const pagination = this.nodePaginationMap.get(nodeId);
+        if (pagination) {
+          pagination.isLoadingMore = false;
+          this.nodePaginationMap.set(nodeId, pagination);
+        }
       }
     });
   }
+  
+  // Phương thức mới để tải thêm dữ liệu
+  loadMoreChildren(nodeId: string): void {
+    // Kiểm tra và lấy thông tin phân trang
+    const pagination = this.nodePaginationMap.get(nodeId);
+    
+    // Chỉ tải thêm nếu: có pagination, còn trang tiếp theo, và không đang tải
+    if (pagination && pagination.hasNextPage && !pagination.isLoadingMore && !this.isLoadingChildren(nodeId)) {
+      // Tải trang tiếp theo
+      const nextPage = pagination.currentPage + 1;
+      this.loadChildrenForNode(nodeId, nextPage);
+    }
+  }
+  
+  // Phương thức kiểm tra có đang tải thêm không
+  isLoadingMore(nodeId: string): boolean {
+    const pagination = this.nodePaginationMap.get(nodeId);
+    return pagination?.isLoadingMore === true;
+  }
+  
+  // Phương thức kiểm tra còn dữ liệu không
+  hasMoreData(nodeId: string): boolean {
+    const pagination = this.nodePaginationMap.get(nodeId);
+    return pagination?.hasNextPage === true;
+  }
+  
+  // Phương thức xử lý sự kiện cuộn
+  onScrollDown(nodeId: string): void {
+    // Gọi loadMore cho node cụ thể
+    this.loadMoreChildren(nodeId);
+  }
 
+  // Thêm phương thức này để xử lý sự kiện cuộn
+  onTableScroll(): void {
+    // Tìm tất cả các node đang mở và cần tải thêm
+    this.expandedRows.forEach((isExpanded, nodeId) => {
+      // Chỉ xử lý các node đang mở
+      if (isExpanded) {
+        // Kiểm tra xem node có cần tải thêm dữ liệu không
+        const pagination = this.nodePaginationMap.get(nodeId);
+        if (pagination && pagination.hasNextPage && !pagination.isLoadingMore && !this.isLoadingChildren(nodeId)) {
+          console.log('Đang tải thêm dữ liệu cho node:', nodeId);
+          // Tải dữ liệu cho node đang mở
+          this.loadMoreChildren(nodeId);
+          // Chỉ tải một node mỗi lần để tránh quá nhiều request
+          return;
+        }
+      }
+    });
+  }
+  
   // Phương thức lựa chọn hàng tối ưu
   selectRow(item: HHThiTruongDto | HHThiTruongTreeNodeDto, event?: Event): void {
     // Ngăn sự kiện lan truyền nếu có
