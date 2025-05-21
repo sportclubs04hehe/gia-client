@@ -35,7 +35,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   nodeLoadingMap = new Map<string, boolean>();
   
   // Hàng đang được chọn
-  selectedRow: HHThiTruongTreeNodeDto | HHThiTruongDto | null = null;
+  selectedRowId: string | null = null; // Chỉ lưu ID thay vì cả đối tượng
   
   constructor(private dmHangHoaThiTruongService: DmHangHoaThiTruongService) {}
   
@@ -131,9 +131,23 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     });
   }
 
-  // Xử lý chọn hàng
-  selectRow(item: HHThiTruongDto | HHThiTruongTreeNodeDto): void {
-    this.selectedRow = item;
+  // Phương thức lựa chọn hàng tối ưu
+  selectRow(item: HHThiTruongDto | HHThiTruongTreeNodeDto, event?: Event): void {
+    // Ngăn sự kiện lan truyền nếu có
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Chỉ cập nhật khi chọn hàng khác
+    if (this.selectedRowId !== item.id) {
+      this.selectedRowId = item.id;
+    }
+  }
+
+  // Phương thức kiểm tra hàng có đang được chọn hay không
+  isRowSelected(itemId: string): boolean {
+    return this.selectedRowId === itemId;
   }
   
   // Tính toán độ thụt lề dựa vào cấp độ

@@ -103,8 +103,8 @@
             <ng-template #treeNodeTemplate let-node="node" let-level="level">
               <tr class="table-row" 
                   [class.child-row]="level > 0"
-                  [class.selected]="selectedRow === node"
-                  (click)="selectRow(node)">
+                  [class.selected]="isRowSelected(node.id)"
+                  (click)="selectRow(node, $event)">
                 <td>
                   <!-- Thụt lề dựa vào cấp độ -->
                   <div class="d-flex align-items-center">

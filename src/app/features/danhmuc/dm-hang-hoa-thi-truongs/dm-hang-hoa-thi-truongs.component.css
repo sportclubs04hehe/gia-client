@@ -30,8 +30,11 @@
 }
 
 .table-row {
-  transition: all 0.2s;
+  transition: background-color 0.2s ease; /* Chỉ chuyển đổi màu nền */
   cursor: pointer;
+  will-change: background-color; /* Gợi ý cho trình duyệt về thuộc tính sẽ thay đổi */
+  height: 54px; /* Chiều cao cố định cho tất cả hàng */
+  box-sizing: border-box; /* Đảm bảo kích thước không thay đổi khi thêm border */
 }
 
 .table-row:hover {
@@ -45,10 +48,20 @@
 }
 
 .table-row.selected td {
+  background-color: rgba(52, 152, 219, 0.15); /* Màu nhẹ hơn */
+  color: #333; /* Giữ màu chữ không đổi */
+  position: relative; /* Cho việc thêm border bên trái */
+}
+
+/* Thêm thanh chỉ báo bên trái thay vì thay đổi toàn bộ style */
+.table-row.selected td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
   background-color: #3498db;
-  box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.5);
-  font-weight: 500;
-  color: #fff;
 }
 
 /* Định dạng cho tree view */
