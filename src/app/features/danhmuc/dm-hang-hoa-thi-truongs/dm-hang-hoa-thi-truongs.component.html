@@ -1,0 +1,75 @@
+<div class="page-container">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
+        <div class="search-container flex-grow-1 me-3">
+          <app-search-bar></app-search-bar>
+        </div>
+
+        <div class="action-wrapper">
+          <app-active-button></app-active-button>
+        </div>
+      </div>
+
+      <!-- Custom Table with static data -->
+      <div class="table-container" style="flex: 1;">
+        <table class="table custom-table">
+          <thead class="table-header">
+            <tr>
+              <th>Mã</th>
+              <th>Tên</th>
+              <th>Đơn vị tính</th>
+              <th>Đặc tính</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="table-row">
+              <td>DV001</td>
+              <td>Đơn vị tính A</td>
+              <td>Cái</td>
+              <td>Hehe</td>
+            </tr>
+            <tr class="table-row selected">
+              <td>DV002</td>
+              <td>Đơn vị tính B</td>
+              <td>Chiếc</td>
+              <td>Hehe</td>
+            </tr>
+            <tr class="table-row">
+              <td>DV003</td>
+              <td>Đơn vị tính C</td>
+              <td>Thùng</td>
+              <td>Hehe</td>
+            </tr>
+            <tr>
+              <td colspan="4" class="text-center  py-3 text-muted">Đang tải…</td>
+            </tr>
+
+            <tr class="text-center">
+              <td colspan="4" class="py-3 text-muted">
+                <i class="bi bi-search me-2"></i>
+                Không tìm thấy kết quả phù hợp với từ khóa ""
+              </td>
+            </tr>
+
+            <tr class="text-center">
+              <td colspan="4" class="py-3 text-muted">
+                <i class="bi bi-inbox me-2"></i>
+                Chưa có dữ liệu
+              </td>
+            </tr>
+            <tr>
+
+              <td colspan="4" class="text-center py-3 text-muted">
+                <i class="bi bi-inbox me-2"></i>
+                Đã hiển thị tất cả kết quả
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+/* Table Styling */
+.table-container {
+  height: calc(100vh - 180px); /* Adjust this as needed */
+  min-height: 300px; /* Ensure there's enough height to trigger scroll */
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  position: relative; /* Important for proper scrolling */
+}
+
+.custom-table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-header {
+  background-color: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table-header th {
+  font-weight: 600;
+  color: #495057;
+  border: none;
+  padding: 1rem;
+}
+
+.table-row {
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.table-row:hover {
+  background-color: rgba(52, 152, 219, 0.05);
+}
+
+.table-row td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.table-row.selected td {
+  background-color: #3498db;
+  box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.5);
+  font-weight: 500;
+  color: #fff;
+}

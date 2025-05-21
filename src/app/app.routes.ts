@@ -10,6 +10,11 @@ export const routes: Routes = [
                     .then(m => m.DmHangHoaThiTruongComponent)
             },
             {
+                path: 'dm-hhthitruongs',
+                loadComponent: () => import('./features/danhmuc/dm-hang-hoa-thi-truongs/dm-hang-hoa-thi-truongs.component')
+                    .then(m => m.DmHangHoaThiTruongsComponent)
+            },
+            {
                 path: 'dm-don-vi-tinh',
                 loadComponent: () => import('./features/danhmuc/dm-don-vi-tinh/dm-don-vi-tinh.component')
                     .then(m => m.DmDonViTinhComponent)
