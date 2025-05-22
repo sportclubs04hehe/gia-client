@@ -90,8 +90,8 @@
         <!-- Node content -->
         <div class="ms-2 d-flex flex-grow-1 justify-content-between align-items-center">
           <div class="node-content">
-            <span class="node-code">{{ node.ma }}</span>
-            <span class="node-name">{{ node.ten }}</span>
+            <span class="node-code">{{ node.ma | truncate:15 }}</span>
+            <span class="node-name">{{ node.ten | truncate:50 }}</span>
           </div>
           <button class="btn btn-outline-primary btn-sm node-select-btn"
             (click)="selectNode(node); $event.stopPropagation();">

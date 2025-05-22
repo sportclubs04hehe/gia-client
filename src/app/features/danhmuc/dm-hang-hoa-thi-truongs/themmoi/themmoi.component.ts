@@ -183,7 +183,6 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     );
   }
 
-  // Thêm phương thức mở modal chọn nhóm hàng hóa
   /**
    * Mở modal chọn nhóm hàng hóa
    */
@@ -204,14 +203,12 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result && result.id) {
-          // Cập nhật giá trị được chọn
           this.selectedNhomHangHoa = result;
           this.form.patchValue({ matHangChaId: result.id });
         }
         this.nhomHangHoaIconFill = false;
       },
       () => {
-        // Đóng modal mà không chọn
         this.nhomHangHoaIconFill = false;
       }
     );

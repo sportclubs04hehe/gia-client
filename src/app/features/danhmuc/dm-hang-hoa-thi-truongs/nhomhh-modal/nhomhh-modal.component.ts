@@ -8,11 +8,17 @@ import { LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { finalize, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { TreeNode } from '../../models/tree-node';
 import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 
 @Component({
   selector: 'app-nhomhh-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TextHighlightPipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TextHighlightPipe,
+    TruncatePipe,
+  ],
   templateUrl: './nhomhh-modal.component.html',
   styleUrl: './nhomhh-modal.component.css'
 })
