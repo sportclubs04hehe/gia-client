@@ -3,7 +3,8 @@
   height: calc(100vh - 180px);
   min-height: 300px;
   overflow-y: auto;
-  overflow-x: auto;
+  /* Cho phép cuộn dọc nhưng ẩn thanh cuộn ngang */
+  overflow-x: hidden;
   border-radius: 0.5rem;
   position: relative;
   padding-bottom: 50px;
@@ -14,6 +15,7 @@
   margin-bottom: 0;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed; /* Thêm thuộc tính fixed để kiểm soát chiều rộng cột tốt hơn */
 }
 
 .table-header {
@@ -28,13 +30,18 @@
   color: #495057;
   border: none;
   padding: 1rem;
+  /* Cho phép tiêu đề cột xuống dòng nếu cần */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .table-row {
   transition: background-color 0.2s ease;
   cursor: pointer;
   will-change: background-color;
-  height: 54px;
+  /* Bỏ chiều cao cố định để hàng tự điều chỉnh theo nội dung */
+  min-height: 54px;
   box-sizing: border-box;
 }
 
@@ -46,8 +53,39 @@
   padding: 0.85rem 1rem;
   border-top: 1px solid #dee2e6;
   vertical-align: middle;
+  /* Cấu hình cho phép text xuống dòng */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Thêm min-width để tránh cột bị co quá nhỏ */
+  min-width: 80px;
 }
 
+/* Hàng có icon mở rộng */
+.table-row td .d-flex {
+  /* Cho phép xuống dòng khi nội dung quá dài */
+  flex-wrap: wrap;
+  align-items: flex-start !important;
+}
+
+.table-row td .d-flex span:not(.tree-toggle) {
+  /* Đảm bảo text xuống dòng sau icon */
+  word-break: break-word;
+  flex: 1;
+  min-width: 0; /* Cho phép co lại để xuống dòng */
+}
+
+/* Giữ icon mở rộng ở đầu dòng đầu tiên */
+.tree-toggle {
+  cursor: pointer;
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  margin-top: 2px; /* Căn chỉnh với dòng đầu tiên của text */
+  flex-shrink: 0; /* Không co lại */
+}
+
+/* Các thiết lập khác giữ nguyên */
 .table-row.selected td {
   background-color: rgba(52, 152, 219, 0.15);
   color: #333;

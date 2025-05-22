@@ -38,12 +38,12 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   // Dữ liệu gốc cho TreeTable
   parentCategories: HHThiTruongDto[] = [];
   
-  // Cấu hình các cột hiển thị trong bảng
+  // Cấu hình các cột hiển thị trong bảng với chiều rộng phù hợp
   columns: TableColumn<HHThiTruongDto>[] = [
-    { field: 'ma', header: 'Mã', width: '25%' },
-    { field: 'ten', header: 'Tên', width: '35%' },
-    { field: 'tenDonViTinh', header: 'Đơn vị tính', width: '20%', formatter: (item) => item.tenDonViTinh || 'N/A' },
-    { field: 'dacTinh', header: 'Đặc tính', width: '20%', formatter: (item) => item.dacTinh || 'N/A' }
+    { field: 'ma', header: 'Mã', width: '15%' },
+    { field: 'ten', header: 'Tên', width: '50%' },
+    { field: 'tenDonViTinh', header: 'Đơn vị tính', width: '10%', formatter: (item) => item.tenDonViTinh || 'N/A' },
+    { field: 'dacTinh', header: 'Đặc tính', width: '25%', formatter: (item) => item.dacTinh || 'N/A' }
   ];
   
   constructor(private dmHangHoaThiTruongService: DmHangHoaThiTruongService) {}

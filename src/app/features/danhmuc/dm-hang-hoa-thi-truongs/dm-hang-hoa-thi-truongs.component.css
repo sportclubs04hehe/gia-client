@@ -1,0 +1,11 @@
+/* Điều chỉnh width của cột theo phần trăm */
+:host ::ng-deep .text-cell {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* Đảm bảo bảng không bị overflow */
+:host ::ng-deep .table-container {
+  overflow-x: hidden;
+}

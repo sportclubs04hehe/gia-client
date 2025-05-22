@@ -98,14 +98,14 @@
 
       <!-- Template hiển thị một node trong cây -->
       <ng-template #treeNodeTemplate let-node="node" let-level="level">
+        <!-- Cập nhật phần hiển thị cột đầu tiên -->
         <tr class="table-row" 
             [class.child-row]="level > 0"
             [class.selected]="isRowSelected(node[keyField])"
             (click)="selectRow(node, $event)">
-          <!-- Cột đầu tiên (cột chính) có phần mở rộng/thu gọn -->
           <td *ngIf="columns.length > 0">
-            <div class="d-flex align-items-center">
-              <div [style.width]="calculateIndent(level)"></div>
+            <div class="d-flex align-items-start">
+              <div [style.width]="calculateIndent(level)" [style.flex-shrink]="0"></div>
               
               <!-- Icon mở rộng/thu gọn -->
               <ng-container *ngIf="hasChildren(node)">
@@ -115,14 +115,20 @@
                 </span>
               </ng-container>
               
-              <!-- Hiển thị giá trị cột đầu tiên -->
-              <span>{{ renderCellValue(node, columns[0]) }}</span>
+              <!-- Sử dụng pipe cho cột đầu tiên nếu là cột tên -->
+              <span class="text-cell">
+                {{ columns[0].field === 'ten' ? 
+                   (renderCellValue(node, columns[0]) ) : 
+                   renderCellValue(node, columns[0]) }}
+              </span>
             </div>
           </td>
           
-          <!-- Các cột còn lại -->
-          <td *ngFor="let column of columns.slice(1)">
-            {{ renderCellValue(node, column) }}
+          <!-- Các cột còn lại với hỗ trợ pipe tương tự -->
+          <td *ngFor="let column of columns.slice(1)" class="text-cell">
+            {{ column.field === 'ten' ? 
+               (renderCellValue(node, column) ) : 
+               renderCellValue(node, column) }}
           </td>
         </tr>
       </ng-template>
