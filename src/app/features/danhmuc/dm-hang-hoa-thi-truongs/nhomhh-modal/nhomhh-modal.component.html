@@ -17,8 +17,9 @@
   <!-- Thanh tìm kiếm -->
   <div class="input-group mb-3 search-container">
     <input type="text" class="form-control" placeholder="Tìm kiếm nhóm hàng hóa..." 
-      [(ngModel)]="searchTerm" (keyup.enter)="searchCategories()">
-    <button class="btn btn-outline-primary" type="button" (click)="searchCategories()">
+      [(ngModel)]="searchTerm" 
+      (input)="onSearchInput(searchTerm)">
+    <button class="btn btn-outline-primary" type="button" (click)="onSearchInput(searchTerm)">
       <i class="bi bi-search"></i>
     </button>
   </div>
@@ -37,8 +38,8 @@
         [class.active]="selectedNode?.id === item.id"
         (click)="selectSearchResult(item)">
         <div class="node-content">
-          <span class="node-code">{{ item.ma }}</span>
-          <span class="node-name">{{ item.ten }}</span>
+          <span class="node-code" [innerHTML]="item.ma | textHighlight:searchTerm"></span>
+          <span class="node-name" [innerHTML]="item.ten | textHighlight:searchTerm"></span>
         </div>
         <i *ngIf="selectedNode?.id === item.id" class="bi bi-check-circle-fill ms-2"></i>
       </button>
@@ -83,15 +84,8 @@
            (click)="selectNode(node)">
         <!-- Toggle icon -->
         <span class="me-1 toggle-icon" (click)="toggleNode(node, $event)">
-          <i class="bi" [ngClass]="node.hasChildren ? 
-            (node.expanded ? 'bi-dash-square-fill' : 'bi-plus-square-fill') : 
-            'bi-square'"></i>
+          <i class="bi" [ngClass]="node.expanded ? 'bi-dash-square-fill' : 'bi-plus-square-fill'"></i>
         </span>
-        
-        <!-- Folder icon -->
-        <i class="bi ms-1" [ngClass]="node.expanded ? 
-          'bi-folder2-open' : 'bi-folder-fill'" 
-          [class.folder-icon]="true"></i>
         
         <!-- Node content -->
         <div class="ms-2 d-flex flex-grow-1 justify-content-between align-items-center">
@@ -116,6 +110,12 @@
             </ng-container>
           </ul>
         </ng-container>
+        
+        <!-- Thông báo khi không có nhóm con -->
+        <div *ngIf="(!node.children || node.children.length === 0) && node.expanded" 
+             class="py-2 text-muted font-italic text-center">
+          <small><i class="bi bi-info-circle me-1"></i> Không có nhóm mặt hàng nào</small>
+        </div>
       </div>
     </li>
   </ng-template>

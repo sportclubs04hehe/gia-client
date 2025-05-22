@@ -5,13 +5,14 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-truong.service';
 import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
 import { LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
-import { finalize } from 'rxjs';
+import { finalize, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { TreeNode } from '../../models/tree-node';
+import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe';
 
 @Component({
   selector: 'app-nhomhh-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TextHighlightPipe],
   templateUrl: './nhomhh-modal.component.html',
   styleUrl: './nhomhh-modal.component.css'
 })
@@ -28,17 +29,17 @@ export class NhomhhModalComponent implements OnInit {
   // Từ khóa tìm kiếm
   searchTerm = '';
   
+  // Subject để theo dõi thay đổi trong ô tìm kiếm
+  private searchTerms = new Subject<string>();
+  
   // Chế độ hiển thị: 'tree' hoặc 'search'
   viewMode: 'tree' | 'search' = 'tree';
   
-  // Kết quả tìm kiếm (đã thêm hasChildren)
+  // Kết quả tìm kiếm
   searchResults: CategoryInfoDto[] = [];
   
   // Trạng thái tải
   loading = false;
-
-  // Thêm thuộc tính để theo dõi item nào đang được hover
-  isHovered: string | null = null;
   
   constructor(
     public activeModal: NgbActiveModal,
@@ -47,6 +48,52 @@ export class NhomhhModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategoriesTree();
+    
+    // Thiết lập subscription cho tìm kiếm theo thời gian thực
+    this.searchTerms.pipe(
+      // Chờ 300ms sau mỗi lần nhập để tránh quá nhiều request
+      debounceTime(300),
+      // Bỏ qua nếu giá trị không thay đổi
+      distinctUntilChanged()
+    ).subscribe(term => {
+      // Thực hiện tìm kiếm
+      this.performSearch(term);
+    });
+  }
+
+  /**
+   * Phương thức được gọi mỗi khi người dùng nhập vào ô tìm kiếm
+   */
+  onSearchInput(term: string): void {
+    this.searchTerms.next(term);
+  }
+  
+  /**
+   * Thực hiện tìm kiếm với từ khóa đã nhập
+   */
+  private performSearch(term: string): void {
+    if (!term.trim()) {
+      this.viewMode = 'tree';
+      return;
+    }
+    
+    this.loading = true;
+    this.viewMode = 'search';
+    
+    // Sử dụng phương thức tìm kiếm trong cache
+    this.hangHoaService.searchCategoriesInCache(term)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (results) => {
+          // Lọc kết quả chỉ lấy các node là NHÓM
+          this.searchResults = results.filter(
+            item => item.loaiMatHang === LoaiMatHangEnum.Nhom
+          );
+        },
+        error: (error) => {
+          console.error('Lỗi khi tìm kiếm nhóm hàng hóa:', error);
+        }
+      });
   }
 
   /**
@@ -81,6 +128,11 @@ export class NhomhhModalComponent implements OnInit {
 
   /**
    * Xây dựng cây từ danh sách phẳng
+   * @param items Các mục cần xây dựng thành node
+   * @param allItems Tất cả các mục trong hệ thống
+   * @param level Cấp độ hiện tại của node
+   * @param parent Node cha (nếu có)
+   * @returns Mảng các TreeNode đã được xây dựng
    */
   private buildTreeNodes(items: CategoryInfoDto[], allItems: CategoryInfoDto[], level = 0, parent?: TreeNode): TreeNode[] {
     return items.map(item => {
@@ -89,10 +141,10 @@ export class NhomhhModalComponent implements OnInit {
         ...item,
         expanded: false,
         level,
-        children: [],
-        loadedChildren: false,  // Đánh dấu chưa tải con
-        currentPage: 1,         // Trang hiện tại là 1
-        hasMoreChildren: false, // Mặc định không có thêm con
+        children: [],  // Luôn khởi tạo mảng rỗng
+        loadedChildren: false,
+        currentPage: 1,
+        hasMoreChildren: false,
         parent
       };
       
@@ -155,16 +207,13 @@ export class NhomhhModalComponent implements OnInit {
 
   /**
    * Mở rộng/thu gọn một node
+   * @param node Node cần toggle
+   * @param event Event click
    */
   toggleNode(node: TreeNode, event: Event): void {
     event.stopPropagation();
-    
-    // Nếu node không có con, không làm gì
-    if (!node.hasChildren) return;
-    
     node.expanded = !node.expanded;
     
-    // Nếu cần tải con từ API riêng, có thể thêm code tại đây
   }
 
   /**
@@ -180,34 +229,6 @@ export class NhomhhModalComponent implements OnInit {
     
     // Nếu chưa được chọn, chọn node đó
     this.selectedNode = node;
-  }
-
-  /**
-   * Tìm kiếm nhóm hàng hóa (sử dụng cache)
-   */
-  searchCategories(): void {
-    if (!this.searchTerm.trim()) {
-      this.viewMode = 'tree';
-      return;
-    }
-    
-    this.loading = true;
-    this.viewMode = 'search';
-    
-    // Sử dụng phương thức tìm kiếm trong cache thay vì gọi API
-    this.hangHoaService.searchCategoriesInCache(this.searchTerm)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (results) => {
-          // Lọc kết quả chỉ lấy các node là NHÓM
-          this.searchResults = results.filter(
-            item => item.loaiMatHang === LoaiMatHangEnum.Nhom
-          );
-        },
-        error: (error) => {
-          console.error('Lỗi khi tìm kiếm nhóm hàng hóa:', error);
-        }
-      });
   }
 
   /**
