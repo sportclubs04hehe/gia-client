@@ -1,0 +1,154 @@
+/* Cấu hình cho phần modal-body */
+.modal-body {
+  min-height: 350px;
+  max-height: 65vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phần thanh tìm kiếm luôn hiển thị cố định */
+.search-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #fff;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+/* Style cho các danh sách có scroll */
+.scrollable-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+
+/* Container cho cây nhóm hàng hóa */
+.tree-container {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phần tree-view có thể scroll */
+.tree-view {
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  padding-right: 5px;
+}
+
+/* Cấu hình thanh cuộn đẹp hơn */
+.tree-view::-webkit-scrollbar,
+.scrollable-list::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.tree-view::-webkit-scrollbar-track,
+.scrollable-list::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.tree-view::-webkit-scrollbar-thumb,
+.scrollable-list::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.tree-view::-webkit-scrollbar-thumb:hover,
+.scrollable-list::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Phần gốc của cây */
+.tree-root {
+  padding-left: 0;
+  list-style-type: none;
+}
+
+/* Style cho header của node */
+.node-header {
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.node-header:hover {
+  background-color: rgba(13, 110, 253, 0.08);
+}
+
+.node-header.selected {
+  background-color: rgba(13, 110, 253, 0.15);
+  border-left: 3px solid #0d6efd;
+}
+
+/* Style cho phần nội dung hiển thị */
+.node-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80%;
+}
+
+/* Style cho mã và tên của node */
+.node-code {
+  font-weight: 500;
+  margin-right: 8px;
+  color: #495057;
+}
+
+.node-name {
+  color: #212529;
+}
+
+/* Style cho nút chọn */
+.node-select-btn {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.node-header:hover .node-select-btn,
+.node-header.selected .node-select-btn {
+  opacity: 1;
+  background-color: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
+}
+
+/* Style cho icon toggle */
+.toggle-icon {
+  width: 18px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Style cho icon folder */
+.folder-icon {
+  color: #ffc107;
+}
+
+/* Tối ưu hiển thị cho màn hình nhỏ */
+@media (max-height: 600px) {
+  .modal-body {
+    max-height: 60vh;
+  }
+  
+  .tree-view, 
+  .scrollable-list {
+    max-height: 40vh;
+  }
+}

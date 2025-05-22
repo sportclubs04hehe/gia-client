@@ -149,7 +149,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
         }
       },
       (reason) => {
-        console.log(`Modal đóng với lý do: ${reason}`);
       }
     );
   }
@@ -178,7 +177,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
         }
       },
       (reason) => {
-        console.log(`Modal đóng với lý do: ${reason}`);
       }
     );
   }

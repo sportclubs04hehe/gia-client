@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment.development';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, of, shareReplay, tap, map } from 'rxjs';
 import { PagedResult } from '../../models/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { buildHttpParams } from '../../utils/build-http-params';
@@ -10,6 +10,7 @@ import { CreateHHThiTruongDto, UpdateHHThiTruongDto, CreateManyHHThiTruongDto } 
 import { HHThiTruongDto } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { PaginationParams } from '../../models/pagination-params ';
 import { SearchParams } from '../../models/search-params';
+import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,14 @@ export class DmHangHoaThiTruongService {
   private http = inject(HttpClient);
   private apiUrl = environment.appUrl;
   private endpoint = 'Dm_HHThiTruongs';
+
+  // Thêm biến cache để lưu trữ danh sách nhóm hàng hóa
+  private categoriesCache: CategoryInfoDto[] = [];
+  private categoriesCacheLoaded = false;
+  private categoriesLoadingSubject = new BehaviorSubject<boolean>(false);
+  
+  // Observable để theo dõi trạng thái tải
+  public categoriesLoading$ = this.categoriesLoadingSubject.asObservable();
 
   constructor() { }
 
@@ -44,25 +53,50 @@ export class DmHangHoaThiTruongService {
   }
 
   /**
-   * Lấy cấu trúc phân cấp của hàng hóa thị trường dạng cây
+   * Tìm kiếm nhóm hàng hóa trong cache thay vì gọi API
+   * @param searchTerm Từ khóa tìm kiếm
+   * @returns Danh sách kết quả tìm kiếm
    */
-  getHierarchicalCategories(): Observable<HHThiTruongTreeNodeDto[]> {
-    return this.http.get<HHThiTruongTreeNodeDto[]>(`${this.apiUrl}/${this.endpoint}/hierarchical`);
+  searchCategoriesInCache(searchTerm: string): Observable<CategoryInfoDto[]> {
+    if (!this.categoriesCacheLoaded) {
+      // Nếu chưa có cache, load data trước
+      return this.getAllCategoriesWithChildInfo().pipe(
+        tap(() => this.categoriesLoadingSubject.next(false)),
+        map(allData => this.filterCategories(allData, searchTerm))
+      );
+    }
+    
+    // Nếu đã có cache, tìm kiếm trực tiếp
+    const results = this.filterCategories(this.categoriesCache, searchTerm);
+    return of(results);
   }
-
+  
   /**
-   * Tìm kiếm mặt hàng thị trường theo tên hoặc mã
+   * Lọc danh sách nhóm hàng hóa theo từ khóa
+   * @param data Danh sách dữ liệu đầu vào
+   * @param searchTerm Từ khóa tìm kiếm
+   * @returns Danh sách kết quả đã lọc
    */
-  search(params: SearchParams): Observable<PagedResult<HHThiTruongDto>> {
-    const httpParams = buildHttpParams(params);
-    return this.http.get<PagedResult<HHThiTruongDto>>(`${this.apiUrl}/${this.endpoint}/search`, { params: httpParams });
+  private filterCategories(data: CategoryInfoDto[], searchTerm: string): CategoryInfoDto[] {
+    const term = searchTerm.toLowerCase().trim();
+    
+    // Nếu không có từ khóa, trả về tất cả
+    if (!term) return data;
+    
+    // Lọc theo mã hoặc tên
+    return data.filter(item => 
+      item.ma?.toLowerCase().includes(term) || 
+      item.ten?.toLowerCase().includes(term)
+    );
   }
-
+  
   /**
    * Thêm mới mặt hàng thị trường
+   * @param dto Dữ liệu mặt hàng cần thêm mới
+   * @returns Observable chứa kết quả từ API
    */
   create(dto: CreateHHThiTruongDto): Observable<ApiResponse<HHThiTruongDto>> {
-    // convert 
+    // Chuyển đổi từ camelCase sang PascalCase
     const formattedDto = {
       Ma: dto.ma,
       Ten: dto.ten,
@@ -72,43 +106,139 @@ export class DmHangHoaThiTruongService {
       LoaiMatHang: dto.loaiMatHang,
       MatHangChaId: dto.matHangChaId || null,
       DacTinh: dto.dacTinh,
-      DonViTinhId: dto.donViTinhId || null 
+      DonViTinhId: dto.donViTinhId || null
     };
 
     return this.http.post<ApiResponse<HHThiTruongDto>>(
-      `${this.apiUrl}/${this.endpoint}`, 
+      `${this.apiUrl}/${this.endpoint}`,
       formattedDto
+    ).pipe(
+      // Làm mới cache sau khi thêm mới thành công
+      tap(() => this.refreshCategoriesCache())
     );
   }
 
   /**
    * Cập nhật thông tin mặt hàng thị trường
+   * @param id ID của mặt hàng cần cập nhật
+   * @param updateDto Dữ liệu cập nhật
+   * @returns Observable chứa kết quả từ API
    */
   update(id: string, updateDto: UpdateHHThiTruongDto): Observable<ApiResponse<HHThiTruongDto>> {
-    return this.http.put<ApiResponse<HHThiTruongDto>>(`${this.apiUrl}/${this.endpoint}/${id}`, updateDto);
+    // Chuyển đổi từ camelCase sang PascalCase
+    const formattedDto = {
+      Ma: updateDto.ma,
+      Ten: updateDto.ten,
+      GhiChu: updateDto.ghiChu,
+      NgayHieuLuc: updateDto.ngayHieuLuc,
+      NgayHetHieuLuc: updateDto.ngayHetHieuLuc,
+      LoaiMatHang: updateDto.loaiMatHang,
+      MatHangChaId: updateDto.matHangChaId || null,
+      DacTinh: updateDto.dacTinh,
+      DonViTinhId: updateDto.donViTinhId || null
+    };
+
+    return this.http.put<ApiResponse<HHThiTruongDto>>(
+      `${this.apiUrl}/${this.endpoint}/${id}`, 
+      formattedDto
+    ).pipe(
+      // Làm mới cache sau khi cập nhật thành công
+      tap(() => this.refreshCategoriesCache())
+    );
   }
 
   /**
    * Xóa mặt hàng thị trường theo ID
+   * @param id ID của mặt hàng cần xóa
+   * @returns Observable chứa kết quả từ API
    */
   delete(id: string): Observable<ApiResponse<string>> {
-    return this.http.delete<ApiResponse<string>>(`${this.apiUrl}/${this.endpoint}/${id}`);
+    return this.http.delete<ApiResponse<string>>(
+      `${this.apiUrl}/${this.endpoint}/${id}`
+    ).pipe(
+      // Làm mới cache sau khi xóa thành công
+      tap(() => this.refreshCategoriesCache())
+    );
   }
 
   /**
    * Xóa nhiều mặt hàng thị trường cùng lúc
+   * @param ids Danh sách ID cần xóa
+   * @returns Observable chứa kết quả từ API
    */
   deleteMultiple(ids: string[]): Observable<ApiResponse<string[]>> {
-    return this.http.delete<ApiResponse<string[]>>(`${this.apiUrl}/${this.endpoint}/batch`, { body: ids });
+    return this.http.delete<ApiResponse<string[]>>(
+      `${this.apiUrl}/${this.endpoint}/batch`, 
+      { body: ids }
+    ).pipe(
+      // Làm mới cache sau khi xóa nhiều thành công
+      tap(() => this.refreshCategoriesCache())
+    );
   }
 
   /**
    * Thêm nhiều mặt hàng thị trường cùng lúc
+   * @param createDto Dữ liệu nhiều mặt hàng cần thêm
+   * @returns Observable chứa kết quả từ API
    */
   createMany(createDto: CreateManyHHThiTruongDto): Observable<ApiResponse<HHThiTruongDto[]>> {
-    return this.http.post<ApiResponse<HHThiTruongDto[]>>(`${this.apiUrl}/${this.endpoint}/batch`, createDto);
+    // Chuyển đổi từ camelCase sang PascalCase cho mỗi item
+    const formattedItems = createDto.items.map(item => ({
+      Ma: item.ma,
+      Ten: item.ten,
+      GhiChu: item.ghiChu,
+      NgayHieuLuc: item.ngayHieuLuc,
+      NgayHetHieuLuc: item.ngayHetHieuLuc,
+      LoaiMatHang: item.loaiMatHang,
+      MatHangChaId: item.matHangChaId || null,
+      DacTinh: item.dacTinh,
+      DonViTinhId: item.donViTinhId || null
+    }));
+
+    return this.http.post<ApiResponse<HHThiTruongDto[]>>(
+      `${this.apiUrl}/${this.endpoint}/batch`, 
+      { items: formattedItems }
+    ).pipe(
+      // Làm mới cache sau khi thêm nhiều thành công
+      tap(() => this.refreshCategoriesCache())
+    );
   }
 
+  /**
+   * Làm mới cache khi cần thiết
+   * Được gọi sau các thao tác thêm, sửa, xóa
+   */
+  refreshCategoriesCache(): void {
+    this.categoriesCacheLoaded = false;
+    this.categoriesCache = [];
+    this.categoriesLoadingSubject.next(false);
+  }
+
+  /**
+   * Lấy danh sách tất cả các nhóm hàng hóa kèm thông tin có chứa con hay không
+   * @returns Observable chứa danh sách nhóm hàng hóa từ cache hoặc API
+   */
+  getAllCategoriesWithChildInfo(): Observable<CategoryInfoDto[]> {
+    // Nếu đã có dữ liệu trong cache, trả về từ cache
+    if (this.categoriesCacheLoaded && this.categoriesCache.length > 0) {
+      return of(this.categoriesCache);
+    }
+
+    // Đánh dấu đang tải
+    this.categoriesLoadingSubject.next(true);
+    
+    // Gọi API và lưu kết quả vào cache
+    return this.http.get<CategoryInfoDto[]>(`${this.apiUrl}/${this.endpoint}/categories-with-info`)
+      .pipe(
+        tap(data => {
+          this.categoriesCache = data;
+          this.categoriesCacheLoaded = true;
+          this.categoriesLoadingSubject.next(false);
+        }),
+        shareReplay(1) // Chia sẻ kết quả nếu có nhiều subscriber
+      );
+  }
+  
   /**
    * Tìm kiếm phân cấp với các nút được mở rộng tự động
    */
@@ -124,7 +254,7 @@ export class DmHangHoaThiTruongService {
     const params = new HttpParams()
       .set('pageIndex', pageIndex.toString())
       .set('pageSize', pageSize.toString());
-    
+
     return this.http.get<PagedResult<HHThiTruongTreeNodeDto>>(`${this.apiUrl}/${this.endpoint}/children/${parentId}`, { params });
   }
 }

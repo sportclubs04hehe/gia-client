@@ -6,7 +6,7 @@
 <form [formGroup]="form" (ngSubmit)="save()">
   <!-- Thêm reference #modalBody để điều khiển scroll -->
   <div class="modal-body modal-body-scrollable" #modalBody>
-    <!-- Nhóm hàng hóa - luôn hiển thị, validate chỉ khi là hàng hóa -->
+    <!-- Nhóm hàng hóa - chuyển từ select sang input + modal -->
     <div class="row mb-3">
       <div class="col-md-12">
         <div class="form-group">
@@ -14,13 +14,24 @@
             Nhóm hàng hóa 
             <span class="text-danger" *ngIf="isHangHoa">*</span>
           </label>
-          <select class="form-select" formControlName="matHangChaId" 
-            [class.is-invalid]="isControlInvalid('matHangChaId')">
-            <option value="">-- Chọn nhóm hàng hóa --</option>
-            <option *ngFor="let item of nhomMatHangList" [value]="item.id">{{ item.ten }}</option>
-          </select>
+          <div class="position-relative mb-3" (click)="openNhomHangHoaModal()">
+            <input type="text" class="form-control pe-5" [value]="selectedNhomHangHoa?.ten || ''" 
+              readonly
+              style="cursor: pointer;"
+              placeholder="Chọn nhóm hàng hóa" 
+              (focus)="nhomHangHoaIconFill = true" 
+              (blur)="nhomHangHoaIconFill = false"
+              [ngClass]="{'is-invalid': isControlInvalid('matHangChaId')}" />
+            <input type="hidden" formControlName="matHangChaId" />
+
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3"
+              style="color: #2980b9;"
+              *ngIf="!isControlInvalid('matHangChaId')">
+              <i class="bi" [ngClass]="nhomHangHoaIconFill ? 'bi-folder-fill' : 'bi-folder2'"></i>
+            </span>
+          </div>
           <div class="invalid-feedback" *ngIf="isControlInvalid('matHangChaId')">
-            Vui lòng chọn nhóm hàng hóa
+            Vui lòng chọn nhóm hàng hóa vì mặt hàng là hàng hóa, tài sản
           </div>
         </div>
       </div>

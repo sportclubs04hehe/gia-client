@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-truong.service';
@@ -11,6 +11,7 @@ import { finalize } from 'rxjs';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
 import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
+import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component'; // Import component modal
 
 @Component({
   selector: 'app-themmoi',
@@ -31,6 +32,8 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
   hangHoaService = inject(DmHangHoaThiTruongService);
   donViTinhSelectionService = inject(DonViTinhSelectionService);
+  // Inject NgbModal service
+  private modalService = inject(NgbModal);
 
   title = 'Thêm mới hàng hóa thị trường';
   submitting = false;
@@ -41,8 +44,13 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   
   // Thông tin đơn vị tính được chọn
   selectedDonViTinh: DonViTinhSelectDto | null = null;
+  // Thông tin nhóm hàng hóa được chọn
+  selectedNhomHangHoa: { id: string, ten: string } | null = null;
+  
   // Trạng thái icon khi focus vào ô chọn đơn vị tính
   iconFill = false;
+  // Trạng thái icon khi focus vào ô chọn nhóm hàng hóa
+  nhomHangHoaIconFill = false;
   
   // Danh sách nhóm mặt hàng để hiển thị dropdown
   nhomMatHangList: { id: string, ten: string }[] = [];
@@ -141,6 +149,15 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     // Tải danh sách nhóm mặt hàng
     this.hangHoaService.getAllParentCategories().subscribe(data => {
       this.nhomMatHangList = data.map(item => ({ id: item.id, ten: item.ten }));
+      
+      // Sau khi tải danh sách, kiểm tra xem có nhóm hàng hóa đã chọn không
+      const matHangChaId = this.form.get('matHangChaId')?.value;
+      if (matHangChaId) {
+        const found = this.nhomMatHangList.find(item => item.id === matHangChaId);
+        if (found) {
+          this.selectedNhomHangHoa = found;
+        }
+      }
     });
 
     // Nếu có donViTinhId từ trước, load thông tin đơn vị tính
@@ -166,6 +183,40 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     );
   }
 
+  // Thêm phương thức mở modal chọn nhóm hàng hóa
+  /**
+   * Mở modal chọn nhóm hàng hóa
+   */
+  openNhomHangHoaModal(): void {
+    this.nhomHangHoaIconFill = true;
+    
+    // Mở modal chọn nhóm hàng hóa
+    const modalRef = this.modalService.open(NhomhhModalComponent, { 
+      size: 'lg', 
+      backdrop: 'static',
+      keyboard: false
+    });
+    
+    // Truyền dữ liệu vào modal
+    modalRef.componentInstance.preSelectedId = this.form.get('matHangChaId')?.value;
+    
+    // Xử lý kết quả khi đóng modal
+    modalRef.result.then(
+      (result) => {
+        if (result && result.id) {
+          // Cập nhật giá trị được chọn
+          this.selectedNhomHangHoa = result;
+          this.form.patchValue({ matHangChaId: result.id });
+        }
+        this.nhomHangHoaIconFill = false;
+      },
+      () => {
+        // Đóng modal mà không chọn
+        this.nhomHangHoaIconFill = false;
+      }
+    );
+  }
+  
   // Kiểm tra trạng thái lỗi của control
   isControlInvalid(controlName: string): boolean {
     const control = this.form.get(controlName);
