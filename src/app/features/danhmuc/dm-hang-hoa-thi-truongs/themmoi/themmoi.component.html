@@ -1,0 +1,137 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ title }}</h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cancel()"></button>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <!-- Thêm reference #modalBody để điều khiển scroll -->
+  <div class="modal-body modal-body-scrollable" #modalBody>
+    <!-- Nhóm hàng hóa - luôn hiển thị, validate chỉ khi là hàng hóa -->
+    <div class="row mb-3">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label class="form-label">
+            Nhóm hàng hóa 
+            <span class="text-danger" *ngIf="isHangHoa">*</span>
+          </label>
+          <select class="form-select" formControlName="matHangChaId" 
+            [class.is-invalid]="isControlInvalid('matHangChaId')">
+            <option value="">-- Chọn nhóm hàng hóa --</option>
+            <option *ngFor="let item of nhomMatHangList" [value]="item.id">{{ item.ten }}</option>
+          </select>
+          <div class="invalid-feedback" *ngIf="isControlInvalid('matHangChaId')">
+            Vui lòng chọn nhóm hàng hóa
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mã và tên -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <app-text-input 
+          formControlName="ma" 
+          label="Mã hàng hóa" 
+          [required]="true"
+          placeholder="Nhập mã hàng hóa">
+        </app-text-input>
+      </div>
+      <div class="col-md-6">
+        <app-text-input 
+          formControlName="ten" 
+          label="Tên hàng hóa" 
+          [required]="true"
+          placeholder="Nhập tên hàng hóa">
+        </app-text-input>
+      </div>
+    </div>
+
+    <!-- Ngày hiệu lực và ngày hết hiệu lực -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <app-date-input 
+          formControlName="ngayHieuLuc" 
+          label="Ngày hiệu lực" 
+          [required]="true">
+        </app-date-input>
+      </div>
+      <div class="col-md-6">
+        <app-date-input 
+          formControlName="ngayHetHieuLuc" 
+          label="Ngày hết hiệu lực" 
+          [required]="true">
+        </app-date-input>
+      </div>
+    </div>
+
+    <!-- Ghi chú -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <app-text-input 
+          formControlName="ghiChu" 
+          label="Ghi chú"
+          placeholder="Nhập ghi chú (nếu có)"
+          type="textarea"
+          [rows]="3">
+        </app-text-input>
+      </div>
+    </div>
+
+    <!-- Switch "Là hàng hóa / tài sản" -->
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" [checked]="isHangHoa" (change)="toggleIsHangHoa()"
+            id="isHangHoaSwitch">
+          <label class="form-check-label" for="isHangHoaSwitch">
+            Là hàng hóa / tài sản
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Đơn vị tính và đặc tính (chỉ hiển thị khi là hàng hóa) -->
+    <div *ngIf="isHangHoa" class="row mb-3">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+          <div class="position-relative mb-3" (click)="openDonViTinhModal()">
+            <input style="cursor: pointer;" type="text" class="form-control pe-5" [value]="selectedDonViTinh?.ten || ''" readonly
+              placeholder="Chọn đơn vị tính" (focus)="iconFill = true" (blur)="iconFill = false"
+              [ngClass]="{'is-invalid': isControlInvalid('donViTinhId')}" />
+            <input type="hidden" formControlName="donViTinhId" />
+
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;"
+              *ngIf="!isControlInvalid('donViTinhId')">
+              <i class="bi" [ngClass]="iconFill ? 'bi-box2-fill' : 'bi-box2'"></i>
+            </span>
+
+            <div class="invalid-feedback" *ngIf="isControlInvalid('donViTinhId')">
+              Đơn vị tính không được để trống.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label">Đặc tính</label>
+          <textarea class="form-control" formControlName="dacTinh" rows="3"
+            placeholder="Nhập đặc tính hàng hóa"
+            [ngClass]="{'is-invalid': isControlInvalid('dacTinh')}"></textarea>
+          <div class="invalid-feedback" *ngIf="isControlInvalid('dacTinh')">
+            Đặc tính không được vượt quá 500 ký tự.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cancel()">Hủy</button>
+    <button type="submit" class="btn btn-primary" [disabled]="submitting">
+      <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
+      Lưu
+    </button>
+  </div>
+</form>

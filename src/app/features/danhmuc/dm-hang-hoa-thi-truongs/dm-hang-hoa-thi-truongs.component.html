@@ -13,7 +13,11 @@
         </div>
 
         <div class="action-wrapper">
-          <app-active-button></app-active-button>
+          <app-active-button 
+            [hasSelected]="!!selectedItem"
+            [showRefreshButton]="true"
+            (buttonClick)="onButtonAction($event)">
+          </app-active-button>
         </div>
       </div>
 

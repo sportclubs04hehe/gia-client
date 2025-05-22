@@ -61,8 +61,24 @@ export class DmHangHoaThiTruongService {
   /**
    * Thêm mới mặt hàng thị trường
    */
-  create(createDto: CreateHHThiTruongDto): Observable<ApiResponse<HHThiTruongDto>> {
-    return this.http.post<ApiResponse<HHThiTruongDto>>(`${this.apiUrl}/${this.endpoint}`, createDto);
+  create(dto: CreateHHThiTruongDto): Observable<ApiResponse<HHThiTruongDto>> {
+    // convert 
+    const formattedDto = {
+      Ma: dto.ma,
+      Ten: dto.ten,
+      GhiChu: dto.ghiChu,
+      NgayHieuLuc: dto.ngayHieuLuc,
+      NgayHetHieuLuc: dto.ngayHetHieuLuc,
+      LoaiMatHang: dto.loaiMatHang,
+      MatHangChaId: dto.matHangChaId || null,
+      DacTinh: dto.dacTinh,
+      DonViTinhId: dto.donViTinhId || null 
+    };
+
+    return this.http.post<ApiResponse<HHThiTruongDto>>(
+      `${this.apiUrl}/${this.endpoint}`, 
+      formattedDto
+    );
   }
 
   /**

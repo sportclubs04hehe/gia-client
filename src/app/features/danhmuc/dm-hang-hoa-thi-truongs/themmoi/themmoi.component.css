@@ -1,0 +1,32 @@
+.modal-body-scrollable {
+  max-height: 70vh; /* Chiều cao tối đa là 70% chiều cao màn hình */
+  overflow-y: auto; /* Cho phép cuộn dọc */
+  overflow-x: hidden; /* Ẩn thanh cuộn ngang */
+  padding-right: 5px; /* Thêm một chút padding để tránh thanh cuộn dọc che mất nội dung */
+}
+
+/* Tùy chỉnh thanh cuộn để trông đẹp hơn */
+.modal-body-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-body-scrollable::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.modal-body-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Đảm bảo nội dung không vượt quá chiều rộng của container */
+.row {
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+}
