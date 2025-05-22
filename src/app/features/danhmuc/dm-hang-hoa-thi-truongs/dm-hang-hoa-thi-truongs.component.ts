@@ -12,6 +12,7 @@ import { TreeTableComponent } from '../../../shared/components/table/tree-table/
 import { TableColumn } from '../../../shared/models/table-column';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ThemmoiComponent } from './themmoi/themmoi.component';
+import { SuaComponent } from './sua/sua.component';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -95,7 +96,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
    * Xử lý sự kiện khi mở/đóng một node
    */
   onNodeToggled(event: {node: HHThiTruongDto, expanded: boolean}): void {
-    console.log(`${event.expanded ? 'Mở rộng' : 'Thu gọn'} mặt hàng: ${event.node.ma}`);
+    
   }
 
   /**
@@ -157,28 +158,39 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
    * Mở modal chỉnh sửa mặt hàng
    */
   openEditModal(item: HHThiTruongDto): void {
-    const modalRef = this.modalService.open(ThemmoiComponent, { 
-      size: 'lg',
-      backdrop: 'static',
-      keyboard: false
-    });
+    // Hiển thị spinner trong khi tải dữ liệu chi tiết
+    this.spinnerService.showSavingSpinner();
     
-    // Truyền dữ liệu vào modal
-    modalRef.componentInstance.title = 'Chỉnh sửa mặt hàng';
-    modalRef.componentInstance.isEditMode = true;
-    modalRef.componentInstance.editItem = item;
-    
-    // Xử lý kết quả khi đóng modal
-    modalRef.result.then(
-      (result) => {
-        if (result === 'saved') {
-          this.toastr.success('Cập nhật mặt hàng thành công', 'Thành công');
-          this.loadParentCategories(); // Tải lại dữ liệu
-        }
+    // Tải dữ liệu đầy đủ trước khi mở modal
+    this.dmHangHoaThiTruongService.getById(item.id).subscribe({
+      next: (fullItemData) => {
+        const modalRef = this.modalService.open(SuaComponent, { 
+          size: 'xl',
+          backdrop: 'static',
+          keyboard: false
+        });
+        
+        modalRef.componentInstance.title = 'Chỉnh sửa mặt hàng';
+        modalRef.componentInstance.editingItem = fullItemData; // Truyền dữ liệu đầy đủ
+        
+        // Xử lý kết quả khi đóng modal
+        modalRef.result.then(
+          (result) => {
+            if (result === 'saved') {
+              this.toastr.success('Cập nhật mặt hàng thành công', 'Thành công');
+              this.loadParentCategories(); // Tải lại dữ liệu
+            }
+          },
+          () => {} // Rút gọn hàm rỗng
+        );
+        this.spinnerService.hideSavingSpinner();
       },
-      (reason) => {
+      error: (error) => {
+        console.error('Lỗi khi tải dữ liệu chi tiết mặt hàng:', error);
+        this.toastr.error('Không thể tải thông tin chi tiết mặt hàng', 'Lỗi');
+        this.spinnerService.hideSavingSpinner();
       }
-    );
+    });
   }
 
   /**

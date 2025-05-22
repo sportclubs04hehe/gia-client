@@ -33,8 +33,8 @@ export class DmHangHoaThiTruongService {
   /**
    * Lấy thông tin mặt hàng thị trường theo ID
    */
-  getById(id: string): Observable<HHThiTruongTreeNodeDto> {
-    return this.http.get<HHThiTruongTreeNodeDto>(`${this.apiUrl}/${this.endpoint}/${id}`);
+  getById(id: string): Observable<HHThiTruongDto> {
+    return this.http.get<HHThiTruongDto>(`${this.apiUrl}/${this.endpoint}/${id}`);
   }
 
   /**
@@ -257,4 +257,5 @@ export class DmHangHoaThiTruongService {
 
     return this.http.get<PagedResult<HHThiTruongTreeNodeDto>>(`${this.apiUrl}/${this.endpoint}/children/${parentId}`, { params });
   }
+
 }
