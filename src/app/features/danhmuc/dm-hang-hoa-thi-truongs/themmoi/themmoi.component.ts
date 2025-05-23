@@ -12,6 +12,7 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component'; // Import component modal
+import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 
 @Component({
   selector: 'app-themmoi',
@@ -32,12 +33,14 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
   hangHoaService = inject(DmHangHoaThiTruongService);
   donViTinhSelectionService = inject(DonViTinhSelectionService);
+  modalNotificationService = inject(ModalNotificationService);
   // Inject NgbModal service
   private modalService = inject(NgbModal);
 
   title = 'Thêm mới hàng hóa thị trường';
   submitting = false;
   loaiMatHangEnum = LoaiMatHangEnum;
+  formModified = false;
   
   // Biến theo dõi trạng thái switch "Là hàng hóa / tài sản"
   isHangHoa = false;
@@ -62,6 +65,11 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     this.loadDanhMucLienQuan();
+    
+    // Listen for form changes
+    this.form.valueChanges.subscribe(() => {
+      this.formModified = true;
+    });
   }
 
   // Triển khai phương thức buildForm từ lớp cơ sở
@@ -289,6 +297,15 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
 
   // Hủy thao tác
   cancel(): void {
-    this.activeModal.dismiss('cancel');
+    if (this.formModified) {
+      this.modalNotificationService.confirm('Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn thoát?', 'Xác nhận thoát')
+        .subscribe((confirmed) => {
+          if (confirmed) {
+            this.activeModal.dismiss('cancel');
+          }
+        });
+    } else {
+      this.activeModal.dismiss('cancel');
+    }
   }
 }

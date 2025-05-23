@@ -12,6 +12,7 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-selection.service';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component';
+import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 
 @Component({
   selector: 'app-sua',
@@ -33,10 +34,12 @@ export class SuaComponent extends FormComponentBase implements OnInit {
   hangHoaService = inject(DmHangHoaThiTruongService);
   donViTinhSelectionService = inject(DonViTinhSelectionService);
   private modalService = inject(NgbModal);
+  modalNotificationService = inject(ModalNotificationService);
 
   title = 'Chỉnh sửa hàng hóa thị trường';
   submitting = false;
   loaiMatHangEnum = LoaiMatHangEnum;
+  formModified = false;
   
   // Thông tin mặt hàng đang chỉnh sửa
   editingItem!: HHThiTruongDto;
@@ -68,6 +71,11 @@ export class SuaComponent extends FormComponentBase implements OnInit {
     
     // Khởi tạo form và dữ liệu liên quan
     this.buildForm();
+    
+    // Listen for form changes
+    this.form.valueChanges.subscribe(() => {
+      this.formModified = true;
+    });
   }
 
   /**
@@ -261,6 +269,15 @@ export class SuaComponent extends FormComponentBase implements OnInit {
    * Hủy thao tác chỉnh sửa
    */
   cancel(): void {
-    this.activeModal.dismiss('cancel');
+    if (this.formModified) {
+      this.modalNotificationService.confirm('Bạn có thông tin chưa lưu. Bạn có chắc chắn muốn thoát?', 'Xác nhận thoát')
+        .subscribe((confirmed) => {
+          if (confirmed) {
+            this.activeModal.dismiss('cancel');
+          }
+        });
+    } else {
+      this.activeModal.dismiss('cancel');
+    }
   }
 }
