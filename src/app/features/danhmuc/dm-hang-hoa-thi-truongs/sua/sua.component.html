@@ -124,24 +124,21 @@
       </div>
 
       <div class="col-md-6">
-        <div class="form-group">
-          <label class="form-label">Đặc tính</label>
-          <textarea class="form-control" formControlName="dacTinh" rows="3"
-            placeholder="Nhập đặc tính hàng hóa"
-            [ngClass]="{'is-invalid': isControlInvalid('dacTinh')}"></textarea>
-          <div class="invalid-feedback" *ngIf="isControlInvalid('dacTinh')">
-            Đặc tính không được vượt quá 500 ký tự.
-          </div>
-        </div>
+        <app-text-input 
+          formControlName="dacTinh" 
+          label="Đặc tính"
+          placeholder="Nhập đặc tính hàng hóa"
+          type="textarea"
+          [rows]="3">
+        </app-text-input>
       </div>
     </div>
   </div>
 
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="cancel()">Hủy</button>
-    <button type="submit" class="btn btn-primary" [disabled]="submitting">
-      <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
-      Lưu
-    </button>
-  </div>
+  <app-form-footer
+    [isSaving]="submitting"
+    [disabled]="form.invalid"
+    submitType="submit"
+    (cancel)="cancel()">
+  </app-form-footer>
 </form>

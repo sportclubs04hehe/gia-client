@@ -13,6 +13,7 @@ import { DonViTinhSelectionService } from '../../services/utils/don-vi-tinh-sele
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
+import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
 
 @Component({
   selector: 'app-sua',
@@ -21,7 +22,8 @@ import { ModalNotificationService } from '../../../../shared/components/notifica
     CommonModule,
     ReactiveFormsModule,
     TextInputComponent,
-    DateInputComponent
+    DateInputComponent,
+    FormFooterComponent
   ],
   templateUrl: './sua.component.html',
   styleUrl: './sua.component.css'
