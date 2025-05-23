@@ -6,6 +6,7 @@ import { PagedResult } from '../../../../features/danhmuc/models/paged-result';
 import { NodePagination } from '../../../models/node-pagination';
 import { TableColumn } from '../../../models/table-column';
 import { TreeNode } from '../../../models/tree-node';
+import { CapitalizePipe } from '../../../pipes/capitalize-pipe.pipe';
 
 /**
  * Component bảng dữ liệu dạng cây hỗ trợ phân trang và lazy loading
@@ -14,7 +15,7 @@ import { TreeNode } from '../../../models/tree-node';
 @Component({
   selector: 'app-tree-table',
   standalone: true,
-  imports: [CommonModule, InfiniteScrollDirective, NgxSpinnerModule],
+  imports: [CommonModule, InfiniteScrollDirective, NgxSpinnerModule, CapitalizePipe],
   templateUrl: './tree-table.component.html',
   styleUrl: './tree-table.component.css'
 })

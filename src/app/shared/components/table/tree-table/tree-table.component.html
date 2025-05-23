@@ -103,6 +103,7 @@
             [class.child-row]="level > 0"
             [class.selected]="isRowSelected(node[keyField])"
             (click)="selectRow(node, $event)">
+          <!-- Phần hiển thị cột đầu tiên -->
           <td *ngIf="columns.length > 0">
             <div class="d-flex align-items-start">
               <div [style.width]="calculateIndent(level)" [style.flex-shrink]="0"></div>
@@ -115,10 +116,10 @@
                 </span>
               </ng-container>
               
-              <!-- Sử dụng pipe cho cột đầu tiên nếu là cột tên -->
+              <!-- Sử dụng pipe capitalize cho cột tên -->
               <span class="text-cell">
                 {{ columns[0].field === 'ten' ? 
-                   (renderCellValue(node, columns[0]) ) : 
+                   (renderCellValue(node, columns[0]) | capitalize) : 
                    renderCellValue(node, columns[0]) }}
               </span>
             </div>
@@ -127,7 +128,7 @@
           <!-- Các cột còn lại với hỗ trợ pipe tương tự -->
           <td *ngFor="let column of columns.slice(1)" class="text-cell">
             {{ column.field === 'ten' ? 
-               (renderCellValue(node, column) ) : 
+               (renderCellValue(node, column) | capitalize) : 
                renderCellValue(node, column) }}
           </td>
         </tr>
