@@ -28,6 +28,12 @@ export class DmHangHoaThiTruongService {
   // Observable để theo dõi trạng thái tải
   public categoriesLoading$ = this.categoriesLoadingSubject.asObservable();
 
+  /**
+   * Cache cho danh sách nhóm hàng hóa cha
+   */
+  private parentCategoriesCache: HHThiTruongDto[] = [];
+  private parentCategoriesCacheLoaded = false;
+
   constructor() { }
 
   /**
@@ -49,7 +55,20 @@ export class DmHangHoaThiTruongService {
    * Lấy danh sách các nhóm hàng hóa cha (không có mặt hàng cha)
    */
   getAllParentCategories(): Observable<HHThiTruongDto[]> {
-    return this.http.get<HHThiTruongDto[]>(`${this.apiUrl}/${this.endpoint}/parents`);
+    // Nếu đã có dữ liệu trong cache, trả về từ cache
+    if (this.parentCategoriesCacheLoaded) {
+      return of(this.parentCategoriesCache);
+    }
+    
+    // Nếu chưa có cache, gọi API và lưu kết quả
+    return this.http.get<HHThiTruongDto[]>(`${this.apiUrl}/${this.endpoint}/parents`)
+      .pipe(
+        tap(data => {
+          this.parentCategoriesCache = data;
+          this.parentCategoriesCacheLoaded = true;
+        }),
+        shareReplay(1)
+      );
   }
 
   /**
@@ -113,8 +132,11 @@ export class DmHangHoaThiTruongService {
       `${this.apiUrl}/${this.endpoint}`,
       formattedDto
     ).pipe(
-      // Làm mới cache sau khi thêm mới thành công
-      tap(() => this.refreshCategoriesCache())
+      // Xóa cả hai loại cache
+      tap(() => {
+        this.refreshCategoriesCache();
+        this.clearParentCategoriesCache();
+      })
     );
   }
 
@@ -212,6 +234,14 @@ export class DmHangHoaThiTruongService {
     this.categoriesCacheLoaded = false;
     this.categoriesCache = [];
     this.categoriesLoadingSubject.next(false);
+  }
+
+  /**
+   * Xóa cache khi có thay đổi dữ liệu
+   */
+  clearParentCategoriesCache(): void {
+    this.parentCategoriesCacheLoaded = false;
+    this.parentCategoriesCache = [];
   }
 
   /**

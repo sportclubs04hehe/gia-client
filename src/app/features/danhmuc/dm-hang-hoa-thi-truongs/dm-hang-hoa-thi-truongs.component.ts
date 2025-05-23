@@ -168,19 +168,116 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     
     // Truyền dữ liệu vào modal
     modalRef.componentInstance.title = 'Thêm mới mặt hàng';
-    modalRef.componentInstance.parentItem = this.selectedItem; // Truyền mặt hàng cha (nếu có)
+    
+    // Truyền mặt hàng cha (nếu có)
+    if (this.selectedItem && this.selectedItem.loaiMatHang === LoaiMatHangEnum.Nhom) {
+      modalRef.componentInstance.parentItem = this.selectedItem;
+    }
+    
+    // Truyền danh sách nhóm hàng hóa để tránh gọi API lại
+    // Map parentCategories thành dạng đơn giản {id, ten}
+    const categoryOptions = this.parentCategories.map(item => ({ 
+      id: item.id, 
+      ten: item.ten 
+    }));
+    modalRef.componentInstance.nhomHangHoaList = categoryOptions;
     
     // Xử lý kết quả khi đóng modal
     modalRef.result.then(
       (result) => {
-        if (result === 'saved') {
+        if (result && typeof result === 'object' && 'id' in result) {
+          // Kết quả là mặt hàng vừa thêm mới
+          const newItem = result as HHThiTruongDto;
           this.toastr.success('Thêm mới mặt hàng thành công', 'Thành công');
-          this.loadParentCategories(); // Tải lại dữ liệu
+          
+          // Cập nhật UI dựa trên loại mặt hàng
+          this.addNewItemToUI(newItem);
         }
       },
-      (reason) => {
-      }
+      () => {}
     );
+  }
+
+  /**
+   * Cập nhật UI sau khi thêm mới mặt hàng
+   * @param newItem Mặt hàng vừa được thêm mới
+   */
+  private addNewItemToUI(newItem: HHThiTruongDto): void {
+    const treeTable = this.getTreeTableComponent();
+    
+    // Trường hợp 1: Mặt hàng cấp cao nhất (không có cha)
+    if (!newItem.matHangChaId) {
+      // Thêm vào danh sách gốc
+      this.parentCategories = [...this.parentCategories, newItem];
+      return;
+    }
+    
+    // Trường hợp 2: Mặt hàng con thuộc một nhóm
+    if (treeTable && newItem.matHangChaId) {
+      if (treeTable.isNodeExpanded(newItem.matHangChaId)) {
+        // Nhóm cha đang mở - thêm vào danh sách con hiển thị
+        const children = treeTable.getNodeChildren(newItem.matHangChaId);
+        treeTable.nodeChildrenMap.set(newItem.matHangChaId, [...children, newItem as any]);
+        
+        // Chọn mặt hàng vừa thêm
+        this.selectRow(newItem);
+      } else {
+        // Nhóm cha chưa mở - xóa cache để khi mở sẽ tải lại dữ liệu mới nhất
+        treeTable.nodeChildrenMap.delete(newItem.matHangChaId);
+        
+        // Tự động mở rộng nhóm cha và hiển thị mặt hàng mới (tùy chọn)
+        this.autoExpandParentAndShowNewItem(newItem);
+      }
+    }
+  }
+
+  /**
+   * Tự động mở rộng nhóm cha và hiển thị mặt hàng mới thêm
+   * @param item Mặt hàng mới vừa thêm
+   */
+  private autoExpandParentAndShowNewItem(item: HHThiTruongDto): void {
+    if (!item.matHangChaId) return;
+    
+    const treeTable = this.getTreeTableComponent();
+    if (!treeTable) return;
+    
+    // Đánh dấu đang mở rộng
+    treeTable.expandedRows.set(item.matHangChaId, true);
+    
+    // Tải dữ liệu con của nhóm cha
+    this.loadChildrenForNode(item.matHangChaId, 1, this.treeTableComponent.defaultPageSize)
+      .subscribe({
+        next: (result) => {
+          // Cập nhật dữ liệu con và chọn mặt hàng vừa thêm
+          treeTable.nodeChildrenMap.set(item.matHangChaId, result.data);
+          treeTable.nodeLoadingMap.set(item.matHangChaId, false);
+          
+          // Thiết lập thông tin phân trang
+          treeTable.nodePaginationMap.set(item.matHangChaId, {
+            currentPage: 1,
+            totalPages: Math.ceil(result.pagination.totalItems / treeTable.defaultPageSize),
+            hasNextPage: result.pagination.hasNextPage,
+            isLoadingMore: false
+          });
+          
+          // Xóa dòng emit event không tồn tại
+          // Thay thế bằng cách gọi trực tiếp sự kiện toggle của TreeTable
+          const parentNode = this.parentCategories.find(node => node.id === item.matHangChaId);
+          if (parentNode) {
+            // Thông báo cho TreeTable biết node đã được mở
+            this.onNodeToggled({
+              node: parentNode,
+              expanded: true
+            });
+          }
+          
+          // Tìm và chọn mặt hàng mới
+          const addedItem = result.data.find(child => child.id === item.id);
+          if (addedItem) {
+            this.selectRow(addedItem as unknown as HHThiTruongDto);
+          }
+        }
+      });
   }
 
   /**
@@ -202,7 +299,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
           keyboard: false
         });
         
-        modalRef.componentInstance.title = 'Chỉnh sửa mặt hàng';
         modalRef.componentInstance.editingItem = fullItemData;
         
         // Xử lý kết quả khi đóng modal
@@ -339,9 +435,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
       next: (result) => {
         // Cập nhật danh sách con trong TreeTable
         treeTable.nodeChildrenMap.set(parentId, result.data);
-        
-        // Cập nhật thông tin phân trang, giữ nguyên trang hiện tại
-        // Sửa lỗi: thay totalCount bằng pagination.totalItems
+
         treeTable.nodePaginationMap.set(parentId, {
           ...pagination,
           hasNextPage: result.pagination.totalItems > result.data.length,
@@ -409,12 +503,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     if (treeTable.isNodeExpanded(item.matHangChaId)) {
       this.reloadChildrenData(item.matHangChaId);
     } else {
-      // Nếu nhóm cha chưa được mở, đánh dấu để buộc tải lại khi mở
-      // Xóa dữ liệu con đã lưu trong cache để khi mở sẽ tải lại từ API
       treeTable.nodeChildrenMap.delete(item.matHangChaId);
-      
-      // Nếu muốn tự động mở nhóm cha mới, uncomment dòng dưới
-      // this.autoExpandParentAndShowItem(item);
     }
   }
 
@@ -439,7 +528,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
       this.loadChildrenForNode(item.matHangChaId, 1, this.treeTableComponent.defaultPageSize)
         .subscribe({
           next: (result) => {
-            // Cập nhật dữ liệu con và chọn mặt hàng vừa chuyển
+            // Cập nhật dữ liệu con và chọn mặt hàng đã chuyển
             treeTable.nodeChildrenMap.set(item.matHangChaId, result.data);
             treeTable.nodeLoadingMap.set(item.matHangChaId, false);
             
@@ -449,6 +538,12 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
               totalPages: Math.ceil(result.pagination.totalItems / this.treeTableComponent.defaultPageSize),
               hasNextPage: result.pagination.hasNextPage,
               isLoadingMore: false
+            });
+            
+            // Gọi trực tiếp sự kiện toggle thay vì emit
+            this.onNodeToggled({
+              node: parentNode,
+              expanded: true
             });
             
             // Chọn mặt hàng đã chuyển

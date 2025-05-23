@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ElementRef, Input } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
@@ -62,6 +62,8 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   
   // Danh sách nhóm mặt hàng để hiển thị dropdown
   nhomMatHangList: { id: string, ten: string }[] = [];
+
+  @Input() nhomHangHoaList: { id: string, ten: string }[] = [];
 
   constructor(protected override fb: FormBuilder) {
     super(fb);
@@ -163,19 +165,16 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
 
   // Tải danh mục liên quan
   private loadDanhMucLienQuan(): void {
-    // Tải danh sách nhóm mặt hàng
-    this.hangHoaService.getAllParentCategories().subscribe(data => {
-      this.nhomMatHangList = data.map(item => ({ id: item.id, ten: item.ten }));
-      
-      // Sau khi tải danh sách, kiểm tra xem có nhóm hàng hóa đã chọn không
-      const matHangChaId = this.form.get('matHangChaId')?.value;
-      if (matHangChaId) {
-        const found = this.nhomMatHangList.find(item => item.id === matHangChaId);
-        if (found) {
-          this.selectedNhomHangHoa = found;
-        }
-      }
-    });
+    // Chỉ tải danh sách nhóm mặt hàng nếu chưa được truyền vào
+    if (this.nhomHangHoaList.length === 0) {
+      this.hangHoaService.getAllParentCategories().subscribe(data => {
+        this.nhomHangHoaList = data.map(item => ({ id: item.id, ten: item.ten }));
+        this.setupSelectedNhomHangHoa();
+      });
+    } else {
+      // Sử dụng dữ liệu đã được truyền vào
+      this.setupSelectedNhomHangHoa();
+    }
 
     // Nếu có donViTinhId từ trước, load thông tin đơn vị tính
     const donViTinhId = this.form.get('donViTinhId')?.value;
@@ -183,6 +182,19 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
       this.donViTinhSelectionService.loadSelectedDonViTinh(donViTinhId, []).subscribe(result => {
         this.selectedDonViTinh = result;
       });
+    }
+  }
+
+  /**
+   * Thiết lập nhóm hàng hóa đã chọn
+   */
+  private setupSelectedNhomHangHoa(): void {
+    const matHangChaId = this.form.get('matHangChaId')?.value;
+    if (matHangChaId) {
+      const found = this.nhomHangHoaList.find(item => item.id === matHangChaId);
+      if (found) {
+        this.selectedNhomHangHoa = found;
+      }
     }
   }
 
@@ -261,30 +273,23 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
       formData.donViTinhId = null;
     }
 
-    // Log dữ liệu trước khi gửi (hỗ trợ debug)
-    console.log('Dữ liệu gửi API:', formData);
-
     // Gọi service để tạo mới
     this.hangHoaService.create(formData)
       .pipe(finalize(() => this.submitting = false))
       .subscribe({
         next: (response) => {
-          // Thông báo thành công và đóng modal
-          this.activeModal.close('saved');
+          // Trả về mặt hàng vừa tạo thay vì chỉ trả về 'saved'
+          this.activeModal.close(response.data);
         },
         error: (error) => {
           console.error('Lỗi API:', error);
           
-          // Xử lý thông báo lỗi từ API một cách chi tiết
+          // Xử lý lỗi
           if (error.error?.errors) {
-            // Hiển thị các lỗi cụ thể từ API
-            Object.entries(error.error.errors).forEach(([key, messages]) => {
-              console.error(`Lỗi ở trường ${key}:`, messages);
-            });
-            
-            // Có thể hiển thị thông báo
             const errorMessages = Object.values(error.error.errors).flat().join('\n');
-            console.error('Thông báo lỗi:', errorMessages);
+            this.modalNotificationService.error(errorMessages, 'Lỗi');
+          } else {
+            this.modalNotificationService.error('Không thể thêm mới mặt hàng', 'Lỗi');
           }
         }
       });
