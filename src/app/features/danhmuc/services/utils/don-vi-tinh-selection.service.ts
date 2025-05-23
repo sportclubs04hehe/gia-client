@@ -93,14 +93,18 @@ export class DonViTinhSelectionService {
           noDataMessage: 'Không có dữ liệu',
           loadingMessage: 'Đang tải...',
           selectedId: form.get('donViTinhId')?.value || null,
-          searchFn: (term: string) => this.searchDonViTinh(term),
-          clearSearchFn: () => this.clearDonViTinhSearch()
+          searchFn: (term: string) => {
+            this.searchDonViTinh(term);
+            this.setupDonViTinhSearchStream().subscribe();
+          },
+          clearSearchFn: () => {
+            this.clearDonViTinhSearch();
+            this.setupDonViTinhSearchStream().subscribe();
+          }
         };
 
         // Open the modal and store reference
         this.modalRef = this.selectionModalService.openWithRef(options);
-
-        this.setupDonViTinhSearchStream(); 
 
         // Handle modal result
         this.modalRef.result.then((result: DonViTinhSelectDto) => {

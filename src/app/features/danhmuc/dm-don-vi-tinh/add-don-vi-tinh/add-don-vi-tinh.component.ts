@@ -2,7 +2,7 @@ import { Component, Input, OnInit, inject } from '@angular/core';
 import { SharedModule } from '../../../../shared/shared.module';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { FormBuilder, Validators } from '@angular/forms';
-import { NgbActiveModal, NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
 import { DonViTinhCreateDto } from '../../models/dm_donvitinh/don-vi-tinh_create.dto';
 import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
@@ -25,7 +25,6 @@ import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
 export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
   activeModal = inject(NgbActiveModal);
   donViTinhService = inject(DmDonViTinhService);
-  calendar = inject(NgbCalendar);
   notificationService = inject(ModalNotificationService);
 
   @Input() title: string = '';
@@ -42,9 +41,9 @@ export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
   }
 
   ngOnInit(): void {
-    this.setDefaultDates();
-    this.buildForm();
-
+    this.buildForm();       // Đặt buildForm() trước
+    this.setDefaultDates(); // Sau đó mới gọi setDefaultDates()
+    
     // Store initial form value to track changes
     this.initialFormValue = this.form.value;
   }

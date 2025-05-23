@@ -173,7 +173,7 @@ export class DmDonViTinhComponent implements OnInit {
   onActionButtonClick(action: string): void {
     switch (action) {
       case 'add':
-        this.openModal();
+        this.openAddModal();
         break;
       case 'edit':
         this.openModalEdit();
@@ -187,7 +187,7 @@ export class DmDonViTinhComponent implements OnInit {
     }
   }
 
-  openModal() {
+  openAddModal() {
     const modalRef = this.modalService.open(AddDonViTinhComponent, {
       size: 'xl',
       backdrop: 'static',
