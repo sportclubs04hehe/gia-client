@@ -14,6 +14,8 @@ import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select
 import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component'; // Import component modal
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
+import { CodeInputDirective } from '../../utils/code-input.directive';
+import { codeValidator } from '../../utils/code-validator';
 
 @Component({
   selector: 'app-themmoi',
@@ -23,7 +25,8 @@ import { FormFooterComponent } from '../../../../shared/components/forms/form-fo
     ReactiveFormsModule,
     TextInputComponent,
     DateInputComponent,
-    FormFooterComponent
+    FormFooterComponent,
+    CodeInputDirective 
   ],
   templateUrl: './themmoi.component.html',
   styleUrl: './themmoi.component.css'
@@ -80,7 +83,11 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     const { startDate, endDate } = generateDefaultDateRange();
 
     this.form = this.fb.group({
-      ma: ['', [Validators.required, Validators.maxLength(50)]],
+      ma: ['', [
+        Validators.required, 
+        Validators.maxLength(25), 
+        codeValidator() 
+      ]],
       ten: ['', [Validators.required, Validators.maxLength(250)]],
       ghiChu: ['', Validators.maxLength(500)],
       ngayHieuLuc: [startDate, Validators.required],

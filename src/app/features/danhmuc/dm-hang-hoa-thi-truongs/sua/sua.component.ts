@@ -14,6 +14,8 @@ import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select
 import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
+import { CodeInputDirective } from '../../utils/code-input.directive';
+import { codeValidator } from '../../utils/code-validator';
 
 @Component({
   selector: 'app-sua',
@@ -23,7 +25,8 @@ import { FormFooterComponent } from '../../../../shared/components/forms/form-fo
     ReactiveFormsModule,
     TextInputComponent,
     DateInputComponent,
-    FormFooterComponent
+    FormFooterComponent,
+    CodeInputDirective
   ],
   templateUrl: './sua.component.html',
   styleUrl: './sua.component.css'
@@ -86,7 +89,11 @@ export class SuaComponent extends FormComponentBase implements OnInit {
   protected buildForm(): void {
     this.form = this.fb.group({
       id: [this.editingItem.id], // Trường id cần thiết cho việc cập nhật
-      ma: [this.editingItem.ma, [Validators.required, Validators.maxLength(50)]],
+      ma: [this.editingItem.ma, [
+        Validators.required, 
+        Validators.maxLength(25), 
+        codeValidator()
+      ]],
       ten: [this.editingItem.ten, [Validators.required, Validators.maxLength(250)]],
       ghiChu: [this.editingItem.ghiChu || '', Validators.maxLength(500)],
       ngayHieuLuc: [stringToDateStruct(this.editingItem.ngayHieuLuc), Validators.required],

@@ -10,6 +10,8 @@ import { DateInputComponent } from '../../../../shared/components/forms/date-inp
 import { dateRangeValidator, generateDefaultDateRange } from '../../../../core/formatters/date-range-validator';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
+import { CodeInputDirective } from '../../utils/code-input.directive';
+import { codeValidator } from '../../utils/code-validator';
 
 @Component({
   selector: 'app-add-don-vi-tinh',
@@ -18,6 +20,7 @@ import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
     SharedModule,
     TextInputComponent,
     DateInputComponent,
+    CodeInputDirective
   ],
   templateUrl: './add-don-vi-tinh.component.html',
   styleUrl: './add-don-vi-tinh.component.css'
@@ -85,7 +88,11 @@ export class AddDonViTinhComponent extends FormComponentBase implements OnInit {
   protected buildForm(): void {
     this.form = this.fb.group({
       ma: ['', {
-        validators: [Validators.required],
+        validators: [
+          Validators.required,
+          codeValidator(),
+          Validators.maxLength(25)
+        ],
         asyncValidators: [uniqueDonViTinhCodeValidator(this.donViTinhService, null)],
         updateOn: 'blur'
       }],

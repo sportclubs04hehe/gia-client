@@ -49,4 +49,10 @@
       {{ label }} không được vượt quá {{ controlDir.control?.errors?.['maxlength']?.requiredLength }} ký tự.
     </div>
   </ng-container>
+
+  <!-- Thêm phần hiển thị lỗi này vào component -->
+  <div *ngIf="controlDir?.control?.touched && controlDir?.control?.errors" class="invalid-feedback d-block">
+    <span *ngIf="controlDir?.control?.errors?.['hasWhitespace']">Không được chứa khoảng trắng</span>
+    <span *ngIf="controlDir?.control?.errors?.['hasSpecialChar']">Chỉ được dùng chữ cái, số, gạch dưới và gạch ngang</span>
+  </div>
 </div>

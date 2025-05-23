@@ -33,7 +33,6 @@ export function uniqueDonViTinhCodeValidator(
         return result.data === true ? { duplicate: true } : null;
       }),
       catchError(() => {
-        // If error or 404, assume code doesn't exist (we'll handle this as valid)
         return of(null);
       })
     );

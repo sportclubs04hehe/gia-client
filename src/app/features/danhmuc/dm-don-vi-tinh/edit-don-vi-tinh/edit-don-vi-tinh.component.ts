@@ -12,6 +12,8 @@ import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
+import { CodeInputDirective } from '../../utils/code-input.directive';
+import { codeValidator } from '../../utils/code-validator';
 
 @Component({
   selector: 'app-edit-don-vi-tinh',
@@ -19,7 +21,8 @@ import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
   imports: [
     SharedModule,
     TextInputComponent,
-    DateInputComponent
+    DateInputComponent,
+    CodeInputDirective
   ],
   templateUrl: './edit-don-vi-tinh.component.html',
   styleUrl: './edit-don-vi-tinh.component.css'
@@ -109,7 +112,11 @@ export class EditDonViTinhComponent extends FormComponentBase implements OnInit 
   protected buildForm(): void {
     this.form = this.fb.group({
       ma: ['', {
-        validators: [Validators.required],
+        validators: [
+          Validators.required,
+          codeValidator(),
+          Validators.maxLength(25)
+        ],
         asyncValidators: [uniqueDonViTinhCodeValidator(
           this.donViTinhService,
           this.donViTinh?.ma,
