@@ -31,15 +31,14 @@ import { map } from 'rxjs/operators';
 export class DmHangHoaThiTruongsComponent implements OnInit {
   private toastr = inject(ToastrService);
   private spinnerService = inject(SpinnerService);
-  private modalService = inject(NgbModal); // Tiêm NgbModal service
+  private modalService = inject(NgbModal);
+  private dmHangHoaThiTruongService: DmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
 
-  // Trạng thái lựa chọn
+  // Trạng thái và dữ liệu
   selectedItem: HHThiTruongDto | null = null;
-
-  // Dữ liệu gốc cho TreeTable
   parentCategories: HHThiTruongDto[] = [];
 
-  // Cấu hình các cột hiển thị trong bảng với chiều rộng phù hợp
+  // Cấu hình bảng
   columns: TableColumn<HHThiTruongDto>[] = [
     { field: 'ma', header: 'Mã', width: '20%' },
     { field: 'ten', header: 'Tên', width: '45%' },
@@ -47,10 +46,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     { field: 'dacTinh', header: 'Đặc tính', width: '25%', formatter: (item) => item.dacTinh || 'N/A' }
   ];
 
-  // Thêm ViewChild để truy cập TreeTableComponent
   @ViewChild(TreeTableComponent) treeTableComponent!: TreeTableComponent<HHThiTruongDto>;
-
-  constructor(private dmHangHoaThiTruongService: DmHangHoaThiTruongService) { }
 
   ngOnInit(): void {
     this.loadParentCategories();
@@ -61,7 +57,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
    */
   loadParentCategories(): void {
     this.spinnerService.showTableSpinner();
-
     this.dmHangHoaThiTruongService.getAllParentCategories().subscribe({
       next: (data) => {
         this.parentCategories = data;
@@ -76,27 +71,21 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   }
 
   /**
-   * Hàm kiểm tra node có con hoặc có thể có con không
+   * Kiểm tra node có con
    */
   hasChildrenForNode = (node: HHThiTruongDto | HHThiTruongTreeNodeDto): boolean => {
     return node.loaiMatHang === LoaiMatHangEnum.Nhom;
   }
 
   /**
-   * Hàm tải dữ liệu con cho một node
+   * Tải dữ liệu con cho một node
    */
   loadChildrenForNode = (parentId: string, pageIndex: number, pageSize: number) => {
     return this.dmHangHoaThiTruongService.getChildrenByParent(parentId, pageIndex, pageSize)
-      .pipe(
-        map(result => {
-          const convertedData = this.convertToHHThiTruongDto(result.data);
-
-          return {
-            data: convertedData,
-            pagination: result.pagination
-          };
-        })
-      );
+      .pipe(map(result => ({
+        data: this.convertToHHThiTruongDto(result.data),
+        pagination: result.pagination
+      })));
   }
 
   /**
@@ -110,34 +99,30 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
    * Xử lý sự kiện khi mở/đóng một node
    */
   onNodeToggled(event: { node: HHThiTruongDto, expanded: boolean }): void {
-    if (event.expanded) {
-      const treeTable = this.getTreeTableComponent();
-      if (!treeTable) return;
+    if (!event.expanded) return;
 
-      const nodeId = event.node.id;
-      const hasLoadedChildren = treeTable.nodeChildrenMap.has(nodeId);
-      if (!hasLoadedChildren) {
-        this.loadChildrenForNode(nodeId, 1, treeTable.defaultPageSize)
-          .subscribe({
-            next: (result) => {
-              const convertedData = this.convertToHHThiTruongDto(result.data);
-              treeTable.nodeChildrenMap.set(nodeId, convertedData);
-              treeTable.nodeLoadingMap.set(nodeId, false);
+    const treeTable = this.treeTableComponent;
+    if (!treeTable) return;
 
-              treeTable.nodePaginationMap.set(nodeId, {
-                currentPage: 1,
-                totalPages: Math.ceil(result.pagination.totalItems / treeTable.defaultPageSize),
-                hasNextPage: result.pagination.hasNextPage,
-                isLoadingMore: false
-              });
-            }
-          });
+    const nodeId = event.node.id;
+    if (treeTable.nodeChildrenMap.has(nodeId)) return;
+
+    this.loadChildrenForNode(nodeId, 1, treeTable.defaultPageSize).subscribe({
+      next: (result) => {
+        treeTable.nodeChildrenMap.set(nodeId, result.data);
+        treeTable.nodeLoadingMap.set(nodeId, false);
+        treeTable.nodePaginationMap.set(nodeId, {
+          currentPage: 1,
+          totalPages: Math.ceil(result.pagination.totalItems / treeTable.defaultPageSize),
+          hasNextPage: result.pagination.hasNextPage,
+          isLoadingMore: false
+        });
       }
-    }
+    });
   }
 
   /**
-   * Xử lý sự kiện từ nút thao tác (thêm, sửa, xóa)
+   * Xử lý sự kiện từ nút thao tác (thêm, sửa, xóa, làm mới)
    */
   onButtonAction(action: string): void {
     switch (action) {
@@ -145,11 +130,8 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
         this.openAddModal();
         break;
       case 'edit':
-        if (this.selectedItem) {
-          this.openEditModal(this.selectedItem);
-        } else {
+        this.selectedItem ? this.openEditModal(this.selectedItem) : 
           this.toastr.warning('Vui lòng chọn một mặt hàng để chỉnh sửa', 'Cảnh báo');
-        }
         break;
       case 'delete':
         this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Cảnh báo');
@@ -175,28 +157,18 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
 
     modalRef.result.then(
       (result) => {
-        if (result && result.success) {
-          this.toastr.success('Thêm mới mặt hàng thành công', 'Thành công');
+        if (!result?.success) return;
+        
+        this.toastr.success('Thêm mới mặt hàng thành công', 'Thành công');
 
-          if (result.parentId) {
-            this.expandAndSelectNewItem(result.parentId, result.item);
-          } else {
-            this.loadParentCategories();
-            if (result.item && result.item.id) {
-              setTimeout(() => {
-                this.selectedItem = result.item;
-                if (this.treeTableComponent) {
-                  this.treeTableComponent.selectedRowId = result.item.id;
-                }
-                this.scrollToSelectedItem(result.item.id);
-              }, 200);
-            }
-          }
+        if (result.parentId) {
+          this.navigateToItemInTree(result.parentId, result.item);
+        } else {
+          this.loadParentCategories();
+          this.selectAndScrollToItem(result.item);
         }
       },
-      () => {
-        // Modal bị đóng không có kết quả
-      }
+      () => {}
     );
   }
 
@@ -205,8 +177,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
    */
   openEditModal(item: HHThiTruongDto): void {
     this.spinnerService.showSavingSpinner();
-
-    // Lưu lại thông tin ban đầu của mặt hàng trước khi sửa
     const originalParentId = item.matHangChaId;
 
     this.dmHangHoaThiTruongService.getById(item.id).subscribe({
@@ -221,24 +191,23 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
 
         modalRef.result.then(
           (result) => {
-            if (result === 'saved') {
-              this.spinnerService.showTableSpinner();
-              this.dmHangHoaThiTruongService.getById(item.id).subscribe({
-                next: (updatedItem) => {
-                  // Xử lý cập nhật UI và di chuyển node nếu parent thay đổi
-                  this.updateItemInDataStructures(updatedItem, originalParentId);
-                  this.toastr.success('Cập nhật mặt hàng thành công', 'Thành công');
-                  this.spinnerService.hideTableSpinner();
-                },
-                error: (error) => {
-                  console.error('Lỗi khi tải lại thông tin mặt hàng sau cập nhật:', error);
-                  this.spinnerService.hideTableSpinner();
-                  this.toastr.error('Không thể tải lại thông tin mặt hàng', 'Lỗi');
-                }
-              });
-            }
+            if (result !== 'saved') return;
+            
+            this.spinnerService.showTableSpinner();
+            this.dmHangHoaThiTruongService.getById(item.id).subscribe({
+              next: (updatedItem) => {
+                this.updateNodeInTree(updatedItem, originalParentId);
+                this.toastr.success('Cập nhật mặt hàng thành công', 'Thành công');
+                this.spinnerService.hideTableSpinner();
+              },
+              error: (error) => {
+                console.error('Lỗi khi tải lại thông tin mặt hàng sau cập nhật:', error);
+                this.spinnerService.hideTableSpinner();
+                this.toastr.error('Không thể tải lại thông tin mặt hàng', 'Lỗi');
+              }
+            });
           },
-          () => { }
+          () => {}
         );
         this.spinnerService.hideSavingSpinner();
       },
@@ -250,230 +219,115 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   }
 
   /**
-   * Xử lý kết quả trả về từ API đường dẫn tối ưu
+   * Di chuyển đến mặt hàng trong cây và hiển thị
    */
-  private handleOptimizedPathResponse(pathTree: HHThiTruongTreeNodeDto[], newItem: HHThiTruongDto): void {
-    if (!pathTree || pathTree.length === 0) {
-      this.spinnerService.hideTableSpinner();
-      return;
-    }
-
-    this.updateRootDataIfNeeded(pathTree);
-    this.processOptimizedPathTree(pathTree, newItem);
-
-    this.spinnerService.hideTableSpinner();
-  }
-
-  /**
-   * Xử lý cây đường dẫn đã tối ưu và thiết lập trạng thái mở rộng
-   */
-  private processOptimizedPathTree(pathTree: HHThiTruongTreeNodeDto[], newItem: HHThiTruongDto): void {
-    if (!this.treeTableComponent) return;
-    this.processNodeAndChildren(pathTree);
-    this.selectedItem = newItem;
-    this.treeTableComponent.selectedRowId = newItem.id;
-
-    setTimeout(() => {
-      this.scrollToSelectedItem(newItem.id);
-    }, 300);
-  }
-
-  /**
-   * Mở rộng toàn bộ đường dẫn đến mặt hàng cha và chọn mặt hàng con vừa thêm
-   */
-  expandAndSelectNewItem(parentId: string, newItem: HHThiTruongDto): void {
+  navigateToItemInTree(parentId: string, item: HHThiTruongDto): void {
     this.spinnerService.showTableSpinner();
+    this.dmHangHoaThiTruongService.getFullPathWithChildren(parentId, item.id).subscribe({
+      next: (pathTree) => {
+        if (!pathTree?.length) {
+          this.spinnerService.hideTableSpinner();
+          return;
+        }
 
-    this.dmHangHoaThiTruongService.getFullPathWithChildren(parentId, newItem.id).subscribe({
-      next: (pathTree) => this.handleOptimizedPathResponse(pathTree, newItem),
-      error: (error) => {
-        console.error('Lỗi khi tải đường dẫn tối ưu:', error);
+        // Cập nhật root data nếu cần
+        pathTree.forEach(rootNode => {
+          const existingRoot = this.parentCategories.find(x => x.id === rootNode.id);
+          if (!existingRoot) {
+            this.parentCategories.push(this.convertToHHThiTruongDto([rootNode])[0]);
+          }
+        });
+
+        // Xử lý cây đường dẫn
+        this.processTreePath(pathTree);
+        
+        // Chọn mặt hàng và scroll đến
+        this.selectAndScrollToItem(item);
         this.spinnerService.hideTableSpinner();
-
+      },
+      error: (error) => {
+        console.error('Lỗi khi tải đường dẫn:', error);
+        this.spinnerService.hideTableSpinner();
         this.loadParentCategories();
       }
     });
   }
 
   /**
-   * Cập nhật dữ liệu gốc nếu cần từ kết quả API
+   * Cập nhật node trong cây (khi thay đổi thông tin hoặc di chuyển)
    */
-  private updateRootDataIfNeeded(pathTree: HHThiTruongTreeNodeDto[]): void {
-    pathTree.forEach(rootNode => {
-      const existingRoot = this.parentCategories.find(item => item.id === rootNode.id);
-      if (!existingRoot) {
-        const convertedRoot = this.convertToHHThiTruongDto([rootNode])[0];
-        this.parentCategories.push(convertedRoot);
-      }
-    });
-  }
-
-  /**
-   * Chuyển đổi từ HHThiTruongTreeNodeDto[] sang HHThiTruongDto[]
-   * @param treeNodes Danh sách node cây cần chuyển đổi
-   * @returns Danh sách HHThiTruongDto tương ứng
-   */
-  private convertToHHThiTruongDto(treeNodes: HHThiTruongTreeNodeDto[]): HHThiTruongDto[] {
-    return treeNodes.map(node => {
-      return {
-        id: node.id,
-        ma: node.ma,
-        ten: node.ten,
-        loaiMatHang: node.loaiMatHang,
-        matHangChaId: node.matHangChaId || null,
-        donViTinhId: node.donViTinhId || null,
-        tenDonViTinh: node.tenDonViTinh || null,
-        ngayHieuLuc: node.ngayHieuLuc || '',
-        ngayHetHieuLuc: node.ngayHetHieuLuc || null,
-        ghiChu: node.ghiChu || null,
-        dacTinh: node.dacTinh || null
-      } as HHThiTruongDto;
-    });
-  }
-
-  /**
-   * Cuộn đến phần tử được chọn trên giao diện
-   * @param itemId ID của mặt hàng cần cuộn đến
-   */
-  private scrollToSelectedItem(itemId: string): void {
-    try {
-      setTimeout(() => {
-        const element = document.querySelector(`[data-id="${itemId}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('highlight-animation');
-
-          setTimeout(() => {
-            element.classList.remove('highlight-animation');
-          }, 2000);
-        }
-      }, 100);
-    } catch (error) {
-      console.error('Lỗi khi cuộn đến phần tử:', error);
-    }
-  }
-
-  /**
-   * Lấy tham chiếu đến TreeTableComponent
-   * @returns Reference đến TreeTableComponent
-   */
-  private getTreeTableComponent(): TreeTableComponent<HHThiTruongDto> {
-    return this.treeTableComponent;
-  }
-
-  /**
-   * Xử lý đệ quy từng node trong cây và thiết lập trạng thái mở rộng
-   * @param nodes Danh sách các node cần xử lý
-   */
-  private processNodeAndChildren(nodes: HHThiTruongTreeNodeDto[]): void {
-    const treeTable = this.treeTableComponent;
-    if (!treeTable) return;
-
-    for (const node of nodes) {
-      if (node.matHangCon && node.matHangCon.length > 0) {
-        treeTable.expandedRows.set(node.id, true);
-
-        const convertedData = this.convertToHHThiTruongDto(node.matHangCon);
-
-        treeTable.nodeChildrenMap.set(node.id, convertedData);
-        treeTable.nodeLoadingMap.set(node.id, false);
-
-        treeTable.nodePaginationMap.set(node.id, {
-          currentPage: 1,
-          totalPages: Math.ceil(node.matHangCon.length / treeTable.defaultPageSize),
-          hasNextPage: false,
-          isLoadingMore: false
-        });
-
-        this.processNodeAndChildren(node.matHangCon);
-      }
-    }
-  }
-
-  /**
-   * Cập nhật mặt hàng trong tất cả cấu trúc dữ liệu liên quan và di chuyển node nếu parent thay đổi
-   * @param updatedItem Mặt hàng đã cập nhật
-   * @param originalParentId ID của nhóm cha ban đầu
-   */
-  private updateItemInDataStructures(updatedItem: HHThiTruongDto, originalParentId?: string): void {
-    // Kiểm tra xem parent có thay đổi không
+  private updateNodeInTree(updatedItem: HHThiTruongDto, originalParentId?: string): void {
     const parentChanged = originalParentId !== updatedItem.matHangChaId;
 
     if (parentChanged) {
-      // Xử lý trường hợp di chuyển node giữa các nhóm
-      this.handleNodeRelocation(updatedItem, originalParentId);
+      this.relocateNodeInTree(updatedItem, originalParentId);
     } else {
-      // Cập nhật thông tin mặt hàng tại vị trí hiện tại
-      this.updateItemInPlace(updatedItem);
+      this.updateNodeInPlace(updatedItem);
     }
 
-    // Luôn cập nhật selectedItem nếu đang được chọn
-    if (this.selectedItem && this.selectedItem.id === updatedItem.id) {
-      this.selectedItem = { ...updatedItem };
+    // Cập nhật selected item
+    if (this.selectedItem?.id === updatedItem.id) {
+      this.selectedItem = {...updatedItem};
     }
-
-    // Cuộn đến phần tử được cập nhật
-    setTimeout(() => {
-      this.scrollToSelectedItem(updatedItem.id);
-    }, 300);
+    
+    this.scrollToSelectedItem(updatedItem.id);
   }
 
   /**
-   * Cập nhật thông tin mặt hàng tại vị trí hiện tại trong cây
+   * Cập nhật thông tin node mà không thay đổi vị trí
    */
-  private updateItemInPlace(updatedItem: HHThiTruongDto): void {
-    // 1. Cập nhật trong danh sách gốc nếu là mặt hàng gốc
+  private updateNodeInPlace(updatedItem: HHThiTruongDto): void {
+    const treeTable = this.treeTableComponent;
+    let updated = false;
+
+    // Cập nhật trong danh sách gốc
     const rootIndex = this.parentCategories.findIndex(x => x.id === updatedItem.id);
     if (rootIndex >= 0) {
-      this.parentCategories[rootIndex] = { ...updatedItem };
+      this.parentCategories[rootIndex] = {...updatedItem};
       this.parentCategories = [...this.parentCategories];
+      updated = true;
     }
 
-    // 2. Cập nhật trong các TreeTable nodeChildrenMap nếu là mặt hàng con
-    if (this.treeTableComponent) {
-      let updated = false;
-      this.treeTableComponent.nodeChildrenMap.forEach((children, parentId) => {
+    // Cập nhật trong node children
+    if (treeTable) {
+      treeTable.nodeChildrenMap.forEach((children, parentId) => {
         const childIndex = children.findIndex(x => x.id === updatedItem.id);
         if (childIndex >= 0) {
           const updatedChildren = [...children];
-          updatedChildren[childIndex] = { ...updatedItem };
-          this.treeTableComponent.nodeChildrenMap.set(parentId, updatedChildren);
+          updatedChildren[childIndex] = {...updatedItem};
+          treeTable.nodeChildrenMap.set(parentId, updatedChildren);
           updated = true;
         }
       });
 
-      if (updated && this.treeTableComponent.detectChanges) {
-        setTimeout(() => this.treeTableComponent.detectChanges());
+      if (updated && treeTable.detectChanges) {
+        setTimeout(() => treeTable.detectChanges());
       }
     }
   }
 
   /**
-   * Xử lý di chuyển node khi parent thay đổi
+   * Di chuyển node sang vị trí mới trong cây
    */
-  private handleNodeRelocation(updatedItem: HHThiTruongDto, originalParentId?: string): void {
+  private relocateNodeInTree(updatedItem: HHThiTruongDto, originalParentId?: string): void {
     const treeTable = this.treeTableComponent;
     if (!treeTable) return;
 
-    // 1. Xóa khỏi danh sách cũ
+    // 1. Xóa khỏi vị trí cũ
     if (originalParentId) {
-      // Xóa khỏi nodeChildrenMap nếu là con của node khác
       const oldParentChildren = treeTable.nodeChildrenMap.get(originalParentId);
       if (oldParentChildren) {
-        const filteredChildren = oldParentChildren.filter(x => x.id !== updatedItem.id);
-        treeTable.nodeChildrenMap.set(originalParentId, filteredChildren);
+        treeTable.nodeChildrenMap.set(originalParentId, 
+          oldParentChildren.filter(x => x.id !== updatedItem.id));
       }
     } else {
-      // Xóa khỏi danh sách gốc nếu trước đây là node gốc
       this.parentCategories = this.parentCategories.filter(x => x.id !== updatedItem.id);
     }
 
-    // 2. Thêm vào danh sách mới
+    // 2. Thêm vào vị trí mới
     if (updatedItem.matHangChaId) {
-      // Thêm vào nodeChildrenMap của parent mới nếu parent mới đã được mở rộng
       if (treeTable.nodeChildrenMap.has(updatedItem.matHangChaId)) {
         const newParentChildren = treeTable.nodeChildrenMap.get(updatedItem.matHangChaId) || [];
-        // Thêm vào chỉ khi chưa có trong danh sách
         if (!newParentChildren.some(x => x.id === updatedItem.id)) {
           treeTable.nodeChildrenMap.set(
             updatedItem.matHangChaId,
@@ -481,41 +335,101 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
           );
         }
       }
-
-      // Tự động mở rộng đến vị trí mới của node
-      this.expandToNodeAfterParentChange(updatedItem);
+      // Mở đường dẫn đến node mới
+      this.navigateToItemInTree(updatedItem.matHangChaId, updatedItem);
     } else {
-      // Thêm vào danh sách gốc nếu trở thành node gốc
       if (!this.parentCategories.some(x => x.id === updatedItem.id)) {
         this.parentCategories = [...this.parentCategories, updatedItem];
       }
     }
 
-    // Cập nhật giao diện
+    // Cập nhật UI
     if (treeTable.detectChanges) {
       setTimeout(() => treeTable.detectChanges());
     }
   }
 
   /**
-   * Mở rộng cây đến vị trí mới của node sau khi chuyển nhóm
+   * Xử lý cây đường dẫn và mở rộng các node
    */
-  private expandToNodeAfterParentChange(updatedItem: HHThiTruongDto): void {
-    if (!updatedItem.matHangChaId) return;
+  private processTreePath(nodes: HHThiTruongTreeNodeDto[]): void {
+    const treeTable = this.treeTableComponent;
+    if (!treeTable) return;
 
-    this.spinnerService.showTableSpinner();
-
-    // Sử dụng phương thức đã có để tự động mở đường dẫn đến node
-    this.dmHangHoaThiTruongService.getFullPathWithChildren(updatedItem.matHangChaId, updatedItem.id)
-      .subscribe({
-        next: (pathTree) => {
-          this.handleOptimizedPathResponse(pathTree, updatedItem);
-          this.spinnerService.hideTableSpinner();
-        },
-        error: (error) => {
-          console.error('Lỗi khi tải đường dẫn mới:', error);
-          this.spinnerService.hideTableSpinner();
-        }
+    for (const node of nodes) {
+      if (!node.matHangCon?.length) continue;
+      
+      // Mở rộng node và lưu dữ liệu con
+      treeTable.expandedRows.set(node.id, true);
+      
+      const convertedData = this.convertToHHThiTruongDto(node.matHangCon);
+      treeTable.nodeChildrenMap.set(node.id, convertedData);
+      treeTable.nodeLoadingMap.set(node.id, false);
+      
+      treeTable.nodePaginationMap.set(node.id, {
+        currentPage: 1,
+        totalPages: Math.ceil(node.matHangCon.length / treeTable.defaultPageSize),
+        hasNextPage: false,
+        isLoadingMore: false
       });
+      
+      // Xử lý con đệ quy
+      this.processTreePath(node.matHangCon);
+    }
+  }
+
+  /**
+   * Chọn mặt hàng và cuộn đến vị trí của nó
+   */
+  private selectAndScrollToItem(item?: HHThiTruongDto): void {
+    if (!item?.id) return;
+    
+    setTimeout(() => {
+      this.selectedItem = item;
+      if (this.treeTableComponent) {
+        this.treeTableComponent.selectedRowId = item.id;
+      }
+      this.scrollToSelectedItem(item.id);
+    }, 200);
+  }
+
+  /**
+   * Cuộn đến phần tử được chọn trên giao diện
+   */
+  private scrollToSelectedItem(itemId: string): void {
+    try {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-id="${itemId}"]`);
+        if (!element) return;
+        
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('highlight-animation');
+
+        setTimeout(() => {
+          element.classList.remove('highlight-animation');
+        }, 2000);
+      }, 100);
+    } catch (error) {
+      console.error('Lỗi khi cuộn đến phần tử:', error);
+    }
+  }
+
+  /**
+   * Chuyển đổi từ HHThiTruongTreeNodeDto[] sang HHThiTruongDto[]
+   */
+  private convertToHHThiTruongDto(treeNodes: HHThiTruongTreeNodeDto[]): HHThiTruongDto[] {
+    return treeNodes.map(node => ({
+      id: node.id,
+      ma: node.ma,
+      ten: node.ten,
+      loaiMatHang: node.loaiMatHang,
+      matHangChaId: node.matHangChaId || null,
+      donViTinhId: node.donViTinhId || null,
+      tenDonViTinh: node.tenDonViTinh || null,
+      ngayHieuLuc: node.ngayHieuLuc || '',
+      ngayHetHieuLuc: node.ngayHetHieuLuc || null,
+      ghiChu: node.ghiChu || null,
+      dacTinh: node.dacTinh || null
+    } as HHThiTruongDto));
   }
 }
