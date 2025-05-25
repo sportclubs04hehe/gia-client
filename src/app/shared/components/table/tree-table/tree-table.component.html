@@ -102,6 +102,7 @@
         <tr class="table-row" 
             [class.child-row]="level > 0"
             [class.selected]="isRowSelected(node[keyField])"
+            [attr.data-id]="node[keyField]"
             (click)="selectRow(node, $event)">
           <!-- Phần hiển thị cột đầu tiên -->
           <td *ngIf="columns.length > 0">

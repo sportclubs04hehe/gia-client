@@ -250,7 +250,7 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   }
 
   /**
-   * Xử lý khi lưu form
+   * Xử lý khi lưu form thêm mới
    */
   save(): void {
     if (this.form.invalid) {
@@ -265,34 +265,47 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     const formData = this.prepareFormData(dateFields);
 
     // Xử lý các trường ID để đảm bảo là null khi không có giá trị
-    if (!formData.matHangChaId) {
-      formData.matHangChaId = null;
-    }
-    
-    if (!formData.donViTinhId) {
-      formData.donViTinhId = null;
-    }
+    const parentId = formData.matHangChaId || null;
+    formData.matHangChaId = parentId;
+    formData.donViTinhId = formData.donViTinhId || null;
 
     // Gọi service để tạo mới
     this.hangHoaService.create(formData)
       .pipe(finalize(() => this.submitting = false))
       .subscribe({
         next: (response) => {
-          // Trả về mặt hàng vừa tạo thay vì chỉ trả về 'saved'
-          this.activeModal.close(response.data);
+          if (response && response.data) {
+            // Trả về đầy đủ thông tin cần thiết
+            const result = {
+              item: response.data,
+              parentId: parentId,
+              success: true,
+              useOptimizedPath: true // Đánh dấu để sử dụng API tối ưu
+            };
+            
+            // Đóng modal và trả về kết quả
+            this.activeModal.close(result);
+          } else {
+            this.modalNotificationService.error('Không nhận được dữ liệu phản hồi từ máy chủ', 'Lỗi');
+          }
         },
         error: (error) => {
-          console.error('Lỗi API:', error);
-          
-          // Xử lý lỗi
-          if (error.error?.errors) {
-            const errorMessages = Object.values(error.error.errors).flat().join('\n');
-            this.modalNotificationService.error(errorMessages, 'Lỗi');
-          } else {
-            this.modalNotificationService.error('Không thể thêm mới mặt hàng', 'Lỗi');
-          }
+          console.error('Lỗi khi thêm mới:', error);
+          this.xulySaveError(error);
         }
       });
+  }
+
+  /**
+   * Xử lý lỗi khi lưu
+   */
+  private xulySaveError(error: any): void {
+    if (error.error?.errors) {
+      const errorMessages = Object.values(error.error.errors).flat().join('\n');
+      this.modalNotificationService.error(errorMessages, 'Lỗi');
+    } else {
+      this.modalNotificationService.error('Không thể thêm mới mặt hàng', 'Lỗi');
+    }
   }
 
   // Chuẩn bị dữ liệu form trước khi gửi API

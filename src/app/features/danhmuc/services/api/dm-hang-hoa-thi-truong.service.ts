@@ -24,7 +24,7 @@ export class DmHangHoaThiTruongService {
   private categoriesCache: CategoryInfoDto[] = [];
   private categoriesCacheLoaded = false;
   private categoriesLoadingSubject = new BehaviorSubject<boolean>(false);
-  
+
   // Observable để theo dõi trạng thái tải
   public categoriesLoading$ = this.categoriesLoadingSubject.asObservable();
 
@@ -59,7 +59,7 @@ export class DmHangHoaThiTruongService {
     if (this.parentCategoriesCacheLoaded) {
       return of(this.parentCategoriesCache);
     }
-    
+
     // Nếu chưa có cache, gọi API và lưu kết quả
     return this.http.get<HHThiTruongDto[]>(`${this.apiUrl}/${this.endpoint}/parents`)
       .pipe(
@@ -84,12 +84,12 @@ export class DmHangHoaThiTruongService {
         map(allData => this.filterCategories(allData, searchTerm))
       );
     }
-    
+
     // Nếu đã có cache, tìm kiếm trực tiếp
     const results = this.filterCategories(this.categoriesCache, searchTerm);
     return of(results);
   }
-  
+
   /**
    * Lọc danh sách nhóm hàng hóa theo từ khóa
    * @param data Danh sách dữ liệu đầu vào
@@ -98,17 +98,17 @@ export class DmHangHoaThiTruongService {
    */
   private filterCategories(data: CategoryInfoDto[], searchTerm: string): CategoryInfoDto[] {
     const term = searchTerm.toLowerCase().trim();
-    
+
     // Nếu không có từ khóa, trả về tất cả
     if (!term) return data;
-    
+
     // Lọc theo mã hoặc tên
-    return data.filter(item => 
-      item.ma?.toLowerCase().includes(term) || 
+    return data.filter(item =>
+      item.ma?.toLowerCase().includes(term) ||
       item.ten?.toLowerCase().includes(term)
     );
   }
-  
+
   /**
    * Thêm mới mặt hàng thị trường
    * @param dto Dữ liệu mặt hàng cần thêm mới
@@ -161,7 +161,7 @@ export class DmHangHoaThiTruongService {
     };
 
     return this.http.put<ApiResponse<HHThiTruongDto>>(
-      `${this.apiUrl}/${this.endpoint}/${id}`, 
+      `${this.apiUrl}/${this.endpoint}/${id}`,
       formattedDto
     ).pipe(
       // Làm mới cache sau khi cập nhật thành công
@@ -190,7 +190,7 @@ export class DmHangHoaThiTruongService {
    */
   deleteMultiple(ids: string[]): Observable<ApiResponse<string[]>> {
     return this.http.delete<ApiResponse<string[]>>(
-      `${this.apiUrl}/${this.endpoint}/batch`, 
+      `${this.apiUrl}/${this.endpoint}/batch`,
       { body: ids }
     ).pipe(
       // Làm mới cache sau khi xóa nhiều thành công
@@ -218,7 +218,7 @@ export class DmHangHoaThiTruongService {
     }));
 
     return this.http.post<ApiResponse<HHThiTruongDto[]>>(
-      `${this.apiUrl}/${this.endpoint}/batch`, 
+      `${this.apiUrl}/${this.endpoint}/batch`,
       { items: formattedItems }
     ).pipe(
       // Làm mới cache sau khi thêm nhiều thành công
@@ -256,7 +256,7 @@ export class DmHangHoaThiTruongService {
 
     // Đánh dấu đang tải
     this.categoriesLoadingSubject.next(true);
-    
+
     // Gọi API và lưu kết quả vào cache
     return this.http.get<CategoryInfoDto[]>(`${this.apiUrl}/${this.endpoint}/categories-with-info`)
       .pipe(
@@ -268,7 +268,7 @@ export class DmHangHoaThiTruongService {
         shareReplay(1) // Chia sẻ kết quả nếu có nhiều subscriber
       );
   }
-  
+
   /**
    * Tìm kiếm phân cấp với các nút được mở rộng tự động
    */
@@ -288,4 +288,21 @@ export class DmHangHoaThiTruongService {
     return this.http.get<PagedResult<HHThiTruongTreeNodeDto>>(`${this.apiUrl}/${this.endpoint}/children/${parentId}`, { params });
   }
 
+  /**
+   * Lấy đường dẫn đầy đủ từ gốc đến node bao gồm các node con cần thiết
+   * @param targetNodeId ID của node đích cần lấy đường dẫn đến
+   * @param newItemId ID của mặt hàng mới vừa thêm (tùy chọn)
+   * @returns Observable chứa cây với đường dẫn và tất cả con của node cuối cùng đã được tải sẵn
+   */
+  getFullPathWithChildren(targetNodeId: string, newItemId?: string): Observable<HHThiTruongTreeNodeDto[]> {
+    let params = new HttpParams();
+    if (newItemId) {
+      params = params.set('newItemId', newItemId);
+    }
+
+    return this.http.get<HHThiTruongTreeNodeDto[]>(
+      `${this.apiUrl}/${this.endpoint}/full-path/${targetNodeId}`,
+      { params }
+    );
+  }
 }
