@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { PagedResult } from '../../../../features/danhmuc/models/paged-result';
@@ -24,73 +24,75 @@ export class TreeTableComponent<T extends TreeNode> {
    * Dữ liệu gốc (cấp cao nhất) của bảng
    */
   @Input() rootData: T[] = [];
-  
+
   /**
    * Cấu hình các cột hiển thị
    */
   @Input() columns: TableColumn<T>[] = [];
-  
+
   /**
    * Cột chứa khóa chính để phân biệt mỗi hàng
    */
   @Input() keyField: keyof T = 'id' as keyof T;
-  
+
   /**
    * Callback tải dữ liệu con (với phân trang)
    */
   @Input() loadChildren!: (parentId: string, pageIndex: number, pageSize: number) => Promise<PagedResult<T>> | any;
-  
+
   /**
    * Hàm kiểm tra node có con hoặc có thể có con
    */
   @Input() hasChildren!: (node: T) => boolean;
-  
+
   /**
    * Kích thước trang mặc định
    */
   @Input() defaultPageSize: number = 100;
-  
+
   /**
    * Tên trường để xác định cấp độ thụt lề
    */
   @Input() levelField: string = 'level';
-  
+
   /**
    * Sự kiện khi chọn một hàng
    */
   @Output() rowSelected = new EventEmitter<T>();
-  
+
   /**
    * Sự kiện khi mở/đóng một node
    */
-  @Output() nodeToggled = new EventEmitter<{node: T, expanded: boolean}>();
+  @Output() nodeToggled = new EventEmitter<{ node: T, expanded: boolean }>();
 
   /**
    * Lưu trữ trạng thái mở rộng của mỗi node
    */
   expandedRows = new Map<string, boolean>();
-  
+
   /**
    * Lưu trữ dữ liệu con của mỗi node
    */
   nodeChildrenMap = new Map<string, T[]>();
-  
+
   /**
    * Lưu trữ trạng thái đang tải của mỗi node
    */
   nodeLoadingMap = new Map<string, boolean>();
-  
+
   /**
    * Lưu trữ thông tin phân trang cho mỗi node
    */
   nodePaginationMap = new Map<string, NodePagination>();
-  
+
   /**
    * ID của hàng đang được chọn
    */
   selectedRowId: string | null = null;
 
-  constructor() {}
+  private changeDetectorRef = inject(ChangeDetectorRef);
+
+  constructor() { }
 
   /**
    * Kiểm tra node có đang mở rộng không
@@ -119,16 +121,16 @@ export class TreeTableComponent<T extends TreeNode> {
   toggleNode(event: Event, node: T): void {
     // Ngăn chặn sự kiện lan đến hàng
     event.stopPropagation();
-    
+
     const nodeId = String(node[this.keyField]);
     const isCurrentlyExpanded = this.isNodeExpanded(nodeId);
-    
+
     // Đảo ngược trạng thái mở rộng
     this.expandedRows.set(nodeId, !isCurrentlyExpanded);
-    
+
     // Emit sự kiện
-    this.nodeToggled.emit({node, expanded: !isCurrentlyExpanded});
-    
+    this.nodeToggled.emit({ node, expanded: !isCurrentlyExpanded });
+
     // Nếu đang mở rộng và chưa tải dữ liệu con, thì tải dữ liệu
     if (!isCurrentlyExpanded && !this.nodeChildrenMap.has(nodeId)) {
       // Khởi tạo thông tin phân trang
@@ -138,18 +140,18 @@ export class TreeTableComponent<T extends TreeNode> {
         hasNextPage: true,
         isLoadingMore: false
       });
-      
+
       this.loadChildrenForNode(nodeId, 1);
     }
   }
-  
+
   /**
    * Tải dữ liệu con cho node với phân trang
    */
   loadChildrenForNode(nodeId: string, pageIndex: number = 1): void {
     // Lấy thông tin phân trang
     const pagination = this.nodePaginationMap.get(nodeId);
-    
+
     // Nếu đang tải thêm, đặt cờ
     if (pageIndex > 1) {
       if (pagination) {
@@ -160,10 +162,10 @@ export class TreeTableComponent<T extends TreeNode> {
       // Đánh dấu đang tải (chỉ khi tải trang đầu tiên)
       this.nodeLoadingMap.set(nodeId, true);
     }
-    
+
     // Gọi callback tải dữ liệu với Promise/Observable
     const result = this.loadChildren(nodeId, pageIndex, this.defaultPageSize);
-    
+
     // Xử lý kết quả (hỗ trợ cả Promise và Observable)
     if (result.then) {
       // Đây là Promise
@@ -177,7 +179,7 @@ export class TreeTableComponent<T extends TreeNode> {
       });
     }
   }
-  
+
   /**
    * Xử lý dữ liệu đã tải
    */
@@ -186,7 +188,7 @@ export class TreeTableComponent<T extends TreeNode> {
       // Xử lý dữ liệu trả về
       let children: T[] = []; // Thay đổi kiểu từ TreeNode[] sang T[]
       let paginationInfo = null;
-      
+
       if (Array.isArray(result)) {
         // Trường hợp API trả về mảng trực tiếp
         children = result as T[]; // Ép kiểu kết quả thành T[]
@@ -195,7 +197,7 @@ export class TreeTableComponent<T extends TreeNode> {
         children = (result.data || []) as T[]; // Ép kiểu kết quả thành T[]
         paginationInfo = result.pagination;
       }
-      
+
       // Xử lý dữ liệu dựa trên pageIndex
       if (pageIndex === 1) {
         // Nếu là trang đầu tiên, thay thế dữ liệu cũ
@@ -205,7 +207,7 @@ export class TreeTableComponent<T extends TreeNode> {
         const existingChildren = this.nodeChildrenMap.get(nodeId) || [];
         this.nodeChildrenMap.set(nodeId, [...existingChildren, ...children]);
       }
-      
+
       // Cập nhật thông tin phân trang
       if (paginationInfo) {
         this.nodePaginationMap.set(nodeId, {
@@ -226,12 +228,12 @@ export class TreeTableComponent<T extends TreeNode> {
           });
         }
       }
-      
+
       // Đánh dấu đã tải xong
       this.nodeLoadingMap.set(nodeId, false);
     };
   }
-  
+
   /**
    * Xử lý lỗi khi tải dữ liệu
    */
@@ -239,7 +241,7 @@ export class TreeTableComponent<T extends TreeNode> {
     return (error: any) => {
       console.error(`Lỗi khi tải danh sách con cho node ${nodeId}:`, error);
       this.nodeLoadingMap.set(nodeId, false);
-      
+
       // Cập nhật trạng thái phân trang khi có lỗi
       const pagination = this.nodePaginationMap.get(nodeId);
       if (pagination) {
@@ -248,14 +250,14 @@ export class TreeTableComponent<T extends TreeNode> {
       }
     };
   }
-  
+
   /**
    * Tải thêm dữ liệu cho node đã mở rộng
    */
   loadMoreChildren(nodeId: string): void {
     // Kiểm tra và lấy thông tin phân trang
     const pagination = this.nodePaginationMap.get(nodeId);
-    
+
     // Chỉ tải thêm nếu: có pagination, còn trang tiếp theo, và không đang tải
     if (pagination && pagination.hasNextPage && !pagination.isLoadingMore && !this.isLoadingChildren(nodeId)) {
       // Tải trang tiếp theo
@@ -263,7 +265,7 @@ export class TreeTableComponent<T extends TreeNode> {
       this.loadChildrenForNode(nodeId, nextPage);
     }
   }
-  
+
   /**
    * Kiểm tra có đang tải thêm không
    */
@@ -271,7 +273,7 @@ export class TreeTableComponent<T extends TreeNode> {
     const pagination = this.nodePaginationMap.get(nodeId);
     return pagination?.isLoadingMore === true;
   }
-  
+
   /**
    * Kiểm tra còn dữ liệu không
    */
@@ -279,7 +281,7 @@ export class TreeTableComponent<T extends TreeNode> {
     const pagination = this.nodePaginationMap.get(nodeId);
     return pagination?.hasNextPage === true;
   }
-  
+
   /**
    * Xử lý sự kiện cuộn cho một node cụ thể
    */
@@ -302,7 +304,7 @@ export class TreeTableComponent<T extends TreeNode> {
       }
     });
   }
-  
+
   /**
    * Chọn một hàng
    */
@@ -312,7 +314,7 @@ export class TreeTableComponent<T extends TreeNode> {
       event.preventDefault();
       event.stopPropagation();
     }
-    
+
     const nodeId = String(item[this.keyField]);
     // Chỉ cập nhật khi chọn hàng khác
     if (this.selectedRowId !== nodeId) {
@@ -327,14 +329,14 @@ export class TreeTableComponent<T extends TreeNode> {
   isRowSelected(itemId: string): boolean {
     return this.selectedRowId === itemId;
   }
-  
+
   /**
    * Tính toán độ thụt lề dựa vào cấp độ
    */
   calculateIndent(level: number): string {
     return `${level * 20}px`;
   }
-  
+
   /**
    * Hiển thị giá trị từ cột với renderer tùy chỉnh nếu có
    */
@@ -344,9 +346,15 @@ export class TreeTableComponent<T extends TreeNode> {
     } else if (column.formatter) {
       return column.formatter(item);
     }
-    
+
     // Lấy giá trị từ trường dữ liệu
     const value = item[column.field as keyof T];
     return value !== undefined && value !== null ? String(value) : '';
+  }
+
+  detectChanges(): void {
+    if (this.changeDetectorRef) {
+      this.changeDetectorRef.markForCheck();
+    }
   }
 }
