@@ -9,7 +9,6 @@ import { HHThiTruongTreeNodeDto } from '../../models/dm-hh-thitruong/HHThiTruong
 import { CreateHHThiTruongDto, UpdateHHThiTruongDto, CreateManyHHThiTruongDto } from '../../models/dm-hh-thitruong/CreateHHThiTruongDto';
 import { HHThiTruongDto } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { PaginationParams } from '../../models/pagination-params ';
-import { SearchParams } from '../../models/search-params';
 import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
 
 @Injectable({

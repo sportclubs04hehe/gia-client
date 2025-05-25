@@ -128,21 +128,11 @@ export class TreeTableComponent<T extends TreeNode> {
     // Đảo ngược trạng thái mở rộng
     this.expandedRows.set(nodeId, !isCurrentlyExpanded);
 
-    // Emit sự kiện
+    // Emit sự kiện - để component cha xử lý việc tải dữ liệu
     this.nodeToggled.emit({ node, expanded: !isCurrentlyExpanded });
 
-    // Nếu đang mở rộng và chưa tải dữ liệu con, thì tải dữ liệu
-    if (!isCurrentlyExpanded && !this.nodeChildrenMap.has(nodeId)) {
-      // Khởi tạo thông tin phân trang
-      this.nodePaginationMap.set(nodeId, {
-        currentPage: 1,
-        totalPages: 1,
-        hasNextPage: true,
-        isLoadingMore: false
-      });
-
-      this.loadChildrenForNode(nodeId, 1);
-    }
+    // Loại bỏ đoạn code tự tải dữ liệu con
+    // Để tránh gọi API trùng lặp với onNodeToggled
   }
 
   /**

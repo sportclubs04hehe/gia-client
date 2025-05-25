@@ -1,18 +1,31 @@
-<div class="modal-header">
+<div class="modal-header alert-header">
     <h4 class="modal-title d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+        <span class="icon-wrapper">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </span>
         {{ title }}
     </h4>
     <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
-    <p class="fs-5 text-center fw-bold">{{ message }}</p>
+    <div class="message-container">
+        <p class="message">{{ message }}</p>
+    </div>
+    
+    <div class="alert alert-warning mt-4" *ngIf="message.includes('Tất cả mặt hàng con')">
+        <div class="d-flex">
+            <i class="bi bi-info-circle me-2"></i>
+            <span>Thao tác này không thể hoàn tác sau khi xóa.</span>
+        </div>
+    </div>
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">
-        Hủy
-    </button>
-    <button type="button" class="btn btn-danger confirm-btn" (click)="confirm()">
-        Xác nhận
-    </button>
+    <div class="d-flex gap-2 w-100 justify-content-center">
+        <button type="button" class="btn btn-outline-secondary px-4 cancel-btn" (click)="activeModal.dismiss()">
+            <i class="bi bi-x-lg me-1"></i> Hủy
+        </button>
+        <button type="button" class="btn btn-danger px-4 confirm-btn" (click)="confirm()">
+            <i class="bi bi-trash me-1"></i> Xác nhận xóa
+        </button>
+    </div>
 </div>

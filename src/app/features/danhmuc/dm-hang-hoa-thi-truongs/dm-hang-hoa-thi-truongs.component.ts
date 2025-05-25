@@ -14,6 +14,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ThemmoiComponent } from './themmoi/themmoi.component';
 import { SuaComponent } from './sua/sua.component';
 import { map } from 'rxjs/operators';
+import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -134,7 +135,11 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
           this.toastr.warning('Vui lòng chọn một mặt hàng để chỉnh sửa', 'Cảnh báo');
         break;
       case 'delete':
-        this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Cảnh báo');
+        if (this.selectedItem) {
+          this.openDeleteConfirmationModal(this.selectedItem);
+        } else {
+          this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Cảnh báo');
+        }
         break;
       case 'refresh':
         this.loadParentCategories();
@@ -216,6 +221,137 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
         this.spinnerService.hideSavingSpinner();
       }
     });
+  }
+
+  /**
+   * Mở modal xác nhận xóa mặt hàng
+   */
+  openDeleteConfirmationModal(item: HHThiTruongDto): void {
+    // Xác định loại xác nhận dựa trên loại mặt hàng
+    const isItemWithChildren = item.loaiMatHang === LoaiMatHangEnum.Nhom;
+    
+    // Tạo tiêu đề và thông báo phù hợp
+    let title = 'Xác nhận xóa mặt hàng';
+    let message = `Bạn có chắc chắn muốn xóa mặt hàng này không?`;
+    
+    // Nếu là nhóm mặt hàng, cảnh báo về xóa các mặt hàng con
+    if (isItemWithChildren) {
+      title = 'Xác nhận xóa nhóm mặt hàng';
+      message = `Bạn có chắc chắn muốn xóa nhóm mặt hàng này không? Tất cả mặt hàng con bên trong nhóm này cũng sẽ bị xóa.`;
+    }
+    
+    // Mở modal xác nhận
+    const modalRef = this.modalService.open(DeleteConfirmationComponent, {
+      backdrop: 'static',
+      keyboard: false
+    });
+    
+    modalRef.componentInstance.title = title;
+    modalRef.componentInstance.message = message;
+    
+    // Xử lý kết quả của modal
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.deleteItem(item, isItemWithChildren);
+        }
+      },
+      () => {} // Dismiss
+    );
+  }
+
+  /**
+   * Xóa mặt hàng dựa trên loại (mặt hàng đơn hoặc nhóm có con)
+   */
+  deleteItem(item: HHThiTruongDto, hasChildren: boolean): void {
+    this.spinnerService.showSavingSpinner();
+    
+    if (hasChildren) {
+      // Xóa nhóm mặt hàng và tất cả con bên trong
+      this.dmHangHoaThiTruongService.deleteMultiple([item.id]).subscribe({
+        next: (response) => {
+          this.handleDeleteSuccess(item, response.data?.length ?? 0);
+        },
+        error: (error) => {
+          this.handleDeleteError(error);
+        }
+      });
+    } else {
+      // Xóa mặt hàng đơn
+      this.dmHangHoaThiTruongService.delete(item.id).subscribe({
+        next: (response) => {
+          this.handleDeleteSuccess(item);
+        },
+        error: (error) => {
+          this.handleDeleteError(error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Xử lý khi xóa thành công
+   */
+  private handleDeleteSuccess(deletedItem: HHThiTruongDto, totalDeleted: number = 1): void {
+    this.spinnerService.hideSavingSpinner();
+    
+    // Xóa khỏi UI
+    this.removeDeletedItemFromUI(deletedItem);
+    
+    // Hiển thị thông báo phù hợp
+    if (totalDeleted > 1) {
+      this.toastr.success(`Đã xóa nhóm mặt hàng và ${totalDeleted - 1} mặt hàng con`, 'Xóa thành công');
+    } else {
+      this.toastr.success('Đã xóa mặt hàng thành công', 'Xóa thành công');
+    }
+    
+    // Reset selected item nếu đang chọn mặt hàng bị xóa
+    if (this.selectedItem && this.selectedItem.id === deletedItem.id) {
+      this.selectedItem = null;
+    }
+  }
+
+  /**
+   * Xử lý khi xóa gặp lỗi
+   */
+  private handleDeleteError(error: any): void {
+    this.spinnerService.hideSavingSpinner();
+    console.error('Lỗi khi xóa mặt hàng:', error);
+    
+    // Hiển thị thông báo lỗi
+    if (error.error?.message) {
+      this.toastr.error(error.error.message, 'Lỗi');
+    } else {
+      this.toastr.error('Không thể xóa mặt hàng. Vui lòng thử lại sau.', 'Lỗi');
+    }
+  }
+
+  /**
+   * Xóa mặt hàng khỏi UI
+   */
+  private removeDeletedItemFromUI(deletedItem: HHThiTruongDto): void {
+    const treeTable = this.treeTableComponent;
+    
+    // Xóa khỏi danh sách gốc nếu là mặt hàng ở cấp cao nhất
+    if (!deletedItem.matHangChaId) {
+      this.parentCategories = this.parentCategories.filter(item => item.id !== deletedItem.id);
+    }
+    
+    // Xóa khỏi nodeChildrenMap trong TreeTable
+    if (treeTable && deletedItem.matHangChaId) {
+      const parentChildren = treeTable.nodeChildrenMap.get(deletedItem.matHangChaId);
+      if (parentChildren) {
+        treeTable.nodeChildrenMap.set(
+          deletedItem.matHangChaId,
+          parentChildren.filter(item => item.id !== deletedItem.id)
+        );
+        
+        // Force update UI
+        if (treeTable.detectChanges) {
+          setTimeout(() => treeTable.detectChanges());
+        }
+      }
+    }
   }
 
   /**
