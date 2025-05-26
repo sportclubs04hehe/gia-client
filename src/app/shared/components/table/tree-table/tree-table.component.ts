@@ -347,4 +347,8 @@ export class TreeTableComponent<T extends TreeNode> {
       this.changeDetectorRef.markForCheck();
     }
   }
+
+   isGroupItem(item: T): boolean {
+    return 'loaiMatHang' in item && item['loaiMatHang'] === 0;
+  }
 }

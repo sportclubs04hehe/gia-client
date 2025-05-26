@@ -150,3 +150,21 @@
   font-style: italic;
   color: #6c757d !important;
 }
+
+/* Định dạng cho chỉ báo loại mặt hàng */
+.badge.text-bg-primary {
+  font-size: 0.5rem;
+  font-weight: normal;
+  opacity: 0.8;
+}
+
+.badge.text-bg-info {
+  font-size: 0.5rem;
+  font-weight: normal;
+  opacity: 0.6;
+}
+
+/* Định dạng cho hàng nhóm mặt hàng */
+.table-row.fw-bold {
+  background-color: rgb(255, 255, 255);
+}
