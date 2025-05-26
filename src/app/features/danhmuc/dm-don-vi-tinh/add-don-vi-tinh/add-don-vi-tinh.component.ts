@@ -5,13 +5,13 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { FormComponentBase } from '../../../../shared/components/forms/forms-base/forms-base.component';
 import { DonViTinhCreateDto } from '../../models/dm_donvitinh/don-vi-tinh_create.dto';
-import { uniqueDonViTinhCodeValidator } from '../../utils/unique-madonvitinh';
+import { uniqueDonViTinhCodeValidator } from '../../helpers/unique-madonvitinh';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { dateRangeValidator, generateDefaultDateRange } from '../../../../core/formatters/date-range-validator';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { DmDonViTinhService } from '../../services/api/dm-don-vi-tinh.service';
-import { CodeInputDirective } from '../../utils/code-input.directive';
-import { codeValidator } from '../../utils/code-validator';
+import { CodeInputDirective } from '../../helpers/code-input.directive';
+import { codeValidator } from '../../helpers/code-validator';
 
 @Component({
   selector: 'app-add-don-vi-tinh',

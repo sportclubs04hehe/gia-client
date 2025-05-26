@@ -4,17 +4,16 @@ import { ActiveButtonComponent } from '../../../shared/components/active-button/
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
 import { HHThiTruongDto, LoaiMatHangEnum } from '../models/dm-hh-thitruong/HHThiTruongDto';
-import { ToastrService } from 'ngx-toastr';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { SpinnerService } from '../../../shared/services/spinner.service';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { TreeTableComponent } from '../../../shared/components/table/tree-table/tree-table.component';
 import { TableColumn } from '../../../shared/models/table-column';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ThemmoiComponent } from './themmoi/themmoi.component';
 import { SuaComponent } from './sua/sua.component';
 import { map } from 'rxjs/operators';
-import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
+import { Observable } from 'rxjs';
+import { CrudComponentBase } from '../../../shared/components/bases/crud-component-base';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -29,12 +28,9 @@ import { DeleteConfirmationComponent } from '../../../shared/components/notifica
   templateUrl: './dm-hang-hoa-thi-truongs.component.html',
   styleUrl: './dm-hang-hoa-thi-truongs.component.css'
 })
-export class DmHangHoaThiTruongsComponent implements OnInit {
-  private toastr = inject(ToastrService);
-  private spinnerService = inject(SpinnerService);
-  private modalService = inject(NgbModal);
-  private dmHangHoaThiTruongService: DmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
-
+export class DmHangHoaThiTruongsComponent extends CrudComponentBase<HHThiTruongDto> implements OnInit {
+  private dmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
+  
   // Trạng thái và dữ liệu
   selectedItem: HHThiTruongDto | null = null;
   parentCategories: HHThiTruongDto[] = [];
@@ -49,8 +45,86 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
 
   @ViewChild(TreeTableComponent) treeTableComponent!: TreeTableComponent<HHThiTruongDto>;
 
+  constructor() {
+    super();
+  }
+  
   ngOnInit(): void {
     this.loadParentCategories();
+  }
+
+  /**
+   * Implement abstract methods from CrudComponentBase
+   */
+  override getItemById(id: string): Observable<HHThiTruongDto> {
+    return this.dmHangHoaThiTruongService.getById(id);
+  }
+  
+  override getEntityName(): string {
+    return 'mặt hàng';
+  }
+  
+  override handleItemCreated(result: any): void {
+    if (result.parentId) {
+      this.navigateToItemInTree(result.parentId, result.item);
+    } else {
+      this.loadParentCategories();
+      this.selectAndScrollToItem(result.item);
+    }
+  }
+  
+  override handleItemUpdated(updatedItem: HHThiTruongDto, originalData?: any): void {
+    const originalParentId = originalData?.matHangChaId;
+    this.updateNodeInTree(updatedItem, originalParentId);
+  }
+  
+  override handleItemDeleted(item: HHThiTruongDto, totalDeleted: number = 1): void {
+    this.removeDeletedItemFromUI(item);
+    
+    // Reset selected item if it was the deleted one
+    if (this.selectedItem?.id === item.id) {
+      this.selectedItem = null;
+    }
+  }
+
+  /**
+   * Override base class method for custom delete handling
+   */
+  protected override deleteItem(item: HHThiTruongDto, hasChildren: boolean): void {
+    this.spinnerService.showSavingSpinner();
+    
+    if (hasChildren) {
+      // Xóa nhóm mặt hàng và tất cả con bên trong
+      this.dmHangHoaThiTruongService.deleteMultiple([item.id]).subscribe({
+        next: (response) => {
+          this.spinnerService.hideSavingSpinner();
+          const totalDeleted = response.data?.length ?? 0;
+          this.handleItemDeleted(item, totalDeleted);
+          
+          // Custom success message
+          if (totalDeleted > 1) {
+            this.toastr.success(`Đã xóa nhóm mặt hàng và ${totalDeleted - 1} mặt hàng con`, 'Thông báo');
+          } else {
+            this.toastr.success('Đã xóa mặt hàng thành công', 'Thông báo');
+          }
+        },
+        error: (error) => {
+          this.handleDeleteError(error);
+        }
+      });
+    } else {
+      // Xóa mặt hàng đơn
+      this.dmHangHoaThiTruongService.delete(item.id).subscribe({
+        next: () => {
+          this.spinnerService.hideSavingSpinner();
+          this.handleItemDeleted(item);
+          this.toastr.success('Đã xóa mặt hàng thành công', 'Thông báo');
+        },
+        error: (error) => {
+          this.handleDeleteError(error);
+        }
+      });
+    }
   }
 
   /**
@@ -65,7 +139,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Lỗi khi tải danh sách mặt hàng cha:', error);
-        this.toastr.error('Không thể tải danh sách mặt hàng', 'Lỗi');
         this.spinnerService.hideTableSpinner();
       }
     });
@@ -128,15 +201,28 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
   onButtonAction(action: string): void {
     switch (action) {
       case 'add':
-        this.openAddModal();
+        // Use base class method from CrudComponentBase
+        super.openAddModal(ThemmoiComponent, {
+          size: 'xl',
+          data: { nhomHangHoaList: this.parentCategories }
+        });
         break;
       case 'edit':
-        this.selectedItem ? this.openEditModal(this.selectedItem) : 
+        if (this.selectedItem) {
+          // Use base class method from CrudComponentBase
+          super.openEditModal(SuaComponent, this.selectedItem, { size: 'xl' });
+        } else {
           this.toastr.warning('Vui lòng chọn một mặt hàng để chỉnh sửa', 'Cảnh báo');
+        }
         break;
       case 'delete':
         if (this.selectedItem) {
-          this.openDeleteConfirmationModal(this.selectedItem);
+          const isItemWithChildren = this.selectedItem.loaiMatHang === LoaiMatHangEnum.Nhom;
+          // Use base class method from CrudComponentBase
+          super.openDeleteConfirmationModal(this.selectedItem, {
+            isGroup: isItemWithChildren,
+            groupItemName: 'nhóm mặt hàng'
+          });
         } else {
           this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Cảnh báo');
         }
@@ -144,170 +230,6 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
       case 'refresh':
         this.loadParentCategories();
         break;
-    }
-  }
-
-  /**
-   * Mở modal thêm mới mặt hàng
-   */
-  openAddModal(): void {
-    const modalRef = this.modalService.open(ThemmoiComponent, {
-      size: 'xl',
-      backdrop: 'static',
-      keyboard: false
-    });
-
-    modalRef.componentInstance.title = 'Thêm mới mặt hàng';
-    modalRef.componentInstance.nhomHangHoaList = this.parentCategories;
-
-    modalRef.result.then(
-      (result) => {
-        if (!result?.success) return;
-        
-        this.toastr.success('Thêm mới mặt hàng thành công', 'Thành công');
-
-        if (result.parentId) {
-          this.navigateToItemInTree(result.parentId, result.item);
-        } else {
-          this.loadParentCategories();
-          this.selectAndScrollToItem(result.item);
-        }
-      },
-      () => {}
-    );
-  }
-
-  /**
-   * Mở modal chỉnh sửa mặt hàng
-   */
-  openEditModal(item: HHThiTruongDto): void {
-    this.spinnerService.showSavingSpinner();
-    const originalParentId = item.matHangChaId;
-
-    this.dmHangHoaThiTruongService.getById(item.id).subscribe({
-      next: (fullItemData) => {
-        const modalRef = this.modalService.open(SuaComponent, {
-          size: 'xl',
-          backdrop: 'static',
-          keyboard: false
-        });
-
-        modalRef.componentInstance.editingItem = fullItemData;
-
-        modalRef.result.then(
-          (result) => {
-            if (result !== 'saved') return;
-            
-            this.spinnerService.showTableSpinner();
-            this.dmHangHoaThiTruongService.getById(item.id).subscribe({
-              next: (updatedItem) => {
-                this.updateNodeInTree(updatedItem, originalParentId);
-                this.toastr.success('Cập nhật mặt hàng thành công', 'Thành công');
-                this.spinnerService.hideTableSpinner();
-              },
-              error: (error) => {
-                console.error('Lỗi khi tải lại thông tin mặt hàng sau cập nhật:', error);
-                this.spinnerService.hideTableSpinner();
-                this.toastr.error('Không thể tải lại thông tin mặt hàng', 'Lỗi');
-              }
-            });
-          },
-          () => {}
-        );
-        this.spinnerService.hideSavingSpinner();
-      },
-      error: (error) => {
-        console.error('Lỗi khi tải dữ liệu chi tiết mặt hàng:', error);
-        this.spinnerService.hideSavingSpinner();
-      }
-    });
-  }
-
-  /**
-   * Mở modal xác nhận xóa mặt hàng
-   */
-  openDeleteConfirmationModal(item: HHThiTruongDto): void {
-    // Xác định loại xác nhận dựa trên loại mặt hàng
-    const isItemWithChildren = item.loaiMatHang === LoaiMatHangEnum.Nhom;
-    
-    // Tạo tiêu đề và thông báo phù hợp
-    let title = 'Xác nhận xóa mặt hàng';
-    let message = `Bạn có chắc chắn muốn xóa mặt hàng này không?`;
-    
-    // Nếu là nhóm mặt hàng, cảnh báo về xóa các mặt hàng con
-    if (isItemWithChildren) {
-      title = 'Xác nhận xóa nhóm mặt hàng';
-      message = `Bạn có chắc chắn muốn xóa nhóm mặt hàng này không? Tất cả mặt hàng con bên trong nhóm này cũng sẽ bị xóa.`;
-    }
-    
-    // Mở modal xác nhận
-    const modalRef = this.modalService.open(DeleteConfirmationComponent, {
-      backdrop: 'static',
-      keyboard: false
-    });
-    
-    modalRef.componentInstance.title = title;
-    modalRef.componentInstance.message = message;
-    
-    // Xử lý kết quả của modal
-    modalRef.result.then(
-      (result) => {
-        if (result) {
-          this.deleteItem(item, isItemWithChildren);
-        }
-      },
-      () => {} // Dismiss
-    );
-  }
-
-  /**
-   * Xóa mặt hàng dựa trên loại (mặt hàng đơn hoặc nhóm có con)
-   */
-  deleteItem(item: HHThiTruongDto, hasChildren: boolean): void {
-    this.spinnerService.showSavingSpinner();
-    
-    if (hasChildren) {
-      // Xóa nhóm mặt hàng và tất cả con bên trong
-      this.dmHangHoaThiTruongService.deleteMultiple([item.id]).subscribe({
-        next: (response) => {
-          this.handleDeleteSuccess(item, response.data?.length ?? 0);
-        },
-        error: (error) => {
-          this.handleDeleteError(error);
-        }
-      });
-    } else {
-      // Xóa mặt hàng đơn
-      this.dmHangHoaThiTruongService.delete(item.id).subscribe({
-        next: (response) => {
-          this.handleDeleteSuccess(item);
-        },
-        error: (error) => {
-          this.handleDeleteError(error);
-        }
-      });
-    }
-  }
-
-  /**
-   * Xử lý khi xóa thành công
-   */
-  private handleDeleteSuccess(deletedItem: HHThiTruongDto, totalDeleted: number = 1): void {
-    this.spinnerService.hideSavingSpinner();
-    
-    // Xóa khỏi UI
-    this.removeDeletedItemFromUI(deletedItem);
-    
-    // Hiển thị thông báo phù hợp
-    if (totalDeleted > 1) {
-      this.toastr.success(`Đã xóa nhóm mặt hàng và ${totalDeleted - 1} mặt hàng con`, 'Xóa thành công');
-    } else {
-      this.toastr.success('Đã xóa mặt hàng thành công', 'Xóa thành công');
-    }
-    
-    // Reset selected item nếu đang chọn mặt hàng bị xóa
-    if (this.selectedItem && this.selectedItem.id === deletedItem.id) {
-      this.selectedItem = null;
     }
   }
 
@@ -330,6 +252,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
    * Xóa mặt hàng khỏi UI
    */
   private removeDeletedItemFromUI(deletedItem: HHThiTruongDto): void {
+    // Implementation unchanged
     const treeTable = this.treeTableComponent;
     
     // Xóa khỏi danh sách gốc nếu là mặt hàng ở cấp cao nhất
@@ -354,6 +277,7 @@ export class DmHangHoaThiTruongsComponent implements OnInit {
     }
   }
 
+  // Rest of the tree-specific methods unchanged
   /**
    * Di chuyển đến mặt hàng trong cây và hiển thị
    */

@@ -319,7 +319,14 @@ export class TreeTableComponent<T extends TreeNode> {
   isRowSelected(itemId: string): boolean {
     return this.selectedRowId === itemId;
   }
-
+  
+  /**
+   * Kiểm tra một thuộc tính có tồn tại trong node không
+   */
+  hasProperty(node: any, prop: string): boolean {
+    return node && Object.prototype.hasOwnProperty.call(node, prop);
+  }
+  
   /**
    * Tính toán độ thụt lề dựa vào cấp độ
    */

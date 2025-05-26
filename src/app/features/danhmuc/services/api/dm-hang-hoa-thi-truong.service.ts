@@ -4,7 +4,7 @@ import { environment } from '../../../../../environments/environment.development
 import { Observable, BehaviorSubject, of, shareReplay, tap, map } from 'rxjs';
 import { PagedResult } from '../../models/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
-import { buildHttpParams } from '../../utils/build-http-params';
+import { buildHttpParams } from '../../helpers/build-http-params';
 import { HHThiTruongTreeNodeDto } from '../../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { CreateHHThiTruongDto, UpdateHHThiTruongDto, CreateManyHHThiTruongDto } from '../../models/dm-hh-thitruong/CreateHHThiTruongDto';
 import { HHThiTruongDto } from '../../models/dm-hh-thitruong/HHThiTruongDto';

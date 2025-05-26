@@ -110,7 +110,7 @@
                 renderCellValue(node, columns[0]) }}
                 <small class="badge rounded-pill text-bg-primary ms-2" *ngIf="isGroupItem(node)">nhóm</small>
                 <small class="badge rounded-pill text-bg-info text-light ms-2"
-                  *ngIf="!isGroupItem(node) && 'loaiMatHang' in node">mặt hàng</small>
+                  *ngIf="!isGroupItem(node) && hasProperty(node, 'loaiMatHang')">mặt hàng</small>
 
               </span>
             </div>

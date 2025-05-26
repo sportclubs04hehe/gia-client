@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../../../environments/environment.development';
-import { buildHttpParams } from '../../utils/build-http-params';
+import { buildHttpParams } from '../../helpers/build-http-params';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { PagedResult } from '../../models/paged-result';
 import { CreateNhomHangHoaDto } from '../../models/dm_nhomhanghoathitruong/CreateNhomHangHoaDto';

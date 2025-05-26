@@ -14,8 +14,8 @@ import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select
 import { NhomhhModalComponent } from '../nhomhh-modal/nhomhh-modal.component';
 import { ModalNotificationService } from '../../../../shared/components/notifications/modal-notification/modal-notification.service';
 import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
-import { CodeInputDirective } from '../../utils/code-input.directive';
-import { codeValidator } from '../../utils/code-validator';
+import { CodeInputDirective } from '../../helpers/code-input.directive';
+import { codeValidator } from '../../helpers/code-validator';
 
 @Component({
   selector: 'app-sua',

@@ -9,7 +9,7 @@ import { FormComponentBase } from '../../../../shared/components/forms/forms-bas
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { ToastrService } from 'ngx-toastr';
-import { uniqueItemCodeValidator } from '../../utils/unique-ma-mat-hang';
+import { uniqueItemCodeValidator } from '../../helpers/unique-ma-mat-hang';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';

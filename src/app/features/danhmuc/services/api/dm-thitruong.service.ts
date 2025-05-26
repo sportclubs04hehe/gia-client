@@ -8,7 +8,7 @@ import { HangHoaUpdateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-
 import { PaginationParams } from '../../models/pagination-params ';
 import { SearchParams } from '../../models/search-params';
 import { SpecificationParams } from '../../models/specification-params';
-import { buildHttpParams } from '../../utils/build-http-params';
+import { buildHttpParams } from '../../helpers/build-http-params';
 import { PagedResult } from '../../models/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { HangHoaImportDto } from '../../models/dm_hanghoathitruong/hanghoa-import.dto';
