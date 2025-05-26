@@ -90,9 +90,7 @@ export class TreeTableComponent<T extends TreeNode> {
    */
   selectedRowId: string | null = null;
 
-  private changeDetectorRef = inject(ChangeDetectorRef);
-
-  constructor() { }
+  constructor(private cdr: ChangeDetectorRef) { }
 
   /**
    * Kiểm tra node có đang mở rộng không
@@ -283,15 +281,14 @@ export class TreeTableComponent<T extends TreeNode> {
    * Xử lý sự kiện cuộn cho toàn bộ bảng
    */
   onTableScroll(): void {
-    // Tìm một node đang mở cần tải thêm (để tránh quá nhiều request)
-    this.expandedRows.forEach((isExpanded, nodeId) => {
-      if (isExpanded) {
-        const pagination = this.nodePaginationMap.get(nodeId);
-        if (pagination && pagination.hasNextPage && !pagination.isLoadingMore && !this.isLoadingChildren(nodeId)) {
-          this.loadMoreChildren(nodeId);
-          return; // Chỉ tải một node mỗi lần
-        }
-      }
+    // Kiểm tra từng node mở rộng với phân trang để xem có cần tải thêm con không
+    this.expandedRows.forEach((expanded, nodeId) => {
+      if (!expanded) return;
+      
+      const pagination = this.nodePaginationMap.get(nodeId);
+      if (!pagination || !pagination.hasNextPage || pagination.isLoadingMore) return;
+      
+      this.loadMoreChildren(nodeId);
     });
   }
 
@@ -349,10 +346,11 @@ export class TreeTableComponent<T extends TreeNode> {
     return value !== undefined && value !== null ? String(value) : '';
   }
 
+  /**
+   * Force change detection - useful after manipulating node maps
+   */
   detectChanges(): void {
-    if (this.changeDetectorRef) {
-      this.changeDetectorRef.markForCheck();
-    }
+    this.cdr.detectChanges();
   }
 
    isGroupItem(item: T): boolean {

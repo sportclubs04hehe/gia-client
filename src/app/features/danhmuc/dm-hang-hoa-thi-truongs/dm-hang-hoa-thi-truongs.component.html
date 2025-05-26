@@ -23,11 +23,11 @@
 
       <!-- Sử dụng TreeTableComponent -->
       <app-tree-table
-        [rootData]="parentCategories"
+        [rootData]="parentItems"
         [columns]="columns"
         [keyField]="'id'"
-        [hasChildren]="hasChildrenForNode"
-        [loadChildren]="loadChildrenForNode" 
+        [hasChildren]="hasChildrenForNode.bind(this)"
+        [loadChildren]="boundLoadChildrenForNode"
         [defaultPageSize]="100"
         (rowSelected)="onRowSelected($event)"
         (nodeToggled)="onNodeToggled($event)">
