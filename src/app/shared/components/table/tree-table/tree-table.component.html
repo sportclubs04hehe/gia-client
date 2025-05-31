@@ -57,15 +57,15 @@
                 </tr>
 
                 <!-- Không còn dữ liệu -->
-                <tr *ngIf="!hasMoreData(node[keyField]) && getNodeChildren(node[keyField]).length > 0"
+                <tr *ngIf="!hasMoreData(node[keyField]) && getNodeChildren(node[keyField]).length > 0 && !searchTerm"
                   class="end-of-data-row">
                   <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
                     <small><i class="bi bi-check-circle me-2"></i> Đã hiển thị tất cả</small>
                   </td>
                 </tr>
 
-                <!-- Không có dữ liệu con -->
-                <tr *ngIf="getNodeChildren(node[keyField]).length === 0" class="empty-row">
+                <!-- Không có dữ liệu con - CHỈ hiển thị khi đã tải xong và không có kết quả -->
+                <tr *ngIf="getNodeChildren(node[keyField]).length === 0 && !isInitialLoading(node[keyField]) && !searchTerm" class="empty-row">
                   <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
                     <small><i class="bi bi-info-circle me-2"></i> Không có dữ liệu con</small>
                   </td>
@@ -95,7 +95,7 @@
             <div class="d-flex align-items-start">
               <div [style.width]="calculateIndent(level)" [style.flex-shrink]="0"></div>
 
-              <!-- Icon mở rộng/thu gọn -->
+              <!-- Icon hiển thị nhóm con -->
               <ng-container *ngIf="hasChildren(node)">
                 <span class="tree-toggle me-2" (click)="toggleNode($event, node)">
                   <i *ngIf="isNodeExpanded(node[keyField])" class="bi bi-dash-square"></i>
@@ -104,23 +104,18 @@
               </ng-container>
 
               <!-- Hiển thị tên với chỉ báo loại mặt hàng -->
-              <span class="text-cell">
-                {{ columns[0].field === 'ten' ?
-                (renderCellValue(node, columns[0]) | capitalize) :
-                renderCellValue(node, columns[0]) }}
-                <small class="badge rounded-pill text-bg-primary ms-2" *ngIf="isGroupItem(node)">nhóm</small>
-                <small class="badge rounded-pill text-bg-info text-light ms-2"
-                  *ngIf="!isGroupItem(node) && hasProperty(node, 'loaiMatHang')">mặt hàng</small>
-
+              <span class="text-cell" [innerHtml]="columns[0].field === 'ten' ? 
+                (renderCellValue(node, columns[0]) | capitalize | textHighlight:searchTerm) : 
+                (renderCellValue(node, columns[0]) | textHighlight:searchTerm)">
               </span>
             </div>
           </td>
 
           <!-- Các cột còn lại với hỗ trợ pipe tương tự -->
-          <td *ngFor="let column of columns.slice(1)" class="text-cell">
-            {{ column.field === 'ten' ?
-            (renderCellValue(node, column) | capitalize) :
-            renderCellValue(node, column) }}
+          <td *ngFor="let column of columns.slice(1)" class="text-cell" 
+              [innerHtml]="column.field === 'ten' ?
+              (renderCellValue(node, column) | capitalize | textHighlight:searchTerm) :
+              (renderCellValue(node, column) | textHighlight:searchTerm)">
           </td>
         </tr>
       </ng-template>
@@ -150,8 +145,8 @@
             </ng-container>
           </ng-container>
 
-          <!-- Không có dữ liệu con -->
-          <tr *ngIf="getNodeChildren(parentId).length === 0" class="empty-row">
+          <!-- Không có dữ liệu con - CHỈ hiển thị khi đã tải xong và không có kết quả -->
+          <tr *ngIf="getNodeChildren(parentId).length === 0 && !isInitialLoading(parentId) && !searchTerm" class="empty-row">
             <td [attr.colspan]="columns.length" class="text-center py-2 text-muted">
               <small><i class="bi bi-info-circle me-2"></i> Không có dữ liệu con</small>
             </td>

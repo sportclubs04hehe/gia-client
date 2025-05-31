@@ -8,8 +8,17 @@
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
-        <div class="search-container flex-grow-1 me-3">
-          <app-search-bar></app-search-bar>
+        <!-- Wrap search-bar with position-relative for proper icon positioning -->
+        <div class="search-container flex-grow-1 me-3 position-relative">
+          <app-search-bar 
+            [placeholder]="'Tìm kiếm mặt hàng...'" 
+            [minLength]="2"
+            [searchDelay]="500"
+            [isSearchActive]="isSearchActive"
+            [searchTerm]="currentSearchTerm"
+            (searchEvent)="onSearch($event)"
+            (clearEvent)="onClearSearch()">
+          </app-search-bar>
         </div>
 
         <div class="action-wrapper">
@@ -21,17 +30,31 @@
         </div>
       </div>
 
-      <!-- Sử dụng TreeTableComponent -->
-      <app-tree-table
-        [rootData]="parentItems"
-        [columns]="columns"
-        [keyField]="'id'"
-        [hasChildren]="hasChildrenForNode.bind(this)"
-        [loadChildren]="boundLoadChildrenForNode"
-        [defaultPageSize]="100"
-        (rowSelected)="onRowSelected($event)"
-        (nodeToggled)="onNodeToggled($event)">
-      </app-tree-table>
+      <!-- Thông báo không tìm thấy kết quả - kiểu mới, chuyên nghiệp hơn -->
+      <div *ngIf="isSearchActive && parentItems.length === 0" class="no-results-container text-center py-5">
+        <div class="no-results-icon mb-3">
+          <i class="bi bi-search fs-1 text-secondary"></i>
+        </div>
+        <div class="no-results-text">
+          <p class="mb-1 text-secondary">Không tìm thấy bản ghi nào với từ khóa "{{currentSearchTerm}}"</p>
+        </div>
+      </div>
+
+      <!-- Hiển thị bảng chỉ khi có dữ liệu hoặc không trong trạng thái tìm kiếm -->
+      <ng-container *ngIf="!(isSearchActive && parentItems.length === 0)">
+        <!-- Sử dụng TreeTableComponent -->
+        <app-tree-table
+          [rootData]="parentItems"
+          [columns]="columns"
+          [keyField]="'id'"
+          [hasChildren]="hasChildrenForNode.bind(this)"
+          [loadChildren]="loadChildrenForNode"
+          [defaultPageSize]="100"
+          [searchTerm]="currentSearchTerm"
+          (rowSelected)="onRowSelected($event)"
+          (nodeToggled)="onNodeToggled($event)">
+        </app-tree-table>
+      </ng-container>
     </div>
   </div>
 </div>

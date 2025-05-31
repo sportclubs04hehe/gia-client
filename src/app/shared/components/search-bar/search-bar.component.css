@@ -1,12 +1,14 @@
-.spin {
-    animation: spin 1s linear infinite;
+.search-wrapper {
+  width: 100%;
+}
+
+.search-container {
+  width: 100%;
+  max-width: 400px; /* hoặc 300px, tùy bạn */
+}
+
+@media (max-width: 576px) {
+  .search-container {
+    max-width: 100%;
   }
-  
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
+}

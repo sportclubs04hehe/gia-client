@@ -1,23 +1,35 @@
-<div class="search-container">
+<div class="search-wrapper d-flex justify-content-start">
+  <div class="search-container position-relative w-100" style="max-width: 400px;">
     <div class="input-group">
-      <div class="position-relative">
+      <div class="position-relative w-100">
+        <!-- Icon tìm kiếm -->
         <i class="bi bi-search text-muted position-absolute top-50 start-0 translate-middle-y ps-3"></i>
+
+        <!-- Input -->
         <input
           #searchInput
           type="text"
-          class="form-control ps-5 border-start-0 shadow-sm"
+          class="form-control ps-5 pe-5 border-start-0 shadow-sm"
           [placeholder]="placeholder"
           [(ngModel)]="searchModel"
           (ngModelChange)="onSearchChange($event)"
         />
+
+        <!-- Nút clear -->
+        <button
+          *ngIf="searchModel || searchTerm"
+          type="button"
+          class="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent text-muted"
+          (click)="clearSearch()"
+        >
+          <i class="bi bi-x-circle-fill fs-5"></i>
+        </button>
       </div>
-      
+
+      <!-- Loading -->
       <span *ngIf="isLoading" class="input-group-text border-start-0">
         <i class="bi bi-arrow-clockwise spin"></i>
       </span>
-      <button *ngIf="searchTerm" class="btn btn-outline-secondary border-start-0" type="button"
-        (click)="clearSearch()">
-        <i class="bi bi-x-lg"></i>
-      </button>
     </div>
   </div>
+</div>

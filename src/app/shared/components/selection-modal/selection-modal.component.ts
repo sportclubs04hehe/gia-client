@@ -30,8 +30,8 @@ export class SelectionModalComponent {
   @Input() loadingMessage: string = 'Loading...';
   @Input() selectedId: string | null = null;
   
-  @Output() search = new EventEmitter<string>();
-  @Output() clearSearch = new EventEmitter<void>();
+  @Output() searchEvent = new EventEmitter<string>();
+  @Output() clearEvent = new EventEmitter<void>();
   
   searchTerm: string = '';
   tempSelectedItem: any = null;
@@ -51,7 +51,7 @@ export class SelectionModalComponent {
       debounceTime(400),
       distinctUntilChanged()
     ).subscribe(term => {
-      this.search.emit(term);
+      this.searchEvent.emit(term);
     });
   }
 
@@ -66,7 +66,7 @@ export class SelectionModalComponent {
 
   onClearSearch(): void {
     this.searchTerm = '';
-    this.clearSearch.emit();
+    this.clearEvent.emit();
   }
 
   selectItem(item: any): void {

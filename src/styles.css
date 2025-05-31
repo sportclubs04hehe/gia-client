@@ -16,11 +16,11 @@ body, html {
 }
 
 .highlight-text {
-  background-color: #ffeb3b;
-  padding: 0.1rem 0;
+    background-color: rgba(255, 193, 7, 0.5) !important;
+  font-weight: bold !important;
+  color: #495057 !important;
+  padding: 0 2px;
   border-radius: 2px;
-  font-weight: 500;
-  color: #333;
 }
 
 .table-row.selected td .highlight-text {

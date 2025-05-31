@@ -30,11 +30,11 @@ export class SelectionModalService {
 
     // Set up event handlers
     if (options.searchFn) {
-      component.search.subscribe(term => options.searchFn!(term));
+      component.searchEvent.subscribe(term => options.searchFn!(term));
     }
 
     if (options.clearSearchFn) {
-      component.clearSearch.subscribe(() => options.clearSearchFn!());
+      component.clearEvent.subscribe(() => options.clearSearchFn!());
     }
 
     // Return an observable that resolves when the modal is closed
@@ -61,11 +61,11 @@ export class SelectionModalService {
 
     // Set up event handlers
     if (options.searchFn) {
-      component.search.subscribe(term => options.searchFn!(term));
+      component.searchEvent.subscribe(term => options.searchFn!(term));
     }
 
     if (options.clearSearchFn) {
-      component.clearSearch.subscribe(() => options.clearSearchFn!());
+      component.clearEvent.subscribe(() => options.clearSearchFn!());
     }
     // Return the modal reference directly
     return modalRef;

@@ -7,7 +7,7 @@
             [isLoading]="isLoadingList()"
             [searchTerm]="searchTerm()"
             [placeholder]="'Tìm kiếm đơn vị tính...'"
-            (search)="onSearchChange($event)"
+            (searchEvent)="onSearchChange($event)"
             (clear)="clearSearch()">  
           </app-search-bar>
         </div>

@@ -10,8 +10,8 @@
       [isLoading]="isLoading"
       [searchTerm]="searchTerm"
       [placeholder]="searchPlaceholder"
-      (search)="onSearch($event)"
-      (clear)="onClearSearch()"
+      (searchEvent)="onSearch($event)"
+      (clearEvent)="onClearSearch()"
     ></app-search-bar>
   </div>
 

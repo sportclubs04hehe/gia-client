@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
@@ -10,9 +10,9 @@ import { TreeTableComponent } from '../../../shared/components/table/tree-table/
 import { TableColumn } from '../../../shared/models/table-column';
 import { ThemmoiComponent } from './themmoi/themmoi.component';
 import { SuaComponent } from './sua/sua.component';
-import { map } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { TreeCrudComponentBase } from '../../../shared/components/bases/tree-crud-component-base';
+import { TreeSearchService } from '../services/utils/tree-search.service';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -27,42 +27,128 @@ import { TreeCrudComponentBase } from '../../../shared/components/bases/tree-cru
   templateUrl: './dm-hang-hoa-thi-truongs.component.html',
   styleUrl: './dm-hang-hoa-thi-truongs.component.css'
 })
-export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTruongDto, HHThiTruongTreeNodeDto> implements OnInit {
+export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTruongDto, HHThiTruongTreeNodeDto> implements OnInit, OnDestroy {
   private dmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
-  
-  // Cấu hình bảng
+  private treeSearchService = inject(TreeSearchService);
+  private destroy$ = new Subject<void>();
+
+  /* Các biến trạng thái tìm kiếm */
+  isSearchActive = false;
+  currentSearchTerm = '';
+  searchResults: HHThiTruongDto[] = [];
+
+  // ViewChild để truy cập vào TreeTableComponent
+  @ViewChild(TreeTableComponent) override treeTableComponent!: TreeTableComponent<HHThiTruongDto>;
+  // Thêm ViewChild để truy cập vào SearchBarComponent
+  @ViewChild(SearchBarComponent) searchBarComponent?: SearchBarComponent;
+
+  /* Cấu hình bảng hiển thị */
   columns: TableColumn<HHThiTruongDto>[] = [
     { field: 'ma', header: 'Mã', width: '20%' },
     { field: 'ten', header: 'Tên', width: '45%' },
-    { field: 'tenDonViTinh', header: 'Đơn vị tính', width: '10%', formatter: (item) => item.tenDonViTinh || 'N/A' },
-    { field: 'dacTinh', header: 'Đặc tính', width: '25%', formatter: (item) => item.dacTinh || 'N/A' }
+    { field: 'tenDonViTinh', header: 'Đơn vị tính', width: '10%', formatter: (item) => item.tenDonViTinh || '' },
+    { field: 'dacTinh', header: 'Đặc tính', width: '25%', formatter: (item) => item.dacTinh || '' }
   ];
-
-  // Create a bound version of the loadChildrenForNode method to fix "this" context
-  boundLoadChildrenForNode = (parentId: string, pageIndex: number, pageSize: number) => {
-    return this.dmHangHoaThiTruongService.getChildrenByParent(parentId, pageIndex, pageSize);
-  }
 
   constructor() {
     super();
+    // Bind the method to preserve 'this' context when used in template binding
+    this.loadChildrenForNode = this.loadChildrenForNode.bind(this);
   }
-  
+
+  /* Lifecycle hooks */
   ngOnInit(): void {
     this.loadParentItems();
   }
 
-  /**
-   * Implement abstract methods from parent classes
-   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /* Quản lý tìm kiếm và xử lý kết quả */
+  onSearch(searchTerm: string): void {
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      this.onClearSearch();
+      return;
+    }
+
+    this.currentSearchTerm = searchTerm;
+    this.isSearchActive = true;
+
+    this.treeSearchService.performSearch<HHThiTruongTreeNodeDto>(
+      searchTerm,
+      (term) => this.dmHangHoaThiTruongService.optimizedSearchHierarchical(term),
+      this.destroy$,
+      2,
+      400
+    ).subscribe({
+      next: (results) => {
+        this.handleSearchResults(results);
+      },
+      error: (error) => {
+        console.error('Lỗi khi tìm kiếm:', error);
+        this.isSearchActive = false;
+      }
+    });
+  }
+
+  /* Xử lý kết quả tìm kiếm phân cấp */
+  private handleSearchResults(results: any): void {
+    // Sử dụng service để trích xuất kết quả
+    const nodeResults = this.treeSearchService.extractSearchResults<HHThiTruongTreeNodeDto>(results);
+
+    if (nodeResults.length === 0) {
+      this.parentItems = [];
+      return;
+    }
+
+    // Now we're sure nodeResults is an array
+    this.parentItems = this.convertNodeToEntity(nodeResults);
+
+    // Đánh dấu là đang trong chế độ tìm kiếm
+    this.isSearchActive = true;
+
+    // Sử dụng TreeSearchService để xử lý kết quả
+    this.treeSearchService.processSearchResults<HHThiTruongTreeNodeDto>(
+      nodeResults,
+      this.treeTableComponent,
+      (results) => this.processTreePath(results),
+      (results) => this.autoExpandNodesWithSearchResults(results)
+    );
+  }
+
+  /* Quản lý hiển thị kết quả tìm kiếm */
+  private autoExpandNodesWithSearchResults(nodes: HHThiTruongTreeNodeDto[]): void {
+    this.treeSearchService.autoExpandSearchResults<HHThiTruongTreeNodeDto, HHThiTruongDto>(
+      nodes,
+      this.treeTableComponent,
+      (node) => node.loaiMatHang === LoaiMatHangEnum.Nhom,
+      (node) => node.matHangCon || [],
+      (nodes) => this.convertNodeToEntity(nodes)
+    );
+  }
+
+  /* Xóa tìm kiếm và reset hiển thị */
+  onClearSearch(): void {
+    if (!this.isSearchActive) return;
+
+    this.isSearchActive = false;
+    this.currentSearchTerm = '';
+    this.searchResults = [];
+    this.loadParentItems(); // Tải lại dữ liệu gốc
+  }
+
+  /* Implement abstract methods từ lớp cơ sở */
   // From CrudComponentBase
   override getItemById(id: string): Observable<HHThiTruongDto> {
     return this.dmHangHoaThiTruongService.getById(id);
   }
-  
+
   override getEntityName(): string {
     return 'mặt hàng';
   }
-  
+
   override handleItemCreated(result: any): void {
     if (result.parentId) {
       this.navigateToItemInTree(result.parentId, result.item);
@@ -71,30 +157,37 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
       this.selectAndScrollToItem(result.item);
     }
   }
-  
+
   override handleItemUpdated(updatedItem: HHThiTruongDto, originalData?: any): void {
     const originalParentId = originalData?.matHangChaId;
     this.updateNodeInTree(updatedItem, originalParentId);
   }
-  
+
   override handleItemDeleted(item: HHThiTruongDto, totalDeleted: number = 1): void {
     this.removeDeletedItemFromUI(item);
   }
 
-  // From TreeCrudComponentBase
+  /* TreeCrudComponentBase implementation */
   override getParentIdFieldName(): string {
     return 'matHangChaId';
   }
-  
+
   override hasChildrenForNode(node: HHThiTruongDto | HHThiTruongTreeNodeDto): boolean {
     return node.loaiMatHang === LoaiMatHangEnum.Nhom;
   }
-  
+
   override loadChildrenForNode(parentId: string, pageIndex: number, pageSize: number): Observable<any> {
     return this.dmHangHoaThiTruongService.getChildrenByParent(parentId, pageIndex, pageSize);
   }
-  
+
+  /* Chuyển đổi dữ liệu */
   override convertNodeToEntity(nodes: HHThiTruongTreeNodeDto[]): HHThiTruongDto[] {
+    // Add defensive check for non-array inputs
+    if (!nodes || !Array.isArray(nodes)) {
+      console.error('Expected array in convertNodeToEntity but got:', typeof nodes, nodes);
+      return [];
+    }
+
     return nodes.map(node => ({
       id: node.id,
       ma: node.ma,
@@ -109,28 +202,24 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
       dacTinh: node.dacTinh || null
     } as HHThiTruongDto));
   }
-  
+
   override getFullPathWithChildren(parentId: string, itemId: string): Observable<HHThiTruongTreeNodeDto[]> {
     return this.dmHangHoaThiTruongService.getFullPathWithChildren(parentId, itemId);
   }
-  
+
   override loadParentItemsFromService(): Observable<HHThiTruongDto[]> {
     return this.dmHangHoaThiTruongService.getAllParentCategories();
   }
-  
-  /**
-   * Override getNodeChildren for specific structure
-   */
+
+  /* Override methods cho cấu trúc cụ thể */
   protected override getNodeChildren(node: any): HHThiTruongTreeNodeDto[] {
     return node.matHangCon || [];
   }
-  
-  /**
-   * Override base class method for custom delete handling
-   */
+
+  /* Quản lý xóa dữ liệu */
   protected override deleteItem(item: HHThiTruongDto, hasChildren: boolean): void {
     this.spinnerService.showSavingSpinner();
-    
+
     if (hasChildren) {
       // Xóa nhóm mặt hàng và tất cả con bên trong
       this.dmHangHoaThiTruongService.deleteMultiple([item.id]).subscribe({
@@ -138,7 +227,7 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
           this.spinnerService.hideSavingSpinner();
           const totalDeleted = response.data?.length ?? 0;
           this.handleItemDeleted(item, totalDeleted);
-          
+
           // Custom success message
           if (totalDeleted > 1) {
             this.toastr.success(`Đã xóa nhóm mặt hàng và ${totalDeleted - 1} mặt hàng con`, 'Thông báo');
@@ -165,9 +254,7 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
     }
   }
 
-  /**
-   * Xử lý sự kiện từ nút thao tác (thêm, sửa, xóa, làm mới)
-   */
+  /* Quản lý hành động UI */
   onButtonAction(action: string): void {
     switch (action) {
       case 'add':
@@ -198,23 +285,30 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
         }
         break;
       case 'refresh':
+        this.isSearchActive = false;
+        this.currentSearchTerm = '';
+        this.searchResults = [];
+        if (this.searchBarComponent) {
+          this.searchBarComponent.clearSearch();
+        }
+        if (this.treeTableComponent) {
+          this.treeTableComponent.expandedRows.clear();
+          this.treeTableComponent.nodeChildrenMap.clear();
+          this.treeTableComponent.nodeLoadingMap.clear();
+          this.treeTableComponent.nodePaginationMap.clear();
+          this.treeTableComponent.selectedRowId = '';
+        }
+        
+        this.selectedItem = null;
+        this.dmHangHoaThiTruongService.clearParentCategoriesCache();
         this.loadParentItems();
         break;
     }
   }
 
-  /**
-   * Xử lý khi xóa gặp lỗi
-   */
+  /* Xử lý lỗi */
   private handleDeleteError(error: any): void {
     this.spinnerService.hideSavingSpinner();
     console.error('Lỗi khi xóa mặt hàng:', error);
-    
-    // Hiển thị thông báo lỗi
-    if (error.error?.message) {
-      this.toastr.error(error.error.message, 'Lỗi');
-    } else {
-      this.toastr.error('Không thể xóa mặt hàng. Vui lòng thử lại sau.', 'Lỗi');
-    }
   }
 }

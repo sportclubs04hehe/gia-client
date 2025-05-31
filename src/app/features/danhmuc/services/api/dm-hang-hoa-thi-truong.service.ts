@@ -270,10 +270,78 @@ export class DmHangHoaThiTruongService {
 
   /**
    * Tìm kiếm phân cấp với các nút được mở rộng tự động
+   * @param searchTerm Từ khóa tìm kiếm
+   * @returns Observable chứa cây kết quả tìm kiếm
    */
   searchHierarchical(searchTerm: string): Observable<HHThiTruongTreeNodeDto[]> {
-    const params = new HttpParams().set('searchTerm', searchTerm);
-    return this.http.get<HHThiTruongTreeNodeDto[]>(`${this.apiUrl}/${this.endpoint}/search-hierarchical`, { params });
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      return of([]);
+    }
+
+    const params = new HttpParams()
+      .set('searchTerm', searchTerm.trim())
+      .set('pageIndex', '1')
+      .set('pageSize', '15'); // Lấy đủ kết quả để hiển thị
+
+    return this.http.get<any>(
+      `${this.apiUrl}/${this.endpoint}/search-hierarchical`,
+      { params }
+    ).pipe(
+      map(response => {
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          return response.data; // Extract the data array from PagedResult
+        }
+        return []; // Default to empty array if unexpected format
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Tối ưu: Tìm kiếm kết hợp cache cho các truy vấn lặp lại
+   * @param searchTerm Từ khóa tìm kiếm
+   * @returns Observable chứa kết quả tìm kiếm
+   */
+  private searchCache = new Map<string, HHThiTruongTreeNodeDto[]>();
+  private searchInProgress = new Map<string, boolean>();
+
+  optimizedSearchHierarchical(searchTerm: string): Observable<HHThiTruongTreeNodeDto[]> {
+    // Chuẩn hóa từ khóa tìm kiếm
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+
+    // Kiểm tra nếu đã có trong cache
+    if (this.searchCache.has(normalizedTerm)) {
+      return of(this.searchCache.get(normalizedTerm)!);
+    }
+
+    // Kiểm tra nếu đang tìm kiếm
+    if (this.searchInProgress.get(normalizedTerm)) {
+      // Đợi kết quả từ request hiện tại
+      return this.searchHierarchical(normalizedTerm);
+    }
+
+    // Đánh dấu đang tìm kiếm
+    this.searchInProgress.set(normalizedTerm, true);
+
+    // Thực hiện tìm kiếm và lưu vào cache
+    return this.searchHierarchical(normalizedTerm).pipe(
+      tap(results => {
+        this.searchCache.set(normalizedTerm, results);
+        this.searchInProgress.set(normalizedTerm, false);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Xóa cache tìm kiếm khi dữ liệu thay đổi
+   */
+  clearSearchCache(): void {
+    this.searchCache.clear();
+    this.searchInProgress.clear();
   }
 
   /**

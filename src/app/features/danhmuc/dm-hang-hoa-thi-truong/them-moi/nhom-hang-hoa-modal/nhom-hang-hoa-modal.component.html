@@ -12,8 +12,8 @@
     [isLoading]="isSearching"
     [searchTerm]="searchTerm"
     [placeholder]="'Tìm kiếm ..'"
-    (search)="onSearch($event)"
-    (clear)="clearSearch()">
+    (searchEvent)="onSearch($event)"
+    (clearEvent)="clearSearch()">
   </app-search-bar>
   
   <!-- Loading indicator -->

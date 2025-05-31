@@ -22,3 +22,47 @@
     background-color: rgba(255, 243, 205, 0.5);
   }
 }
+
+.no-results-container {
+  padding: 3rem 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.no-results-icon {
+  color: #6c757d;
+}
+
+.no-results-icon i {
+  opacity: 0.7;
+}
+
+/* Positioning for the clear search button */
+.search-container {
+  position: relative;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 1.2rem;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.clear-search-btn:hover {
+  color: #212529;
+}
