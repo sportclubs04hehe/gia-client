@@ -13,10 +13,10 @@ import { TableColumn } from '../../../shared/models/table-column';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { SpinnerService } from '../../../shared/services/spinner.service';
 import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
-import { TreeNode } from '../models/tree-node';
 import { TextHighlightPipe } from '../../../shared/pipes/text-highlight.pipe';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
-import { PagedResult } from '../models/paged-result';
+import { PagedResult } from '../models/helpers/paged-result';
+import { TreeNode } from '../models/helpers/tree-node';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truong',

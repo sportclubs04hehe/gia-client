@@ -5,13 +5,13 @@ import { environment } from '../../../../../environments/environment.development
 import { HangHoa } from '../../models/dm_hanghoathitruong/dm-thitruong';
 import { HangHoaCreateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-create';
 import { HangHoaUpdateDto } from '../../models/dm_hanghoathitruong/hh-thitruong-update';
-import { PaginationParams } from '../../models/pagination-params ';
-import { SearchParams } from '../../models/search-params';
-import { SpecificationParams } from '../../models/specification-params';
+import { SearchParams } from '../../models/helpers/search-params';
+import { SpecificationParams } from '../../models/helpers/specification-params';
 import { buildHttpParams } from '../../helpers/build-http-params';
-import { PagedResult } from '../../models/paged-result';
+import { PagedResult } from '../../models/helpers/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { HangHoaImportDto } from '../../models/dm_hanghoathitruong/hanghoa-import.dto';
+import { PaginationParams } from '../../models/helpers/pagination-params ';
 
 @Injectable({
   providedIn: 'root'

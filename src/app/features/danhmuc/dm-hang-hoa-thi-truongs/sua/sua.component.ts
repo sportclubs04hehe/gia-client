@@ -16,6 +16,7 @@ import { ModalNotificationService } from '../../../../shared/components/notifica
 import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
 import { CodeInputDirective } from '../../helpers/code-input.directive';
 import { codeValidator } from '../../helpers/code-validator';
+import { uniqueHHThiTruongCodeValidator } from '../../helpers/uniqueHHThiTruongCodeValidator';
 
 @Component({
   selector: 'app-sua',
@@ -87,13 +88,25 @@ export class SuaComponent extends FormComponentBase implements OnInit {
    * Khởi tạo form với dữ liệu có sẵn từ mặt hàng đang chỉnh sửa
    */
   protected buildForm(): void {
+    // Tạo validator để kiểm tra mã
+    const codeUniqueValidator = uniqueHHThiTruongCodeValidator(
+      this.hangHoaService,
+      () => this.form?.get('matHangChaId')?.value,
+      this.editingItem.ma, 
+      this.editingItem.id  
+    );
+
     this.form = this.fb.group({
       id: [this.editingItem.id], // Trường id cần thiết cho việc cập nhật
-      ma: [this.editingItem.ma, [
-        Validators.required, 
-        Validators.maxLength(25), 
-        codeValidator()
-      ]],
+      ma: [this.editingItem.ma, {
+        validators: [
+          Validators.required, 
+          Validators.maxLength(25), 
+          codeValidator()
+        ],
+        asyncValidators: [codeUniqueValidator],
+        updateOn: 'blur'
+      }],
       ten: [this.editingItem.ten, [Validators.required, Validators.maxLength(250)]],
       ghiChu: [this.editingItem.ghiChu || '', Validators.maxLength(500)],
       ngayHieuLuc: [stringToDateStruct(this.editingItem.ngayHieuLuc), Validators.required],
@@ -125,6 +138,11 @@ export class SuaComponent extends FormComponentBase implements OnInit {
 
     // Cập nhật validator dựa trên loại mặt hàng
     this.updateFormFieldsBasedOnType();
+
+    // Lắng nghe sự thay đổi của trường matHangChaId để cập nhật validator
+    this.form.get('matHangChaId')?.valueChanges.subscribe(() => {
+      this.form.get('ma')?.updateValueAndValidity();
+    });
   }
 
   /**

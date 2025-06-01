@@ -1,4 +1,4 @@
-import { HHThiTruongTreeNodeDto } from "./dm-hh-thitruong/HHThiTruongTreeNodeDto";
+import { HHThiTruongTreeNodeDto } from "../dm-hh-thitruong/HHThiTruongTreeNodeDto";
 
 // Add these properties to your TreeNode interface
 export interface TreeNode extends HHThiTruongTreeNodeDto {

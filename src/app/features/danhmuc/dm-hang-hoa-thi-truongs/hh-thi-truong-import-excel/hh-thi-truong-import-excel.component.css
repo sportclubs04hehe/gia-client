@@ -1,0 +1,40 @@
+.import-file-input {
+  position: relative;
+  min-height: 120px;
+}
+
+.import-file-input .form-control {
+  cursor: pointer;
+}
+
+.selected-file {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.file-name {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.step-container {
+  min-height: 300px;
+}
+
+.table-responsive {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.success-container {
+  min-height: 250px;
+}

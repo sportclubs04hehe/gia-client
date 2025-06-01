@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { PagedResult } from '../../models/paged-result';
+import { PagedResult } from '../../models/helpers/paged-result';
 import { FormGroup } from '@angular/forms';
 import { DmNhomHangHoaService } from '../api/dm-nhom-hang-hoa.service';
 import { NhomHangHoaDto } from '../../models/dm_nhomhanghoathitruong/NhomHangHoaDto';

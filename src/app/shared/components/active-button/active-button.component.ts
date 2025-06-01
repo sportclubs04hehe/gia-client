@@ -12,7 +12,8 @@ export class ActiveButtonComponent {
   @Input() isLoading: boolean = false;
   @Input() isSaving: boolean = false;
   @Input() hasSelected: boolean = false;
-  @Input() showRefreshButton: boolean = false; // Thêm input này
+  @Input() showRefreshButton: boolean = false;
+  @Input() showImportButton: boolean = false; 
   
   @Output() buttonClick = new EventEmitter<string>();
 

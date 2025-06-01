@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { NgxSpinnerModule } from 'ngx-spinner';
-import { PagedResult } from '../../../../features/danhmuc/models/paged-result';
+import { PagedResult } from '../../../../features/danhmuc/models/helpers/paged-result';
 import { NodePagination } from '../../../models/node-pagination';
 import { TableColumn } from '../../../models/table-column';
 import { TreeNode } from '../../../models/tree-node';

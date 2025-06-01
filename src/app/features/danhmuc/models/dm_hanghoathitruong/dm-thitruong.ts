@@ -1,4 +1,4 @@
-import { DanhMucBase } from "../dm-base";
+import { DanhMucBase } from "../helpers/dm-base";
 import { DonViTinhSelectDto } from "../dm_donvitinh/don-vi-tinh-select.dto";
 
 export class HangHoa extends DanhMucBase {

@@ -56,7 +56,6 @@ export abstract class TreeCrudComponentBase<T extends ITreeEntity, TNode = T> ex
       },
       error: (error) => {
         console.error('Error loading parent items:', error);
-        this.toastr.error('Could not load data', 'Error');
         this.spinnerService.hideTableSpinner();
       }
     });

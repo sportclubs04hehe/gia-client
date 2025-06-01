@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Ensure this import is present
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
@@ -13,6 +14,7 @@ import { SuaComponent } from './sua/sua.component';
 import { Observable, Subject } from 'rxjs';
 import { TreeCrudComponentBase } from '../../../shared/components/bases/tree-crud-component-base';
 import { TreeSearchService } from '../services/utils/tree-search.service';
+import { HhThiTruongImportExcelComponent } from './hh-thi-truong-import-excel/hh-thi-truong-import-excel.component';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -30,6 +32,7 @@ import { TreeSearchService } from '../services/utils/tree-search.service';
 export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTruongDto, HHThiTruongTreeNodeDto> implements OnInit, OnDestroy {
   private dmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
   private treeSearchService = inject(TreeSearchService);
+  private ngbModalService = inject(NgbModal); // Add this line for NgbModal
   private destroy$ = new Subject<void>();
 
   /* Các biến trạng thái tìm kiếm */
@@ -284,6 +287,9 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
           this.toastr.warning('Vui lòng chọn một mặt hàng để xóa', 'Cảnh báo');
         }
         break;
+      case 'import':
+        this.openImportExcelModal();
+        break;
       case 'refresh':
         this.isSearchActive = false;
         this.currentSearchTerm = '';
@@ -298,12 +304,29 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
           this.treeTableComponent.nodePaginationMap.clear();
           this.treeTableComponent.selectedRowId = '';
         }
-        
+
         this.selectedItem = null;
         this.dmHangHoaThiTruongService.clearParentCategoriesCache();
         this.loadParentItems();
         break;
     }
+  }
+
+  openImportExcelModal(): void {
+    const modalRef = this.ngbModalService.open(HhThiTruongImportExcelComponent, { 
+      size: 'xl',
+      backdrop: 'static'
+    });
+
+    modalRef.result.then((result) => {
+      if (result === true) {
+        // Import thành công, làm mới cache và danh sách
+        this.dmHangHoaThiTruongService.clearParentCategoriesCache();
+        this.loadParentItems();
+      }
+    }, () => {
+      // Dismissed
+    });
   }
 
   /* Xử lý lỗi */

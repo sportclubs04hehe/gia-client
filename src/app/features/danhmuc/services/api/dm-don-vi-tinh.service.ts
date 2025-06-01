@@ -8,10 +8,10 @@ import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select
 import { DonViTinhCreateDto } from '../../models/dm_donvitinh/don-vi-tinh_create.dto';
 import { DonViTinhUpdateDto } from '../../models/dm_donvitinh/don-vi-tinh_update.dto';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
-import { PagedResult } from '../../models/paged-result';
-import { PaginationParams } from '../../models/pagination-params ';
-import { SearchParams } from '../../models/search-params';
+import { PagedResult } from '../../models/helpers/paged-result';
+import { SearchParams } from '../../models/helpers/search-params';
 import { buildHttpParams } from '../../helpers/build-http-params';
+import { PaginationParams } from '../../models/helpers/pagination-params ';
 
 @Injectable({
   providedIn: 'root'

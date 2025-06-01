@@ -1,4 +1,4 @@
-import { DanhMucBase } from '../../models/dm-base';
+import { DanhMucBase } from '../helpers/dm-base';
 import { NhomHangHoaDto } from './NhomHangHoaDto';
 import { HangHoa } from '../dm_hanghoathitruong/dm-thitruong';
 

@@ -2,14 +2,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment.development';
 import { Observable, BehaviorSubject, of, shareReplay, tap, map } from 'rxjs';
-import { PagedResult } from '../../models/paged-result';
+import { PagedResult } from '../../models/helpers/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { buildHttpParams } from '../../helpers/build-http-params';
 import { HHThiTruongTreeNodeDto } from '../../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { CreateHHThiTruongDto, UpdateHHThiTruongDto, CreateManyHHThiTruongDto } from '../../models/dm-hh-thitruong/CreateHHThiTruongDto';
 import { HHThiTruongDto } from '../../models/dm-hh-thitruong/HHThiTruongDto';
-import { PaginationParams } from '../../models/pagination-params ';
 import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
+import { HHThiTruongBatchImportDto } from '../../models/dm-hh-thitruong/HHThiTruongImportDto';
+import { PaginationParams } from '../../models/helpers/pagination-params ';
+import { CodeValidationResult } from '../../models/helpers/CodeValidationResult';
 
 @Injectable({
   providedIn: 'root'
@@ -226,6 +228,40 @@ export class DmHangHoaThiTruongService {
   }
 
   /**
+   * Import mặt hàng thị trường từ Excel
+   * @param importDto Dữ liệu import bao gồm mặt hàng cha và danh sách mặt hàng con
+   * @returns Observable chứa kết quả từ API
+   */
+  importFromExcel(importDto: HHThiTruongBatchImportDto): Observable<ApiResponse<HHThiTruongDto[]>> {
+    // Chuyển đổi từ camelCase sang PascalCase
+    const formattedDto = {
+      MatHangChaId: importDto.matHangChaId,
+      Items: importDto.items.map(item => ({
+        Ma: item.ma,
+        Ten: item.ten,
+        GhiChu: item.ghiChu,
+        LoaiMatHang: item.loaiMatHang,
+        DacTinh: item.dacTinh,
+        NgayHieuLuc: item.ngayHieuLuc,
+        NgayHetHieuLuc: item.ngayHetHieuLuc,
+        DonViTinhTen: item.donViTinhTen
+      }))
+    };
+
+    return this.http.post<ApiResponse<HHThiTruongDto[]>>(
+      `${this.apiUrl}/${this.endpoint}/import-from-excel`,
+      formattedDto
+    ).pipe(
+      // Làm mới cache sau khi import thành công
+      tap(() => {
+        this.refreshCategoriesCache();
+        this.clearParentCategoriesCache();
+        this.clearSearchCache();
+      })
+    );
+  }
+
+  /**
    * Làm mới cache khi cần thiết
    * Được gọi sau các thao tác thêm, sửa, xóa
    */
@@ -370,6 +406,36 @@ export class DmHangHoaThiTruongService {
     return this.http.get<HHThiTruongTreeNodeDto[]>(
       `${this.apiUrl}/${this.endpoint}/full-path/${targetNodeId}`,
       { params }
+    );
+  }
+
+  validateCode(ma: string, parentId?: string, exceptId?: string): Observable<ApiResponse<CodeValidationResult>> {
+    let params = new HttpParams()
+      .set('ma', ma);
+
+    if (parentId) {
+      params = params.set('parentId', parentId);
+    }
+
+    if (exceptId) {
+      params = params.set('exceptId', exceptId);
+    }
+
+    return this.http.get<ApiResponse<CodeValidationResult>>(
+      `${this.apiUrl}/${this.endpoint}/validate-code`,
+      { params }
+    );
+  }
+
+  validateMultipleCodes(codes: string[], parentId?: string): Observable<ApiResponse<CodeValidationResult[]>> {
+    const body = {
+      Codes: codes,
+      ParentId: parentId
+    };
+
+    return this.http.post<ApiResponse<CodeValidationResult[]>>(
+      `${this.apiUrl}/${this.endpoint}/validate-multiple-codes`,
+      body
     );
   }
 }

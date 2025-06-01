@@ -17,6 +17,14 @@
     <i class="fas fa-trash-alt"></i> Xóa
   </button>
   
+  <!-- Thêm nút Import Excel -->
+  <button *ngIf="showImportButton" 
+          type="button" 
+          class="btn btn-success" 
+          (click)="onButtonClick('import')">
+    <i class="fas fa-file-excel"></i> Import Excel
+  </button>
+  
   <!-- Nút làm mới (chỉ hiển thị khi showRefreshButton là true) -->
   <button *ngIf="showRefreshButton" 
           type="button" 

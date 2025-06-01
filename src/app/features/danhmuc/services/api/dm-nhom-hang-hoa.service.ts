@@ -4,7 +4,7 @@ import { Observable, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../../../environments/environment.development';
 import { buildHttpParams } from '../../helpers/build-http-params';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
-import { PagedResult } from '../../models/paged-result';
+import { PagedResult } from '../../models/helpers/paged-result';
 import { CreateNhomHangHoaDto } from '../../models/dm_nhomhanghoathitruong/CreateNhomHangHoaDto';
 import { UpdateNhomHangHoaDto } from '../../models/dm_nhomhanghoathitruong/UpdateNhomHangHoaDto';
 import { NhomHangHoaDetailDto } from '../../models/dm_nhomhanghoathitruong/NhomHangHoaDetailDto';

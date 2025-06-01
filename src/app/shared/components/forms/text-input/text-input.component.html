@@ -48,6 +48,9 @@
     <div *ngIf="controlDir?.control?.errors?.['maxlength']" class="invalid-feedback">
       {{ label }} không được vượt quá {{ controlDir.control?.errors?.['maxlength']?.requiredLength }} ký tự.
     </div>
+    <div *ngIf="controlDir?.control?.errors?.['duplicateCode']" class="invalid-feedback">
+      {{ controlDir!.control?.errors?.['duplicateCode'] || 'Mã đã tồn tại trong cùng nhóm hàng hóa' }}
+    </div>
   </ng-container>
 
   <!-- Thêm phần hiển thị lỗi này vào component -->

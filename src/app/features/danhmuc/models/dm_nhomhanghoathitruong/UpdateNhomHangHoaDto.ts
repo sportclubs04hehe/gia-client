@@ -1,4 +1,4 @@
-import { DanhMucBase } from "../dm-base";
+import { DanhMucBase } from "../helpers/dm-base";
 
 export interface UpdateNhomHangHoaDto extends DanhMucBase {
   maNhom: string;

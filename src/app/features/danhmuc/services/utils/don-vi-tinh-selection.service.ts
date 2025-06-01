@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { DonViTinhSelectDto } from '../../models/dm_donvitinh/don-vi-tinh-select.dto';
-import { PagedResult } from '../../models/paged-result';
+import { PagedResult } from '../../models/helpers/paged-result';
 import { SelectionModalService } from '../../../../shared/components/selection-modal/selection-modal.service';
 import { FormGroup } from '@angular/forms';
 import { DmDonViTinhService } from '../api/dm-don-vi-tinh.service';

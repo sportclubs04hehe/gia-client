@@ -6,9 +6,9 @@ import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-tr
 import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
 import { LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { finalize, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
-import { TreeNode } from '../../models/tree-node';
 import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
+import { TreeNode } from '../../models/helpers/tree-node';
 
 @Component({
   selector: 'app-nhomhh-modal',

@@ -16,7 +16,7 @@ import { ModalNotificationService } from '../../../../shared/components/notifica
 import { FormFooterComponent } from '../../../../shared/components/forms/form-footer/form-footer.component';
 import { CodeInputDirective } from '../../helpers/code-input.directive';
 import { codeValidator } from '../../helpers/code-validator';
-
+import { uniqueHHThiTruongCodeValidator } from '../../helpers/uniqueHHThiTruongCodeValidator';
 @Component({
   selector: 'app-themmoi',
   standalone: true,
@@ -83,13 +83,23 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
   protected buildForm(): void {
     // Tạo giá trị mặc định cho ngày hiệu lực và ngày hết hiệu lực
     const { startDate, endDate } = generateDefaultDateRange();
+    
+    // Tạo validator để kiểm tra mã
+    const codeUniqueValidator = uniqueHHThiTruongCodeValidator(
+      this.hangHoaService,
+      () => this.form?.get('matHangChaId')?.value
+    );
 
     this.form = this.fb.group({
-      ma: ['', [
-        Validators.required, 
-        Validators.maxLength(25), 
-        codeValidator() 
-      ]],
+      ma: ['', {
+        validators: [
+          Validators.required, 
+          Validators.maxLength(25), 
+          codeValidator()
+        ],
+        asyncValidators: [codeUniqueValidator],
+        updateOn: 'blur'
+      }],
       ten: ['', [Validators.required, Validators.maxLength(250)]],
       ghiChu: ['', Validators.maxLength(500)],
       ngayHieuLuc: [startDate, Validators.required],
@@ -104,6 +114,11 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
 
     // Cập nhật trạng thái ban đầu
     this.updateFormFieldsBasedOnType();
+    
+    // Lắng nghe sự thay đổi của trường matHangChaId để cập nhật validator
+    this.form.get('matHangChaId')?.valueChanges.subscribe(() => {
+      this.form.get('ma')?.updateValueAndValidity();
+    });
   }
 
   // Xử lý khi toggle switch "Là hàng hóa / tài sản"
