@@ -1,4 +1,4 @@
-import { LoaiMatHangEnum } from "./HHThiTruongDto";
+import { Loai } from "./HHThiTruongDto";
 
 export interface CreateHHThiTruongDto {
     ma: string;
@@ -6,7 +6,7 @@ export interface CreateHHThiTruongDto {
     ghiChu?: string;
     ngayHieuLuc: string;
     ngayHetHieuLuc: string;
-    loaiMatHang: LoaiMatHangEnum;
+    loaiMatHang: Loai;
     matHangChaId?: string;
     dacTinh?: string;
     donViTinhId?: string;

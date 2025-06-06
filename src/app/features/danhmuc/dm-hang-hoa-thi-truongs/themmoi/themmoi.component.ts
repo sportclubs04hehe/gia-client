@@ -4,7 +4,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-truong.service';
-import { LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
+import { Loai } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { dateRangeValidator, dateStructToString, generateDefaultDateRange } from '../../../../core/formatters/date-range-validator';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
@@ -44,7 +44,7 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
 
   title = 'Thêm mới hàng hóa thị trường';
   submitting = false;
-  loaiMatHangEnum = LoaiMatHangEnum;
+  loai = Loai;
   formModified = false;
   
   // Biến theo dõi trạng thái switch "Là hàng hóa / tài sản"
@@ -104,7 +104,7 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
       ghiChu: ['', Validators.maxLength(500)],
       ngayHieuLuc: [startDate, Validators.required],
       ngayHetHieuLuc: [endDate, Validators.required],
-      loaiMatHang: [LoaiMatHangEnum.Nhom], // Mặc định là nhóm mặt hàng
+      loaiMatHang: [this.loai.Cha], // Mặc định là nhóm mặt hàng
       matHangChaId: [''],
       dacTinh: ['', Validators.maxLength(500)],
       donViTinhId: ['']
@@ -127,7 +127,7 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
     
     // Cập nhật loại mặt hàng trong form
     this.form.patchValue({
-      loaiMatHang: this.isHangHoa ? LoaiMatHangEnum.HangHoa : LoaiMatHangEnum.Nhom
+      loaiMatHang: this.isHangHoa ? this.loai.Con : this.loai.Cha
     });
     
     // Cập nhật validator

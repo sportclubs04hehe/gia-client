@@ -4,7 +4,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Ensure this import is 
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
-import { HHThiTruongDto, LoaiMatHangEnum } from '../models/dm-hh-thitruong/HHThiTruongDto';
+import { HHThiTruongDto, Loai } from '../models/dm-hh-thitruong/HHThiTruongDto';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { TreeTableComponent } from '../../../shared/components/table/tree-table/tree-table.component';
@@ -126,7 +126,7 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
     this.treeSearchService.autoExpandSearchResults<HHThiTruongTreeNodeDto, HHThiTruongDto>(
       nodes,
       this.treeTableComponent,
-      (node) => node.loaiMatHang === LoaiMatHangEnum.Nhom,
+      (node) => node.loaiMatHang === Loai.Cha,
       (node) => node.matHangCon || [],
       (nodes) => this.convertNodeToEntity(nodes)
     );
@@ -176,7 +176,7 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
   }
 
   override hasChildrenForNode(node: HHThiTruongDto | HHThiTruongTreeNodeDto): boolean {
-    return node.loaiMatHang === LoaiMatHangEnum.Nhom;
+    return node.loaiMatHang === Loai.Cha;
   }
 
   override loadChildrenForNode(parentId: string, pageIndex: number, pageSize: number): Observable<any> {
@@ -277,7 +277,7 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
         break;
       case 'delete':
         if (this.selectedItem) {
-          const isItemWithChildren = this.selectedItem.loaiMatHang === LoaiMatHangEnum.Nhom;
+          const isItemWithChildren = this.selectedItem.loaiMatHang === Loai.Cha;
           // Use base class method from CrudComponentBase
           super.openDeleteConfirmationModal(this.selectedItem, {
             isGroup: isItemWithChildren,

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-truong.service';
 import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
-import { LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
+import { Loai } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { finalize, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { TextHighlightPipe } from '../../../../shared/pipes/text-highlight.pipe';
 import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
@@ -93,7 +93,7 @@ export class NhomhhModalComponent implements OnInit {
         next: (results) => {
           // Lọc kết quả chỉ lấy các node là NHÓM
           this.searchResults = results.filter(
-            item => item.loaiMatHang === LoaiMatHangEnum.Nhom
+            item => item.loaiMatHang === Loai.Cha
           );
         },
         error: (error) => {
@@ -115,7 +115,7 @@ export class NhomhhModalComponent implements OnInit {
         next: (data) => {
           // Lọc ra các node gốc (không có cha) và là NHÓM
           const rootItems = data.filter(item => 
-            !item.matHangChaId && item.loaiMatHang === LoaiMatHangEnum.Nhom
+            !item.matHangChaId && item.loaiMatHang === Loai.Cha
           );
           
           // Chuyển đổi thành cây
@@ -163,7 +163,7 @@ export class NhomhhModalComponent implements OnInit {
       if (item.hasChildren) {
         // Tìm các item con trực tiếp
         const childItems = allItems.filter(child => 
-          child.matHangChaId === item.id && child.loaiMatHang === LoaiMatHangEnum.Nhom
+          child.matHangChaId === item.id && child.loaiMatHang === Loai.Cha
         );
         
         if (childItems.length > 0) {

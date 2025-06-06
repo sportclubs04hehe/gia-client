@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import { DmHangHoaThiTruongService } from '../api/dm-hang-hoa-thi-truong.service';
 import { HHThiTruongImportDto, HHThiTruongBatchImportDto } from '../../models/dm-hh-thitruong/HHThiTruongImportDto';
 import { lastValueFrom } from 'rxjs';
-import { LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
+import { Loai } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 
 export interface HHThiTruongExcelImportResult {
@@ -212,7 +212,7 @@ export class HHThiTruongExcelImportService {
     const dto: HHThiTruongImportDto = {
       ma: '',
       ten: '',
-      loaiMatHang: LoaiMatHangEnum.HangHoa, // Mặc định là hàng hóa, không phải nhóm
+      loaiMatHang: Loai.Con, // Mặc định là hàng hóa, không phải nhóm
       ngayHieuLuc: new Date(),
       ngayHetHieuLuc: new Date()
     };

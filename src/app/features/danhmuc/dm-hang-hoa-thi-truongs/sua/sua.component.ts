@@ -4,7 +4,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-truong.service';
-import { HHThiTruongDto, LoaiMatHangEnum } from '../../models/dm-hh-thitruong/HHThiTruongDto';
+import { HHThiTruongDto, Loai } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
@@ -44,7 +44,7 @@ export class SuaComponent extends FormComponentBase implements OnInit {
 
   title = 'Chỉnh sửa hàng hóa thị trường';
   submitting = false;
-  loaiMatHangEnum = LoaiMatHangEnum;
+  loaiMatHangEnum = Loai;
   formModified = false;
   
   // Thông tin mặt hàng đang chỉnh sửa
@@ -73,8 +73,8 @@ export class SuaComponent extends FormComponentBase implements OnInit {
     }
     
     // Xác định loại mặt hàng
-    this.isHangHoa = this.editingItem.loaiMatHang === LoaiMatHangEnum.HangHoa;
-    
+    this.isHangHoa = this.editingItem.loaiMatHang === Loai.Con;
+
     // Khởi tạo form và dữ liệu liên quan
     this.buildForm();
     
@@ -153,7 +153,7 @@ export class SuaComponent extends FormComponentBase implements OnInit {
     
     // Cập nhật loại mặt hàng trong form
     this.form.patchValue({
-      loaiMatHang: this.isHangHoa ? LoaiMatHangEnum.HangHoa : LoaiMatHangEnum.Nhom
+      loaiMatHang: this.isHangHoa ? Loai.Con : Loai.Cha
     });
     
     // Cập nhật validator

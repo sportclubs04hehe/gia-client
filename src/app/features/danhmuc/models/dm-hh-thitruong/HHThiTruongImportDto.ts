@@ -1,10 +1,10 @@
-import { LoaiMatHangEnum } from './HHThiTruongDto';
+import { Loai } from './HHThiTruongDto';
 
 export interface HHThiTruongImportDto {
     ma: string;
     ten: string;
     ghiChu?: string;
-    loaiMatHang: LoaiMatHangEnum;
+    loaiMatHang: Loai;
     dacTinh?: string;
     ngayHieuLuc: Date | string;
     ngayHetHieuLuc: Date | string;

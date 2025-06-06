@@ -6,7 +6,7 @@ export interface HHThiTruongDto extends DanhMucBase {
     ghiChu?: string;
     ngayHieuLuc: string;
     ngayHetHieuLuc: string;
-    loaiMatHang: LoaiMatHangEnum;
+    loaiMatHang: Loai;
     matHangChaId?: string;
     tenMatHangCha?: string;
     dacTinh?: string;
@@ -14,7 +14,7 @@ export interface HHThiTruongDto extends DanhMucBase {
     tenDonViTinh?: string;
 }
 
-export enum LoaiMatHangEnum {
-    Nhom = 0,
-    HangHoa = 1
+export enum Loai {
+    Cha = 0, // Nhom
+    Con = 1 // HangHoa
 }
