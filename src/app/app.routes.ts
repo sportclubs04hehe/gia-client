@@ -15,6 +15,11 @@ export const routes: Routes = [
                     .then(m => m.DmHangHoaThiTruongsComponent)
             },
             {
+                path: 'dm-thuoc-tinh',
+                loadComponent: () => import('./features/danhmuc/dm-thuoc-tinh/dm-thuoc-tinh.component')
+                    .then(m => m.DmThuocTinhComponent)
+            },
+            {
                 path: 'dm-don-vi-tinh',
                 loadComponent: () => import('./features/danhmuc/dm-don-vi-tinh/dm-don-vi-tinh.component')
                     .then(m => m.DmDonViTinhComponent)

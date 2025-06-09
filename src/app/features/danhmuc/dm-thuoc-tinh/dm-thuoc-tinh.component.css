@@ -1,0 +1,25 @@
+/* Table text styling */
+:host ::ng-deep .text-cell {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* Table container */
+:host ::ng-deep .table-container {
+  overflow-x: hidden;
+}
+
+/* Highlight animation for selected row */
+.highlight-animation {
+  animation: highlight-row 2s ease-in-out;
+}
+
+@keyframes highlight-row {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(255, 243, 205, 0.5);
+  }
+}

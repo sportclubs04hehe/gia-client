@@ -1,0 +1,33 @@
+<div class="page-container">
+  <!-- Loading spinner -->
+  <ngx-spinner name="tableSpinner" bdColor="rgba(0, 0, 0, 0.8)" size="default" color="#fff" type="pacman"
+    [fullScreen]="true">
+    <p style="color: white">Đang tải dữ liệu...</p>
+  </ngx-spinner>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
+        <div class="action-wrapper">
+          <app-active-button 
+            [hasSelected]="!!selectedItem"
+            [showRefreshButton]="true"
+            (buttonClick)="onButtonAction($event)">
+          </app-active-button>
+        </div>
+      </div>
+
+      <!-- Tree Table Component -->
+      <app-tree-table
+        [rootData]="parentItems"
+        [columns]="columns"
+        [keyField]="'id'"
+        [hasChildren]="hasChildrenForNode.bind(this)"
+        [loadChildren]="loadChildrenForNode"
+        [defaultPageSize]="100"
+        (rowSelected)="onRowSelected($event)"
+        (nodeToggled)="onNodeToggled($event)">
+      </app-tree-table>
+    </div>
+  </div>
+</div>

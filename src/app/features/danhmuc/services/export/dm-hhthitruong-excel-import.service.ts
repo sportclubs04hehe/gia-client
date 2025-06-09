@@ -3,8 +3,8 @@ import * as XLSX from 'xlsx';
 import { DmHangHoaThiTruongService } from '../api/dm-hang-hoa-thi-truong.service';
 import { HHThiTruongImportDto, HHThiTruongBatchImportDto } from '../../models/dm-hh-thitruong/HHThiTruongImportDto';
 import { lastValueFrom } from 'rxjs';
-import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { Loai } from '../../models/enum/loai';
+import { MultipleCodeValidationRequestDto } from '../../models/helpers/MultipleCodeValidationRequestDto';
 
 export interface HHThiTruongExcelImportResult {
   items: HHThiTruongImportDto[];
@@ -69,36 +69,41 @@ export class HHThiTruongExcelImportService {
     return lastValueFrom(this.hhThiTruongService.importFromExcel(importDto));
   }
 
-  /**
-   * Kiểm tra mã đã tồn tại
-   */
-  async checkExistingCodes(matHangChaId: string, items: HHThiTruongImportDto[]): Promise<Set<string>> {
-    try {
-      const codes = items
-        .map(item => item.ma)
-        .filter(code => code && code.trim().length > 0);
-        
-      if (codes.length === 0) {
-        return new Set<string>();
-      }
+/**
+ * Kiểm tra mã đã tồn tại
+ */
+async checkExistingCodes(matHangChaId: string, items: HHThiTruongImportDto[]): Promise<Set<string>> {
+  try {
+    const codes = items
+      .map(item => item.ma)
+      .filter(code => code && code.trim().length > 0);
       
-      const existingCodesResponse = await lastValueFrom(
-        this.hhThiTruongService.validateMultipleCodes(codes, matHangChaId)
-      );
-      
-      const existingCodes = new Set<string>();
-      
-      if (existingCodesResponse?.data) {
-        const invalidCodes = existingCodesResponse.data.filter(result => !result.isValid);
-        invalidCodes.forEach(result => existingCodes.add(result.code));
-      }
-      
-      return existingCodes;
-    } catch (error) {
-      console.error('Error checking existing codes:', error);
+    if (codes.length === 0) {
       return new Set<string>();
     }
+    
+    const request: MultipleCodeValidationRequestDto = {
+      codes: codes,
+      parentId: matHangChaId
+    };
+    
+    const existingCodesResponse = await lastValueFrom(
+      this.hhThiTruongService.validateMultipleCodes(request)
+    );
+    
+    const existingCodes = new Set<string>();
+    
+    if (existingCodesResponse?.data) {
+      const invalidCodes = existingCodesResponse.data.filter(result => !result.isValid);
+      invalidCodes.forEach(result => existingCodes.add(result.code));
+    }
+    
+    return existingCodes;
+  } catch (error) {
+    console.error('Error checking existing codes:', error);
+    return new Set<string>();
   }
+}
 
   generateTemplate(): void {
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([

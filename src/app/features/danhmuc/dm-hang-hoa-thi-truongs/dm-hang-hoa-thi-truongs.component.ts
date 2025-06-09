@@ -33,17 +33,14 @@ import { Loai } from '../models/enum/loai';
 export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTruongDto, HHThiTruongTreeNodeDto> implements OnInit, OnDestroy {
   private dmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
   private treeSearchService = inject(TreeSearchService);
-  private ngbModalService = inject(NgbModal); // Add this line for NgbModal
+  private ngbModalService = inject(NgbModal); 
   private destroy$ = new Subject<void>();
 
-  /* Các biến trạng thái tìm kiếm */
   isSearchActive = false;
   currentSearchTerm = '';
   searchResults: HHThiTruongDto[] = [];
 
-  // ViewChild để truy cập vào TreeTableComponent
   @ViewChild(TreeTableComponent) override treeTableComponent!: TreeTableComponent<HHThiTruongDto>;
-  // Thêm ViewChild để truy cập vào SearchBarComponent
   @ViewChild(SearchBarComponent) searchBarComponent?: SearchBarComponent;
 
   /* Cấu hình bảng hiển thị */

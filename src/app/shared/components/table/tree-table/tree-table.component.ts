@@ -211,10 +211,10 @@ export class TreeTableComponent<T extends TreeNode> {
     // Kiểm tra từng node mở rộng với phân trang để xem có cần tải thêm con không
     this.expandedRows.forEach((expanded, nodeId) => {
       if (!expanded) return;
-      
+
       const pagination = this.nodePaginationMap.get(nodeId);
       if (!pagination || !pagination.hasNextPage || pagination.isLoadingMore) return;
-      
+
       this.loadMoreChildren(nodeId);
     });
   }
@@ -239,12 +239,12 @@ export class TreeTableComponent<T extends TreeNode> {
   isRowSelected(itemId: string): boolean {
     return this.selectedRowId === itemId;
   }
-  
+
   // Kiểm tra thuộc tính tồn tại trong node
   hasProperty(node: any, prop: string): boolean {
     return node && Object.prototype.hasOwnProperty.call(node, prop);
   }
-  
+
   // Tính toán độ thụt lề
   calculateIndent(level: number): string {
     return `${level * 20}px`;
@@ -267,10 +267,13 @@ export class TreeTableComponent<T extends TreeNode> {
     this.cdr.detectChanges();
   }
 
-  // Kiểm tra là nhóm item
+  // Kiểm tra là nhóm item dựa trên loaiMatHang hoặc loai
   isGroupItem(item: T): boolean {
-    return 'loaiMatHang' in item && item['loaiMatHang'] === 0;
+    const isGroupByLoaiMatHang = 'loaiMatHang' in item && item['loaiMatHang'] === 0;
+    const isGroupByLoai = 'loai' in item && item['loai'] === 0;
+    return isGroupByLoaiMatHang || isGroupByLoai;
   }
+
 
   // Kiểm tra đang tải lần đầu
   isInitialLoading(nodeId: string): boolean {
@@ -284,7 +287,7 @@ export class TreeTableComponent<T extends TreeNode> {
     if (existingChildren.length === 0) {
       this.loadChildrenForNode(nodeId);
     }
-    
+
     const node = this.findNodeById(nodeId);
     if (node) {
       this.nodeToggled.emit({ node, expanded: true });
@@ -294,7 +297,7 @@ export class TreeTableComponent<T extends TreeNode> {
   // Thu gọn một node
   collapseNode(nodeId: string): void {
     this.expandedRows.set(nodeId, false);
-    
+
     const node = this.findNodeById(nodeId);
     if (node) {
       this.nodeToggled.emit({ node, expanded: false });
@@ -308,7 +311,7 @@ export class TreeTableComponent<T extends TreeNode> {
         return node;
       }
     }
-    
+
     for (const [, children] of this.nodeChildrenMap.entries()) {
       for (const child of children) {
         if (String(child[this.keyField as keyof T]) === nodeId) {
@@ -316,7 +319,7 @@ export class TreeTableComponent<T extends TreeNode> {
         }
       }
     }
-    
+
     return null;
   }
 }

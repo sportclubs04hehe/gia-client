@@ -76,41 +76,43 @@ export abstract class TreeCrudComponentBase<T extends ITreeEntity, TNode = T> ex
   /**
    * Node toggle handler (expand/collapse)
    */
-  onNodeToggled(event: { node: T, expanded: boolean }): void {
-    if (!event.expanded) return;
+ onNodeToggled(event: { node: T, expanded: boolean }): void {
+  if (!event.expanded) return;
 
-    const treeTable = this.treeTableComponent;
-    if (!treeTable) return;
+  const treeTable = this.treeTableComponent;
+  if (!treeTable) return;
 
-    const nodeId = event.node.id;
-    if (treeTable.nodeChildrenMap.has(nodeId)) return;
+  const nodeId = event.node.id;
+  
+  // Kiểm tra xem đã có dữ liệu trong cache hoặc đang tải không
+  if (treeTable.nodeChildrenMap.has(nodeId) || treeTable.nodeLoadingMap.get(nodeId)) return;
 
-    this.loadChildrenForNode(nodeId, 1, treeTable.defaultPageSize).subscribe({
-      next: (result) => {
-        const data = Array.isArray(result) ? result : result.data;
-        const pagination = !Array.isArray(result) ? result.pagination : null;
-        
-        treeTable.nodeChildrenMap.set(nodeId, this.convertNodeToEntity(data));
-        treeTable.nodeLoadingMap.set(nodeId, false);
-        
-        if (pagination) {
-          treeTable.nodePaginationMap.set(nodeId, {
-            currentPage: 1,
-            totalPages: Math.ceil(pagination.totalItems / treeTable.defaultPageSize),
-            hasNextPage: pagination.hasNextPage,
-            isLoadingMore: false
-          });
-        } else {
-          treeTable.nodePaginationMap.set(nodeId, {
-            currentPage: 1,
-            totalPages: 1,
-            hasNextPage: false,
-            isLoadingMore: false
-          });
-        }
+  this.loadChildrenForNode(nodeId, 1, treeTable.defaultPageSize).subscribe({
+    next: (result) => {
+      const data = Array.isArray(result) ? result : result.data;
+      const pagination = !Array.isArray(result) ? result.pagination : null;
+      
+      treeTable.nodeChildrenMap.set(nodeId, this.convertNodeToEntity(data));
+      treeTable.nodeLoadingMap.set(nodeId, false);
+      
+      if (pagination) {
+        treeTable.nodePaginationMap.set(nodeId, {
+          currentPage: 1,
+          totalPages: Math.ceil(pagination.totalItems / treeTable.defaultPageSize),
+          hasNextPage: pagination.hasNextPage,
+          isLoadingMore: false
+        });
+      } else {
+        treeTable.nodePaginationMap.set(nodeId, {
+          currentPage: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          isLoadingMore: false
+        });
       }
-    });
-  }
+    }
+  });
+}
   
   /**
    * Navigate to an item in the tree and show it

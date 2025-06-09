@@ -4,14 +4,13 @@ import { environment } from '../../../../../environments/environment.development
 import { Observable, BehaviorSubject, of, shareReplay, tap, map } from 'rxjs';
 import { PagedResult } from '../../models/helpers/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
-import { buildHttpParams } from '../../helpers/build-http-params';
 import { HHThiTruongTreeNodeDto } from '../../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { CreateHHThiTruongDto, UpdateHHThiTruongDto, CreateManyHHThiTruongDto } from '../../models/dm-hh-thitruong/CreateHHThiTruongDto';
 import { HHThiTruongDto } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
 import { HHThiTruongBatchImportDto } from '../../models/dm-hh-thitruong/HHThiTruongImportDto';
-import { PaginationParams } from '../../models/helpers/pagination-params ';
 import { CodeValidationResult } from '../../models/helpers/CodeValidationResult';
+import { MultipleCodeValidationRequestDto } from '../../models/helpers/MultipleCodeValidationRequestDto';
 
 @Injectable({
   providedIn: 'root'
@@ -419,15 +418,10 @@ export class DmHangHoaThiTruongService {
     );
   }
 
-  validateMultipleCodes(codes: string[], parentId?: string): Observable<ApiResponse<CodeValidationResult[]>> {
-    const body = {
-      Codes: codes,
-      ParentId: parentId
-    };
-
+  validateMultipleCodes(request: MultipleCodeValidationRequestDto): Observable<ApiResponse<CodeValidationResult[]>> {
     return this.http.post<ApiResponse<CodeValidationResult[]>>(
       `${this.apiUrl}/${this.endpoint}/validate-multiple-codes`,
-      body
+      request
     );
   }
 }
