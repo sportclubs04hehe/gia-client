@@ -3,8 +3,8 @@ import * as XLSX from 'xlsx';
 import { DmHangHoaThiTruongService } from '../api/dm-hang-hoa-thi-truong.service';
 import { HHThiTruongImportDto, HHThiTruongBatchImportDto } from '../../models/dm-hh-thitruong/HHThiTruongImportDto';
 import { lastValueFrom } from 'rxjs';
-import { Loai } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
+import { Loai } from '../../models/enum/loai';
 
 export interface HHThiTruongExcelImportResult {
   items: HHThiTruongImportDto[];

@@ -4,7 +4,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Ensure this import is 
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
 import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
-import { HHThiTruongDto, Loai } from '../models/dm-hh-thitruong/HHThiTruongDto';
+import { HHThiTruongDto } from '../models/dm-hh-thitruong/HHThiTruongDto';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { TreeTableComponent } from '../../../shared/components/table/tree-table/tree-table.component';
@@ -15,6 +15,7 @@ import { Observable, Subject } from 'rxjs';
 import { TreeCrudComponentBase } from '../../../shared/components/bases/tree-crud-component-base';
 import { TreeSearchService } from '../services/utils/tree-search.service';
 import { HhThiTruongImportExcelComponent } from './hh-thi-truong-import-excel/hh-thi-truong-import-excel.component';
+import { Loai } from '../models/enum/loai';
 
 @Component({
   selector: 'app-dm-hang-hoa-thi-truongs',
@@ -143,7 +144,6 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
   }
 
   /* Implement abstract methods từ lớp cơ sở */
-  // From CrudComponentBase
   override getItemById(id: string): Observable<HHThiTruongDto> {
     return this.dmHangHoaThiTruongService.getById(id);
   }

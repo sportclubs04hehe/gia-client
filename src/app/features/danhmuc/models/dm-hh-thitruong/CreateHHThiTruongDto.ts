@@ -1,4 +1,4 @@
-import { Loai } from "./HHThiTruongDto";
+import { Loai } from "../enum/loai";
 
 export interface CreateHHThiTruongDto {
     ma: string;

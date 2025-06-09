@@ -1,3 +1,4 @@
+import { Loai } from "../enum/loai";
 import { DanhMucBase } from "../helpers/dm-base";
 
 export interface HHThiTruongDto extends DanhMucBase {
@@ -14,7 +15,3 @@ export interface HHThiTruongDto extends DanhMucBase {
     tenDonViTinh?: string;
 }
 
-export enum Loai {
-    Cha = 0, // Nhom
-    Con = 1 // HangHoa
-}

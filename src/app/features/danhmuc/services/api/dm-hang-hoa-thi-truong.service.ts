@@ -43,15 +43,7 @@ export class DmHangHoaThiTruongService {
   getById(id: string): Observable<HHThiTruongDto> {
     return this.http.get<HHThiTruongDto>(`${this.apiUrl}/${this.endpoint}/${id}`);
   }
-
-  /**
-   * Lấy danh sách tất cả mặt hàng thị trường có phân trang
-   */
-  getAll(params: PaginationParams): Observable<PagedResult<HHThiTruongDto>> {
-    const httpParams = buildHttpParams(params);
-    return this.http.get<PagedResult<HHThiTruongDto>>(`${this.apiUrl}/${this.endpoint}`, { params: httpParams });
-  }
-
+  
   /**
    * Lấy danh sách các nhóm hàng hóa cha (không có mặt hàng cha)
    */

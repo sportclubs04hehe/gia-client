@@ -4,7 +4,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TextInputComponent } from '../../../../shared/components/forms/text-input/text-input.component';
 import { DateInputComponent } from '../../../../shared/components/forms/date-input/date-input.component';
 import { DmHangHoaThiTruongService } from '../../services/api/dm-hang-hoa-thi-truong.service';
-import { HHThiTruongDto, Loai } from '../../models/dm-hh-thitruong/HHThiTruongDto';
+import { HHThiTruongDto } from '../../models/dm-hh-thitruong/HHThiTruongDto';
 import { dateRangeValidator, stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
@@ -17,6 +17,7 @@ import { FormFooterComponent } from '../../../../shared/components/forms/form-fo
 import { CodeInputDirective } from '../../helpers/code-input.directive';
 import { codeValidator } from '../../helpers/code-validator';
 import { uniqueHHThiTruongCodeValidator } from '../../helpers/uniqueHHThiTruongCodeValidator';
+import { Loai } from '../../models/enum/loai';
 
 @Component({
   selector: 'app-sua',
