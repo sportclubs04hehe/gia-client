@@ -6,6 +6,7 @@
   overflow-x: auto;
   border-radius: 0.5rem;
   position: relative; /* Important for proper scrolling */
+  -webkit-overflow-scrolling: touch; /* Cải thiện cuộn trên iOS */
 }
 
 .custom-table {

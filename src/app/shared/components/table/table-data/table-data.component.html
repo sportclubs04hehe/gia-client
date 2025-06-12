@@ -1,4 +1,11 @@
-<div #tableContainer class="table-container" style="flex: 1;">
+<div #tableContainer class="table-container" 
+     style="flex: 1;"
+     infiniteScroll
+     [infiniteScrollDistance]="1"
+     [infiniteScrollThrottle]="150"
+     [infiniteScrollDisabled]="isLoading || !hasNextPage"
+     [scrollWindow]="false"
+     (scrolled)="onScrollDown()">
     <table class="table custom-table">
       <thead class="table-header">
         <tr>
