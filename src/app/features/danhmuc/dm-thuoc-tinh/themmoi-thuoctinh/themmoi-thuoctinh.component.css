@@ -1,0 +1,41 @@
+.form-control.ng-invalid.ng-touched {
+  border-color: #dc3545;
+}
+
+.form-select.ng-invalid.ng-touched {
+  border-color: #dc3545;
+}
+
+.table td {
+  padding: 0.5rem;
+}
+
+.form-control-sm, .form-select-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Ghi đè style cho DateInputComponent */
+:host ::ng-deep app-date-input .form-group {
+  margin-bottom: 0;
+}
+
+:host ::ng-deep app-date-input .form-label {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+
+:host ::ng-deep app-date-input .datepicker-container {
+  width: 100%;
+}
+
+:host ::ng-deep app-date-input .datepicker-container input {
+  font-size: 0.875rem;
+  height: calc(1.5em + 0.5rem + 2px);
+  padding: 0.25rem 0.5rem;
+}
+
+:host ::ng-deep app-date-input .calendar-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}

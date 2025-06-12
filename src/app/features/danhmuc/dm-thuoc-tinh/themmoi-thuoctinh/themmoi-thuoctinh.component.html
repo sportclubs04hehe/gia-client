@@ -1,0 +1,53 @@
+<div class="modal-header">
+  <h4 class="modal-title">Cấu hình thêm mới thuộc tính</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+<table class="table table-bordered text-center align-middle">
+  <thead>
+    <!-- Hàng tiêu đề cha -->
+    <tr>
+      <th colspan="4" class="bg-light">Mặt hàng</th>
+      <th rowspan="2" class="bg-light">Ghi chú</th>
+    </tr>
+
+    <!-- Hàng tiêu đề con -->
+    <tr>
+      <th>Mã</th>
+      <th>Tên</th>
+      <th>Giá</th>
+      <th>Tên</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>Tên</td>
+      <td>Lương thực</td>
+      <td>22,000</td>
+      <td>10</td>
+      <td>Tên</td>
+    </tr>
+    <tr>
+      <td>Đặc tính</td>
+      <td>Đồ uống</td>
+      <td>5,000</td>
+      <td>50</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Đơn vị tính</td>
+      <td>Đồ uống</td>
+      <td>5,000</td>
+      <td>50</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="activeModal.close()">Đóng</button>
+</div>

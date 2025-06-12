@@ -10,6 +10,7 @@ import { DmThuocTinhDto } from '../models/dm_thuoctinh/DmThuocTinhDto';
 import { DmThuocTinhTreeNodeDto } from '../models/dm_thuoctinh/DmThuocTinhTreeNodeDto';
 import { DmThuocTinhService } from '../services/api/dm-thuoc-tinh.service';
 import { Loai } from '../models/enum/loai';
+import { ThemmoiThuoctinhComponent } from './themmoi-thuoctinh/themmoi-thuoctinh.component';
 
 @Component({
   selector: 'app-dm-thuoc-tinh',
@@ -25,15 +26,14 @@ import { Loai } from '../models/enum/loai';
 })
 export class DmThuocTinhComponent extends TreeCrudComponentBase<DmThuocTinhDto, DmThuocTinhTreeNodeDto> implements OnInit {
   private dmThuocTinhService = inject(DmThuocTinhService);
-  
+
   @ViewChild(TreeTableComponent) override treeTableComponent!: TreeTableComponent<DmThuocTinhDto>;
 
   columns: TableColumn<DmThuocTinhDto>[] = [
-    { field: 'ma', header: 'Mã', width: '15%' },
+    { field: 'ma', header: 'Mã', width: '20%' },
     { field: 'ten', header: 'Tên', width: '40%' },
-    { field: 'loai', header: 'Loại', width: '15%' },
-    { field: 'ngayHieuLuc', header: 'Ngày hiệu lực', width: '15%' },
-    { field: 'ngayHetHieuLuc', header: 'Ngày hết hiệu lực', width: '15%' }
+    { field: 'congThuc', header: 'Công thức', width: '25%' },
+    { field: 'ghiChu', header: 'Ghi chú', width: '25%' }
   ];
 
   constructor() {
@@ -47,16 +47,29 @@ export class DmThuocTinhComponent extends TreeCrudComponentBase<DmThuocTinhDto, 
 
   // Action button handler for refresh
   onButtonAction(action: string): void {
-    if (action === 'refresh') {
-      if (this.treeTableComponent) {
-        this.treeTableComponent.expandedRows.clear();
-        this.treeTableComponent.nodeChildrenMap.clear();
-        this.treeTableComponent.nodeLoadingMap.clear();
-        this.treeTableComponent.nodePaginationMap.clear();
-        this.treeTableComponent.selectedRowId = '';
-      }
-      this.selectedItem = null;
-      this.loadParentItems();
+    switch (action) {
+      case 'add':
+        this.openAddModal(ThemmoiThuoctinhComponent, {
+          size: 'fullscreen',
+        });
+        break;
+      case 'edit':
+        // this.openEditModal();
+        break;
+      case 'delete':
+        // this.openDeleteModal();
+        break;
+      case 'refresh':
+        if (this.treeTableComponent) {
+          this.treeTableComponent.expandedRows.clear();
+          this.treeTableComponent.nodeChildrenMap.clear();
+          this.treeTableComponent.nodeLoadingMap.clear();
+          this.treeTableComponent.nodePaginationMap.clear();
+          this.treeTableComponent.selectedRowId = '';
+        }
+        this.selectedItem = null;
+        this.loadParentItems();
+        break;
     }
   }
 
@@ -66,7 +79,7 @@ export class DmThuocTinhComponent extends TreeCrudComponentBase<DmThuocTinhDto, 
   }
 
   override hasChildrenForNode(node: DmThuocTinhDto | DmThuocTinhTreeNodeDto): boolean {
-   return node.loai === Loai.Cha;
+    return node.loai === Loai.Cha;
   }
 
   override loadChildrenForNode(parentId: string, pageIndex: number, pageSize: number): Observable<any> {
@@ -116,7 +129,7 @@ export class DmThuocTinhComponent extends TreeCrudComponentBase<DmThuocTinhDto, 
     return 'thuộc tính';
   }
 
-  override handleItemCreated(result: any): void {}
-  override handleItemUpdated(item: DmThuocTinhDto, originalData?: any): void {}
-  override handleItemDeleted(item: DmThuocTinhDto, additionalInfo?: any): void {}
+  override handleItemCreated(result: any): void { }
+  override handleItemUpdated(item: DmThuocTinhDto, originalData?: any): void { }
+  override handleItemDeleted(item: DmThuocTinhDto, additionalInfo?: any): void { }
 }
