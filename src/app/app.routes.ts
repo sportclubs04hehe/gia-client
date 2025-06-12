@@ -26,4 +26,14 @@ export const routes: Routes = [
             },
         ]
     },
+    {
+        path: 'nghiep-vu',
+        children: [
+            {
+                path: 'thu-thap-gia-thi-truong',
+                loadComponent: () => import('./features/nghiep-vu/thu-thap-gia-thi-truong/main-ttgtt/main-ttgtt.component')
+                    .then(m => m.MainTtgttComponent)
+            }
+        ]
+    }
 ];
