@@ -2,22 +2,37 @@
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
-        <div class="search-container flex-grow-1 me-3">
-          <app-search-bar
-            [isLoading]="isLoading()"
-            [searchTerm]="searchTerm()"
-            [placeholder]="'Tìm kiếm giá thị trường...'"
-            (searchEvent)="onSearchChange($event)"
-            (clearEvent)="clearSearch()">
-          </app-search-bar>  
-        </div>
-        
         <div class="action-wrapper">
           <app-active-button
             [isLoading]="isLoading()"
             [hasSelected]="!!selectedItem()"
             (buttonClick)="editItem(selectedItem()!)">
           </app-active-button>
+        </div>
+
+        <!-- Search input with inside clear button -->
+        <div class="search-wrapper">
+          <div class="position-relative w-100">
+            <!-- Search icon -->
+            <i class="bi bi-search text-muted position-absolute top-50 start-0 translate-middle-y ps-3"></i>
+            
+            <input 
+              type="text" 
+              class="form-control ps-5 pe-5" 
+              placeholder="Tìm kiếm..." 
+              [ngModel]="searchTerm()" 
+              #searchInput
+              (input)="onSearchInputChange(searchInput.value)">
+            
+            <!-- Clear button inside input -->
+            <button 
+              *ngIf="searchTerm()" 
+              type="button" 
+              class="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent text-muted"
+              (click)="clearSearch()">
+              <i class="bi bi-x-circle-fill fs-5"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -28,7 +43,7 @@
         [isLoading]="isLoading()"
         [hasNextPage]="hasNextPage()" 
         [idField]="'id'" 
-        [searchTerm]="searchTerm()" 
+        [searchTerm]="searchTerm()"
         (selectItem)="onSelectItem($event)"
         (loadMore)="onLoadMore()">
       </app-table-data>
