@@ -1,1 +1,37 @@
-<p>màn thu thập giá</p>
+<div class="page-container">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex flex-row align-items-center justify-content-between mb-4 action-row">
+        <div class="search-container flex-grow-1 me-3">
+          <app-search-bar
+            [isLoading]="isLoading()"
+            [searchTerm]="searchTerm()"
+            [placeholder]="'Tìm kiếm giá thị trường...'"
+            (searchEvent)="onSearchChange($event)"
+            (clearEvent)="clearSearch()">
+          </app-search-bar>  
+        </div>
+        
+        <div class="action-wrapper">
+          <app-active-button
+            [isLoading]="isLoading()"
+            [hasSelected]="!!selectedItem()"
+            (buttonClick)="editItem(selectedItem()!)">
+          </app-active-button>
+        </div>
+      </div>
+
+      <app-table-data 
+        [items]="items()" 
+        [columns]="columns" 
+        [selectedItem]="selectedItem()" 
+        [isLoading]="isLoading()"
+        [hasNextPage]="hasNextPage()" 
+        [idField]="'id'" 
+        [searchTerm]="searchTerm()" 
+        (selectItem)="onSelectItem($event)"
+        (loadMore)="onLoadMore()">
+      </app-table-data>
+    </div>
+  </div>
+</div>

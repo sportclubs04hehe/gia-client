@@ -2,7 +2,7 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
 import { SharedModule } from '../../../shared.module';
 import { TextHighlightPipe } from '../../../pipes/text-highlight.pipe';
 import { TableColumn } from '../../../models/table-column';
-import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 
 @Component({
   selector: 'app-table-data',
@@ -10,7 +10,7 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
   imports: [
     SharedModule,
     TextHighlightPipe,
-    InfiniteScrollModule
+    InfiniteScrollDirective
   ],
   templateUrl: './table-data.component.html',
   styleUrl: './table-data.component.css'
