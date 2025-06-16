@@ -7,7 +7,7 @@ import { NhomHangHoaTreeComponent } from '../nhom-hang-hoa-tree/nhom-hang-hoa-tr
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subject, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
-import { SearchBarComponent } from '../../../../../shared/components/search-bar/search-bar.component';
+import { SearchBarComponent } from '../../../../../shared/components/search/search-bar/search-bar.component';
 import { TextHighlightPipe } from '../../../../../shared/pipes/text-highlight.pipe';
 
 @Component({

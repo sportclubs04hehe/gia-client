@@ -33,6 +33,11 @@ export const routes: Routes = [
                 path: 'thu-thap-gia-thi-truong',
                 loadComponent: () => import('./features/nghiep-vu/thu-thap-gia-thi-truong/main-ttgtt/main-ttgtt.component')
                     .then(m => m.MainTtgttComponent)
+            },
+            {
+                path: 'test',
+                loadComponent: () => import('./features/nghiep-vu/thu-thap-gia-thi-truong/test/test.component')
+                    .then(m => m.TestComponent)
             }
         ]
     }

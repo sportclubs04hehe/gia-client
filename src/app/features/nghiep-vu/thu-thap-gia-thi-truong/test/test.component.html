@@ -1,0 +1,21 @@
+<!-- <div class="container">
+  <button (click)="toggleCard()" class="btn btn-primary">
+    {{ isExpanded ? 'Thu gọn' : 'Mở rộng' }}
+  </button>
+
+  <div
+    [@cardExpandCollapse]="isExpanded ? 'expanded' : 'collapsed'"
+    class="animated-card"
+  >
+    <h3>Thông tin chi tiết</h3>
+    <p>Đây là phần nội dung mở rộng. Bạn có thể hiển thị nhiều thông tin ở đây.</p>
+  </div>
+</div> -->
+
+
+<nav>
+  <button type="button" (click)="toggle()">Toggle Open/Close</button>
+</nav>
+<div [@openClose]="isOpen ? 'open' : 'closed'" class="open-close-container">
+  <p>The box is now {{ isOpen ? 'Open' : 'Closed' }}!</p>
+</div>

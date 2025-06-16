@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TextHighlightPipe } from '../../pipes/text-highlight.pipe';
 import { TruncatePipe } from '../../pipes/truncate.pipe';
-import { SearchBarComponent } from '../search-bar/search-bar.component';
+import { SearchBarComponent } from '../search/search-bar/search-bar.component';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableColumn } from '../../models/table-column';

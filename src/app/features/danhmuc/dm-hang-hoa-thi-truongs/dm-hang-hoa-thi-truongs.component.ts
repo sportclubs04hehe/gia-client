@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Ensure this import is present
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
-import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
+import { SearchBarComponent } from '../../../shared/components/search/search-bar/search-bar.component';
 import { DmHangHoaThiTruongService } from '../services/api/dm-hang-hoa-thi-truong.service';
 import { HHThiTruongDto } from '../models/dm-hh-thitruong/HHThiTruongDto';
 import { HHThiTruongTreeNodeDto } from '../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';

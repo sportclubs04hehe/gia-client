@@ -10,30 +10,13 @@
           </app-active-button>
         </div>
 
-        <!-- Search input with inside clear button -->
-        <div class="search-wrapper">
-          <div class="position-relative w-100">
-            <!-- Search icon -->
-            <i class="bi bi-search text-muted position-absolute top-50 start-0 translate-middle-y ps-3"></i>
-            
-            <input 
-              type="text" 
-              class="form-control ps-5 pe-5" 
-              placeholder="Tìm kiếm..." 
-              [ngModel]="searchTerm()" 
-              #searchInput
-              (input)="onSearchInputChange(searchInput.value)">
-            
-            <!-- Clear button inside input -->
-            <button 
-              *ngIf="searchTerm()" 
-              type="button" 
-              class="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent text-muted"
-              (click)="clearSearch()">
-              <i class="bi bi-x-circle-fill fs-5"></i>
-            </button>
-          </div>
-        </div>
+        <!-- Thay thế phần search input cũ bằng SearchInputComponent -->
+        <app-search-input
+          [searchTerm]="searchTerm()"
+          [placeholder]="'Tìm kiếm hàng hóa...'"
+          (search)="onSearchInputChange($event)"
+          (clear)="clearSearch()">
+        </app-search-input>
       </div>
 
       <app-table-data 

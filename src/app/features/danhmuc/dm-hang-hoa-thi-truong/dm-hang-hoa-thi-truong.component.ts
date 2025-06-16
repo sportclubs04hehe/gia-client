@@ -6,7 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import { SharedModule } from '../../../shared/shared.module';
 import { debounceTime, distinctUntilChanged, map, of, Subject, switchMap, tap, Observable, forkJoin, catchError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { SearchBarComponent } from '../../../shared/components/search-bar/search-bar.component';
+import { SearchBarComponent } from '../../../shared/components/search/search-bar/search-bar.component';
 import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
 import { ActiveButtonComponent } from '../../../shared/components/active-button/active-button.component';
 import { TableColumn } from '../../../shared/models/table-column';
