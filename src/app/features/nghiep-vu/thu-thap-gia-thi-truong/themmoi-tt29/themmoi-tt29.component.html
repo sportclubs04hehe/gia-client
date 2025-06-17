@@ -64,18 +64,14 @@
 
 <!-- Cấu trúc tối ưu cho bảng có thanh cuộn -->
 <div class="table-container" [ngClass]="{'expanded-table': isFormCollapsed}">
-  <!-- Tiêu đề bảng -->
-  <div class="table-title">
-    <h6 class="m-0 p-2 text-white text-center">Mặt hàng</h6>
-  </div>
 
   <div class="single-table-wrapper">
     <!-- Nội dung bảng giữ nguyên -->
-    <table class="table table-sm table-bordered table-hover mb-0">
+    <table class="table table-sm table-hover mb-0">
       <thead class="sticky-header">
         <tr>
-          <th scope="col" style="width: 10%;">Mã</th>
-          <th scope="col" style="width: 50%;">Tên</th>
+          <th scope="col" style="width: 15%;">Mã</th>
+          <th scope="col" style="width: 45%;">Tên</th>
           <th scope="col" style="width: 20%;">Đặc tính</th>
           <th scope="col" style="width: 20%;">Đơn vị tính</th>
         </tr>
@@ -85,9 +81,18 @@
           <tr *ngFor="let hh of descendants" 
               [ngClass]="{'tree-parent': hh.loaiMatHang === 0, 'tree-child': hh.loaiMatHang === 1}"
               class="tree-item">
-            <td class="text-center" style="width: 10%;">{{ hh.ma }}</td>
+            <td class="text-center code-cell" style="width: 10%;">
+              <div class="tree-item-code" [ngStyle]="getIndentStyle(hh.level)">
+                <ng-container *ngIf="hh.loaiMatHang === 0">
+                  <strong>{{ hh.ma }}</strong>
+                </ng-container>
+                <ng-container *ngIf="hh.loaiMatHang === 1">
+                  <span>{{ hh.ma }}</span>
+                </ng-container>
+              </div>
+            </td>
             <td style="width: 50%;" class="item-name-cell">
-              <div class="tree-item-name" [ngClass]="'tree-level-' + hh.level">
+              <div class="tree-item-name" [ngStyle]="getIndentStyle(hh.level)">
                 <ng-container *ngIf="hh.loaiMatHang === 0">
                   <strong>{{ hh.ten }}</strong>
                 </ng-container>

@@ -19,15 +19,37 @@
 button {
   padding: 10px 20px;
 } */
-:host {
-  display: block;
-  margin-top: 1rem;
-}
-.open-close-container {
-  border: 1px solid #dddddd;
-  margin-top: 1em;
-  padding: 20px 20px 0px 20px;
-  color: #000000;
-  font-weight: bold;
-  font-size: 20px;
-}
+  .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+  }
+
+  .custom-table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: left;
+  }
+
+  .custom-table th,
+  .custom-table td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background-color: #e3f2fd;
+    z-index: 1;
+  }
+
+  .header-main {
+    background-color: #90caf9 !important;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  thead tr:nth-child(2) th {
+    background-color: #bbdefb;
+  }

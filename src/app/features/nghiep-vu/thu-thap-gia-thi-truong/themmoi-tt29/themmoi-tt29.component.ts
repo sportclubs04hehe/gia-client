@@ -287,4 +287,13 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit, A
     
     this.isFormCollapsed = !this.isFormCollapsed;
   }
+
+  // Thêm phương thức này trong ThemmoiTt29Component
+
+  getIndentStyle(level: number): object {
+    const indentSize = 20; // px cho mỗi cấp độ
+    return {
+      'padding-left': `${level * indentSize}px`
+    };
+  }
 }

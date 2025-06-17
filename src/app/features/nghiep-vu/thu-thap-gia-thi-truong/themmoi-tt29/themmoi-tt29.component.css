@@ -16,11 +16,6 @@
   margin-top: 0.25rem;
 }
 
-.modal-header,
-.modal-footer {
-  background-color: #f8f9fa;
-}
-
 .position-relative input.form-control {
   transition: all 0.2s ease-in-out;
 }
@@ -28,12 +23,6 @@
 .position-relative input.form-control:hover {
   border-color: #2980b9;
   box-shadow: 0 0 0 0.25rem rgba(41, 128, 185, 0.1);
-}
-
-.modal-body-scrollable {
-  max-height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 .form-container {
@@ -93,12 +82,32 @@
   font-size: 0.8rem;
   padding: 0.5rem;
   vertical-align: middle;
+  border-right: 1px solid #dee2e6;
+  border-left: 1px solid #dee2e6;
+}
+
+.table th:first-child {
+  border-left: none;
+}
+
+.table th:last-child {
+  border-right: none;
 }
 
 .table td {
   padding: 0.45rem 0.5rem;
   vertical-align: middle;
   word-break: break-word;
+  border-right: 1px solid #dee2e6;
+  border-left: 1px solid #dee2e6;
+}
+
+.table td:first-child {
+  border-left: none;
+}
+
+.table td:last-child {
+  border-right: none;
 }
 
 .tree-item {
@@ -116,15 +125,6 @@
 
 .tree-child {
   color: #555;
-}
-
-.table-title h6 {
-  background-color: #0a547c !important;
-  font-weight: 500;
-  margin: 0;
-  padding: 0.7rem;
-  color: white;
-  text-align: center;
 }
 
 .single-table-wrapper {
@@ -161,18 +161,9 @@
   z-index: 11;
 }
 
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
 tbody {
   position: relative;
   z-index: 9;
-}
-
-.table-bordered th {
-  border-bottom-width: 2px !important;
 }
 
 .item-name-cell {
@@ -186,27 +177,26 @@ tbody {
   line-height: 1.4;
 }
 
-.tree-level-0 {
-  padding-left: 0;
+/* CSS cho cột mã */
+.code-cell {
+  padding: 0.45rem 0.5rem !important;
 }
-.tree-level-1 {
-  padding-left: 20px;
+
+.tree-item-code {
+  display: block;
+  position: relative;
+  line-height: 1.4;
 }
-.tree-level-2 {
-  padding-left: 40px;
+
+/* Giữ lại các định dạng cơ bản và xóa các tree-level-X */
+.tree-item-code, .tree-item-name {
+  display: block;
+  position: relative;
+  line-height: 1.4;
+  /* Padding sẽ được áp dụng bằng [ngStyle] */
 }
-.tree-level-3 {
-  padding-left: 60px;
-}
-.tree-level-4 {
-  padding-left: 80px;
-}
-.tree-level-5 {
-  padding-left: 100px;
-}
-.tree-level-6 {
-  padding-left: 120px;
-}
+
+/* Xóa tất cả các class tree-level-0 đến tree-level-6 */
 
 .btn-collapse {
   background-color: #f8f9fa;
