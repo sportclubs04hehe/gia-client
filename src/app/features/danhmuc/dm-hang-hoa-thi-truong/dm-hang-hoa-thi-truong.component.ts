@@ -4,7 +4,7 @@ import { ThemMoiComponent } from './them-moi/them-moi.component';
 import { EditComponent } from './edit/edit.component';
 import { ToastrService } from 'ngx-toastr';
 import { SharedModule } from '../../../shared/shared.module';
-import { debounceTime, distinctUntilChanged, map, of, Subject, switchMap, tap, Observable, forkJoin, catchError } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, of, Subject, switchMap, tap, forkJoin, catchError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SearchBarComponent } from '../../../shared/components/search/search-bar/search-bar.component';
 import { DeleteConfirmationComponent } from '../../../shared/components/notifications/delete-confirmation/delete-confirmation.component';
@@ -24,7 +24,6 @@ import { TreeNode } from '../models/helpers/tree-node';
   imports: [
     SharedModule,
     FormsModule,
-    SearchBarComponent,
     ActiveButtonComponent,
     NgxSpinnerModule,
     TextHighlightPipe,

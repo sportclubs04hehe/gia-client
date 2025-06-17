@@ -1,6 +1,6 @@
 import { Directive, OnDestroy, OnInit, signal } from '@angular/core';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, filter, map } from 'rxjs';
-import { PaginationParams } from '../../../features/danhmuc/models/helpers/pagination-params ';
+import { PaginationParams } from '../../../features/danhmuc/models/helpers/pagination-params';
 import { SearchParams } from '../../../features/danhmuc/models/helpers/search-params';
 import { TableColumn } from '../../models/table-column';
 

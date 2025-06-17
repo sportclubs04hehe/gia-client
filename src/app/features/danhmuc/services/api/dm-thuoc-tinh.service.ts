@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment.development';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { PagedResult } from '../../models/helpers/paged-result';
-import { PaginationParams } from '../../models/helpers/pagination-params ';
+import { PaginationParams } from '../../models/helpers/pagination-params';
 import { buildHttpParams } from '../../helpers/build-http-params';
 import { SearchParams } from '../../models/helpers/search-params';
 import { DmThuocTinhDto } from '../../models/dm_thuoctinh/DmThuocTinhDto';

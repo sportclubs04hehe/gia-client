@@ -1,0 +1,121 @@
+<div class="container-fluid p-3">
+  <h5 class="mb-3 text-primary">
+    <i class="bi bi-database-add me-2"></i>Thêm mới thu thập giá thị trường
+  </h5>
+
+  <form [formGroup]="form" class="needs-validation">
+    <div class="row g-3">
+      <!-- Hàng hóa, dịch vụ selection with improved styling -->
+      <div class="col-md-5">
+        <div class="form-group">
+          <label class="form-label">Hàng hóa, dịch vụ <span class="text-danger">*</span></label>
+          <div class="position-relative mb-3" (click)="openProductModal()">
+            <input type="text" class="form-control pe-5" [value]="selectedHangHoa?.ten || ''" readonly
+              style="cursor: pointer;" placeholder="Chọn hàng hóa, dịch vụ"
+              [ngClass]="{'is-invalid': submitted && f['hangHoaId'].errors}">
+            <input type="hidden" formControlName="hangHoaId" />
+
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3"
+              style="color: #2980b9; font-size: 1.5rem; cursor: pointer;">
+              <i class="bi" [ngClass]="selectedHangHoa ? 'bi-folder-fill' : 'bi-folder2'"></i>
+            </span>
+          </div>
+          <div *ngIf="submitted && f['hangHoaId'].errors" class="invalid-feedback d-block">
+            <div *ngIf="f['hangHoaId'].errors['required']">Vui lòng chọn hàng hóa</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <!-- Loại giá selection -->
+        <div class="form-group">
+          <label for="loaiGia" class="form-label">Loại giá <span class="text-danger">*</span></label>
+          <select class="form-select" id="loaiGia" formControlName="loaiGiaId"
+            [ngClass]="{'is-invalid': submitted && f['loaiGiaId'].errors}">
+            <option value="">-- Chọn loại giá --</option>
+            <option *ngFor="let loaiGia of loaiGiaList" [value]="loaiGia.id">
+              {{ loaiGia.ten }}
+            </option>
+          </select>
+          <div *ngIf="submitted && f['loaiGiaId'].errors" class="invalid-feedback">
+            <div *ngIf="f['loaiGiaId'].errors['required']">Vui lòng chọn loại giá</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <!-- Date input -->
+        <app-date-input formControlName="ngayThuThap" [label]="'Ngày thu thập'" [required]="true"
+          [placeholder]="'dd/MM/yyyy'"></app-date-input>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Table for product details -->
+<div class="table-container mt-3">
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered table-hover caption-top">
+      <caption
+        style="background-color: #0a547c; color: white;"
+        class="mb-0 fw-medium text-center">Mặt hàng</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="text-center" style="background-color: #0a547c; color: white;">Mã</th>
+          <th scope="col" style="background-color: #0a547c; color: white;">Tên</th>
+          <th scope="col" style="background-color: #0a547c; color: white;">Đặc tính</th>
+          <th scope="col" style="background-color: #0a547c; color: white;">Đơn vị tính</th>
+        </tr>
+      </thead>
+      
+      <!-- Phần thân bảng -->
+      <tbody>
+        <ng-container *ngIf="descendants && descendants.length > 0">
+          <tr *ngFor="let hh of descendants" 
+              [ngClass]="{'font-weight-bold': hh.loaiMatHang === 0}">
+            <td class="text-center">{{ hh.ma }}</td>
+            <td>
+              <!-- Thụt đầu dòng cho mặt hàng con -->
+              <ng-container *ngIf="hh.loaiMatHang === 1">
+                <span class="ms-3">{{ hh.ten }}</span>
+              </ng-container>
+              <!-- Bôi đậm cho mặt hàng cha -->
+              <ng-container *ngIf="hh.loaiMatHang === 0">
+                <strong>{{ hh.ten }}</strong>
+              </ng-container>
+            </td>
+            <td>{{ hh.dacTinh || '—' }}</td>
+            <td>{{ hh.tenDonViTinh || '—' }}</td>
+          </tr>
+        </ng-container>
+        
+        <tr *ngIf="isLoadingDescendants">
+          <td colspan="4" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            Đang tải dữ liệu...
+          </td>
+        </tr>
+        
+        <tr *ngIf="!isLoadingDescendants && (!descendants || descendants.length === 0)">
+          <td colspan="4" class="text-center py-3">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ selectedHangHoa ? 'Không có mặt hàng con' : 'Vui lòng chọn hàng hóa, dịch vụ' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Load more button if there are more items -->
+    <div *ngIf="hasNextPage && !isLoadingDescendants" class="text-center mt-2 mb-3">
+      <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadMoreDescendants()">
+        <i class="bi bi-arrow-down-circle me-1"></i> Tải thêm
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Use the form-footer component for footer -->
+<app-form-footer [isSaving]="isSubmitting" [disabled]="isSubmitting" (save)="save()" (cancel)="close()">
+</app-form-footer>

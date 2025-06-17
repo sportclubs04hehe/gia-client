@@ -11,7 +11,7 @@ import { buildHttpParams } from '../../helpers/build-http-params';
 import { PagedResult } from '../../models/helpers/paged-result';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { HangHoaImportDto } from '../../models/dm_hanghoathitruong/hanghoa-import.dto';
-import { PaginationParams } from '../../models/helpers/pagination-params ';
+import { PaginationParams } from '../../models/helpers/pagination-params';
 
 @Injectable({
   providedIn: 'root'

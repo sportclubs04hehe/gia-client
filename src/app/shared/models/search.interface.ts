@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 import { ApiResponse } from "../../features/danhmuc/models/dm_hanghoathitruong/api-response";
 import { PagedResult } from "../../features/danhmuc/models/helpers/paged-result";
-import { PaginationParams } from "../../features/danhmuc/models/helpers/pagination-params ";
+import { PaginationParams } from "../../features/danhmuc/models/helpers/pagination-params";
 import { SearchParams } from "../../features/danhmuc/models/helpers/search-params";
 
 export interface SearchService<T> {

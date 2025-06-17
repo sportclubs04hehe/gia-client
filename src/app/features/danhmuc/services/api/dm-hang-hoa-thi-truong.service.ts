@@ -42,7 +42,7 @@ export class DmHangHoaThiTruongService {
   getById(id: string): Observable<HHThiTruongDto> {
     return this.http.get<HHThiTruongDto>(`${this.apiUrl}/${this.endpoint}/${id}`);
   }
-  
+
   /**
    * Lấy danh sách các nhóm hàng hóa cha (không có mặt hàng cha)
    */
@@ -424,4 +424,49 @@ export class DmHangHoaThiTruongService {
       request
     );
   }
+
+  /**
+  * Lấy tất cả mặt hàng con và cháu chắt (mọi cấp) của một mặt hàng cha có phân trang
+  * @param parentId ID của mặt hàng cha
+  * @param pageIndex Số trang hiện tại
+  * @param pageSize Số bản ghi trên một trang
+  * @returns Observable chứa danh sách tất cả mặt hàng con, cháu, chắt... có phân trang
+  */
+ // Cách đơn giản hơn không qua mapping phức tạp
+getAllDescendantsByParentId(parentId: string, pageIndex: number = 1, pageSize: number = 50): Observable<PagedResult<HHThiTruongDto>> {
+  const params = new HttpParams()
+    .set('pageIndex', pageIndex.toString())
+    .set('pageSize', pageSize.toString());
+
+  return this.http.get<any>(
+    `${this.apiUrl}/${this.endpoint}/all-descendants/${parentId}`,
+    { params }
+  ).pipe(
+    map(response => {
+      // Kiểm tra cấu trúc và trích xuất dữ liệu đúng
+      if (response && response.data && response.data.data) {
+        // Trường hợp response là ApiResponse bọc PagedResult
+        return {
+          data: response.data.data,
+          pagination: response.data.pagination
+        };
+      } else if (response && response.data) {
+        // Trường hợp response là ApiResponse với data là mảng trực tiếp
+        return {
+          data: response.data,
+          pagination: response.pagination || {
+            currentPage: pageIndex,
+            itemsPerPage: pageSize,
+            totalItems: response.data.length,
+            totalPages: 1,
+            hasNextPage: false
+          }
+        };
+      }
+      
+      // Trả về response nguyên bản nếu có cấu trúc đúng
+      return response;
+    })
+  );
+}
 }

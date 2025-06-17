@@ -8,7 +8,7 @@ import { ThuThapGiaThiTruongCreateDto } from '../../models/thu-thap-gia-thi-truo
 import { ThuThapGiaThiTruongUpdateDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongUpdateDto';
 import { SearchParams } from '../../../danhmuc/models/helpers/search-params';
 import { ThuThapGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongDto';
-import { PaginationParams } from '../../../danhmuc/models/helpers/pagination-params ';
+import { PaginationParams } from '../../../danhmuc/models/helpers/pagination-params';
 import { tap } from 'rxjs/operators';
 import { CacheService } from '../utils/cache.service';
 

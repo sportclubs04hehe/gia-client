@@ -1,4 +1,4 @@
-import { PaginationParams } from "./pagination-params ";
+import { PaginationParams } from "./pagination-params";
 
 export interface SpecificationParams extends PaginationParams {
     searchTerm: string;

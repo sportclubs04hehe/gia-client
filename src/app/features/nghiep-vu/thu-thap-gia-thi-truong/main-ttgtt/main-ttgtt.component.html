@@ -6,11 +6,10 @@
           <app-active-button
             [isLoading]="isLoading()"
             [hasSelected]="!!selectedItem()"
-            (buttonClick)="editItem(selectedItem()!)">
+            (buttonClick)="handleButtonAction($event)">
           </app-active-button>
         </div>
 
-        <!-- Thay thế phần search input cũ bằng SearchInputComponent -->
         <app-search-input
           [searchTerm]="searchTerm()"
           [placeholder]="'Tìm kiếm hàng hóa...'"

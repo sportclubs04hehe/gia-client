@@ -11,7 +11,7 @@ import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { PagedResult } from '../../models/helpers/paged-result';
 import { SearchParams } from '../../models/helpers/search-params';
 import { buildHttpParams } from '../../helpers/build-http-params';
-import { PaginationParams } from '../../models/helpers/pagination-params ';
+import { PaginationParams } from '../../models/helpers/pagination-params';
 
 @Injectable({
   providedIn: 'root'

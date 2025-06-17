@@ -13,7 +13,7 @@ import { EditDonViTinhComponent } from './edit-don-vi-tinh/edit-don-vi-tinh.comp
 import { AddDonViTinhComponent } from './add-don-vi-tinh/add-don-vi-tinh.component';
 import { DmDonViTinhService } from '../services/api/dm-don-vi-tinh.service';
 import { GetAndSearchBaseComponent } from '../../../shared/components/bases/get-search.base';
-import { PaginationParams } from '../models/helpers/pagination-params ';
+import { PaginationParams } from '../models/helpers/pagination-params';
 import { Observable } from 'rxjs';
 import { PagedResult } from '../models/helpers/paged-result';
 import { SearchParams } from '../models/helpers/search-params';
