@@ -1,95 +1,107 @@
 <div class="container-fluid p-3">
-  <h5 class="mb-3 text-primary">
-    <i class="bi bi-database-add me-2"></i>Thêm mới thu thập giá thị trường
-  </h5>
+  <!-- Header với nút thu gọn -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 text-primary">
+      <i class="bi bi-database-add me-2"></i>Thêm mới thu thập giá thị trường
+    </h5>
+    <button type="button" class="btn btn-sm btn-collapse" (click)="toggleFormCollapse()" title="Thu gọn/Mở rộng form">
+      <i class="bi" [ngClass]="isFormCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+      {{ isFormCollapsed ? 'Mở rộng' : 'Thu gọn' }}
+    </button>
+  </div>
 
-  <form [formGroup]="form" class="needs-validation">
-    <div class="row g-3">
-      <!-- Hàng hóa, dịch vụ selection with improved styling -->
-      <div class="col-md-5">
-        <div class="form-group">
-          <label class="form-label">Hàng hóa, dịch vụ <span class="text-danger">*</span></label>
-          <div class="position-relative mb-3" (click)="openProductModal()">
-            <input type="text" class="form-control pe-5" [value]="selectedHangHoa?.ten || ''" readonly
-              style="cursor: pointer;" placeholder="Chọn hàng hóa, dịch vụ"
-              [ngClass]="{'is-invalid': submitted && f['hangHoaId'].errors}">
-            <input type="hidden" formControlName="hangHoaId" />
+  <!-- Form container với animation collapse -->
+  <div class="form-container" [ngClass]="{'collapsed': isFormCollapsed}" [@collapseAnimation]="isFormCollapsed ? 'collapsed' : 'expanded'">
+    <form [formGroup]="form" class="needs-validation">
+      <div class="row g-3">
+        <!-- Hàng hóa, dịch vụ selection with improved styling -->
+        <div class="col-md-5">
+          <div class="form-group">
+            <label class="form-label">Hàng hóa, dịch vụ <span class="text-danger">*</span></label>
+            <div class="position-relative mb-3" (click)="openProductModal()">
+              <input type="text" class="form-control pe-5" [value]="selectedHangHoa?.ten || ''" readonly
+                style="cursor: pointer;" placeholder="Chọn hàng hóa, dịch vụ"
+                [ngClass]="{'is-invalid': submitted && f['hangHoaId'].errors}">
+              <input type="hidden" formControlName="hangHoaId" />
 
-            <span class="position-absolute top-50 end-0 translate-middle-y pe-3"
-              style="color: #2980b9; font-size: 1.5rem; cursor: pointer;">
-              <i class="bi" [ngClass]="selectedHangHoa ? 'bi-folder-fill' : 'bi-folder2'"></i>
-            </span>
-          </div>
-          <div *ngIf="submitted && f['hangHoaId'].errors" class="invalid-feedback d-block">
-            <div *ngIf="f['hangHoaId'].errors['required']">Vui lòng chọn hàng hóa</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <!-- Loại giá selection -->
-        <div class="form-group">
-          <label for="loaiGia" class="form-label">Loại giá <span class="text-danger">*</span></label>
-          <select class="form-select" id="loaiGia" formControlName="loaiGiaId"
-            [ngClass]="{'is-invalid': submitted && f['loaiGiaId'].errors}">
-            <option value="">-- Chọn loại giá --</option>
-            <option *ngFor="let loaiGia of loaiGiaList" [value]="loaiGia.id">
-              {{ loaiGia.ten }}
-            </option>
-          </select>
-          <div *ngIf="submitted && f['loaiGiaId'].errors" class="invalid-feedback">
-            <div *ngIf="f['loaiGiaId'].errors['required']">Vui lòng chọn loại giá</div>
+              <span class="position-absolute top-50 end-0 translate-middle-y pe-3"
+                style="color: #2980b9; font-size: 1.5rem; cursor: pointer;">
+                <i class="bi" [ngClass]="selectedHangHoa ? 'bi-folder-fill' : 'bi-folder2'"></i>
+              </span>
+            </div>
+            <div *ngIf="submitted && f['hangHoaId'].errors" class="invalid-feedback d-block">
+              <div *ngIf="f['hangHoaId'].errors['required']">Vui lòng chọn hàng hóa</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="col-md-3">
-        <!-- Date input -->
-        <app-date-input formControlName="ngayThuThap" [label]="'Ngày thu thập'" [required]="true"
-          [placeholder]="'dd/MM/yyyy'"></app-date-input>
+        <div class="col-md-4">
+          <!-- Loại giá selection -->
+          <div class="form-group">
+            <label for="loaiGia" class="form-label">Loại giá <span class="text-danger">*</span></label>
+            <select class="form-select" id="loaiGia" formControlName="loaiGiaId"
+              [ngClass]="{'is-invalid': submitted && f['loaiGiaId'].errors}">
+              <option value="">-- Chọn loại giá --</option>
+              <option *ngFor="let loaiGia of loaiGiaList" [value]="loaiGia.id">
+                {{ loaiGia.ten }}
+              </option>
+            </select>
+            <div *ngIf="submitted && f['loaiGiaId'].errors" class="invalid-feedback">
+              <div *ngIf="f['loaiGiaId'].errors['required']">Vui lòng chọn loại giá</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <!-- Date input -->
+          <app-date-input formControlName="ngayThuThap" [label]="'Ngày thu thập'" [required]="true"
+            [placeholder]="'dd/MM/yyyy'"></app-date-input>
+        </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
 </div>
 
-<!-- Table for product details -->
-<div class="table-container mt-3">
-  <div class="table-responsive">
-    <table class="table table-sm table-bordered table-hover caption-top">
-      <caption
-        style="background-color: #0a547c; color: white;"
-        class="mb-0 fw-medium text-center">Mặt hàng</caption>
-      <thead>
+<!-- Cấu trúc tối ưu cho bảng có thanh cuộn -->
+<div class="table-container" [ngClass]="{'expanded-table': isFormCollapsed}">
+  <!-- Tiêu đề bảng -->
+  <div class="table-title">
+    <h6 class="m-0 p-2 text-white text-center">Mặt hàng</h6>
+  </div>
+
+  <div class="single-table-wrapper">
+    <!-- Nội dung bảng giữ nguyên -->
+    <table class="table table-sm table-bordered table-hover mb-0">
+      <thead class="sticky-header">
         <tr>
-          <th scope="col" class="text-center" style="background-color: #0a547c; color: white;">Mã</th>
-          <th scope="col" style="background-color: #0a547c; color: white;">Tên</th>
-          <th scope="col" style="background-color: #0a547c; color: white;">Đặc tính</th>
-          <th scope="col" style="background-color: #0a547c; color: white;">Đơn vị tính</th>
+          <th scope="col" style="width: 10%;">Mã</th>
+          <th scope="col" style="width: 50%;">Tên</th>
+          <th scope="col" style="width: 20%;">Đặc tính</th>
+          <th scope="col" style="width: 20%;">Đơn vị tính</th>
         </tr>
       </thead>
-      
-      <!-- Phần thân bảng -->
       <tbody>
         <ng-container *ngIf="descendants && descendants.length > 0">
           <tr *ngFor="let hh of descendants" 
-              [ngClass]="{'font-weight-bold': hh.loaiMatHang === 0}">
-            <td class="text-center">{{ hh.ma }}</td>
-            <td>
-              <!-- Thụt đầu dòng cho mặt hàng con -->
-              <ng-container *ngIf="hh.loaiMatHang === 1">
-                <span class="ms-3">{{ hh.ten }}</span>
-              </ng-container>
-              <!-- Bôi đậm cho mặt hàng cha -->
-              <ng-container *ngIf="hh.loaiMatHang === 0">
-                <strong>{{ hh.ten }}</strong>
-              </ng-container>
+              [ngClass]="{'tree-parent': hh.loaiMatHang === 0, 'tree-child': hh.loaiMatHang === 1}"
+              class="tree-item">
+            <td class="text-center" style="width: 10%;">{{ hh.ma }}</td>
+            <td style="width: 50%;" class="item-name-cell">
+              <div class="tree-item-name" [ngClass]="'tree-level-' + hh.level">
+                <ng-container *ngIf="hh.loaiMatHang === 0">
+                  <strong>{{ hh.ten }}</strong>
+                </ng-container>
+                <ng-container *ngIf="hh.loaiMatHang === 1">
+                  <span>{{ hh.ten }}</span>
+                </ng-container>
+              </div>
             </td>
-            <td>{{ hh.dacTinh || '—' }}</td>
-            <td>{{ hh.tenDonViTinh || '—' }}</td>
+            <td style="width: 20%;">{{ hh.dacTinh || '—' }}</td>
+            <td style="width: 20%;">{{ hh.tenDonViTinh || '—' }}</td>
           </tr>
         </ng-container>
         
-        <tr *ngIf="isLoadingDescendants">
+        <tr *ngIf="isLoadingTree">
           <td colspan="4" class="text-center py-3">
             <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
               <span class="visually-hidden">Loading...</span>
@@ -98,7 +110,7 @@
           </td>
         </tr>
         
-        <tr *ngIf="!isLoadingDescendants && (!descendants || descendants.length === 0)">
+        <tr *ngIf="!isLoadingTree && (!descendants || descendants.length === 0)">
           <td colspan="4" class="text-center py-3">
             <i class="bi bi-info-circle me-2"></i>
             {{ selectedHangHoa ? 'Không có mặt hàng con' : 'Vui lòng chọn hàng hóa, dịch vụ' }}
@@ -106,16 +118,9 @@
         </tr>
       </tbody>
     </table>
-    
-    <!-- Load more button if there are more items -->
-    <div *ngIf="hasNextPage && !isLoadingDescendants" class="text-center mt-2 mb-3">
-      <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadMoreDescendants()">
-        <i class="bi bi-arrow-down-circle me-1"></i> Tải thêm
-      </button>
-    </div>
   </div>
 </div>
 
-<!-- Use the form-footer component for footer -->
-<app-form-footer [isSaving]="isSubmitting" [disabled]="isSubmitting" (save)="save()" (cancel)="close()">
+<!-- Form footer không thay đổi -->
+<app-form-footer size="small" [isSaving]="isSubmitting" [disabled]="isSubmitting" (save)="save()" (cancel)="close()">
 </app-form-footer>

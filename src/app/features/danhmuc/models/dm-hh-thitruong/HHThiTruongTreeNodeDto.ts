@@ -15,4 +15,6 @@ export interface HHThiTruongTreeNodeDto {
   dacTinh?: string;
   // Đổi tên từ children thành matHangCon để khớp với C#
   matHangCon?: HHThiTruongTreeNodeDto[];
+  // Thêm thuộc tính level để hỗ trợ hiển thị tree view
+  level: number;
 }

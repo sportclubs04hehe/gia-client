@@ -1,8 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../../../environments/environment.development';
+import { Injectable, inject } from '@angular/core';
 import { Observable, BehaviorSubject, of, shareReplay, tap, map } from 'rxjs';
-import { PagedResult } from '../../models/helpers/paged-result';
+import { environment } from '../../../../../environments/environment.development';
 import { ApiResponse } from '../../models/dm_hanghoathitruong/api-response';
 import { HHThiTruongTreeNodeDto } from '../../models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { CreateHHThiTruongDto, UpdateHHThiTruongDto, CreateManyHHThiTruongDto } from '../../models/dm-hh-thitruong/CreateHHThiTruongDto';
@@ -11,6 +10,7 @@ import { CategoryInfoDto } from '../../models/dm-hh-thitruong/CategoryInfoDto';
 import { HHThiTruongBatchImportDto } from '../../models/dm-hh-thitruong/HHThiTruongImportDto';
 import { CodeValidationResult } from '../../models/helpers/CodeValidationResult';
 import { MultipleCodeValidationRequestDto } from '../../models/helpers/MultipleCodeValidationRequestDto';
+import { PagedResult } from '../../models/helpers/paged-result';
 
 @Injectable({
   providedIn: 'root'
@@ -426,47 +426,13 @@ export class DmHangHoaThiTruongService {
   }
 
   /**
-  * Lấy tất cả mặt hàng con và cháu chắt (mọi cấp) của một mặt hàng cha có phân trang
-  * @param parentId ID của mặt hàng cha
-  * @param pageIndex Số trang hiện tại
-  * @param pageSize Số bản ghi trên một trang
-  * @returns Observable chứa danh sách tất cả mặt hàng con, cháu, chắt... có phân trang
-  */
- // Cách đơn giản hơn không qua mapping phức tạp
-getAllDescendantsByParentId(parentId: string, pageIndex: number = 1, pageSize: number = 50): Observable<PagedResult<HHThiTruongDto>> {
-  const params = new HttpParams()
-    .set('pageIndex', pageIndex.toString())
-    .set('pageSize', pageSize.toString());
-
-  return this.http.get<any>(
-    `${this.apiUrl}/${this.endpoint}/all-descendants/${parentId}`,
-    { params }
-  ).pipe(
-    map(response => {
-      // Kiểm tra cấu trúc và trích xuất dữ liệu đúng
-      if (response && response.data && response.data.data) {
-        // Trường hợp response là ApiResponse bọc PagedResult
-        return {
-          data: response.data.data,
-          pagination: response.data.pagination
-        };
-      } else if (response && response.data) {
-        // Trường hợp response là ApiResponse với data là mảng trực tiếp
-        return {
-          data: response.data,
-          pagination: response.pagination || {
-            currentPage: pageIndex,
-            itemsPerPage: pageSize,
-            totalItems: response.data.length,
-            totalPages: 1,
-            hasNextPage: false
-          }
-        };
-      }
-      
-      // Trả về response nguyên bản nếu có cấu trúc đúng
-      return response;
-    })
-  );
-}
+     * Lấy cấu trúc cây phân cấp của mặt hàng thị trường
+     * @param parentId ID của mặt hàng cha cần lấy cấu trúc cây
+     * @returns Observable<ApiResponse<HHThiTruongTreeNodeDto[]>> Trả về cấu trúc cây phân cấp
+     */
+  getHierarchicalDescendants(parentId: string): Observable<ApiResponse<HHThiTruongTreeNodeDto[]>> {
+    return this.http.get<ApiResponse<HHThiTruongTreeNodeDto[]>>(
+      `${this.apiUrl}/${this.endpoint}/hierarchical/${parentId}`
+    );
+  }
 }

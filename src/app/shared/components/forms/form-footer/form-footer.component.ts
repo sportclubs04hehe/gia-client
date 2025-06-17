@@ -18,6 +18,7 @@ export class FormFooterComponent {
   @Input() savingIcon = 'bi-hourglass-split';
   @Input() cancelIcon = 'bi-x-circle me-1';
   @Input() submitType: 'button' | 'submit' = 'button';
+  @Input() size: 'default' | 'small' = 'default';
 
   @Output() save = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();

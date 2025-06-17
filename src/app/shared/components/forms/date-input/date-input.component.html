@@ -11,6 +11,7 @@
         [formControl]="control"
         ngbDatepicker
         #datepicker="ngbDatepicker"
+        container="body"
         [footerTemplate]="showFooter ? footerTemplate : emptyFooter"
         [class.is-invalid]="ngControl.invalid && (ngControl.touched || ngControl.dirty)"
         [attr.aria-invalid]="ngControl.invalid && (ngControl.touched || ngControl.dirty)"

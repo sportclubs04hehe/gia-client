@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 // Services
 import { ThuThapGiaThiTruongService } from '../../services/api/thu-thap-gia-thi-truong.service';
@@ -20,8 +21,7 @@ import { NhomhhModalComponent } from '../../../danhmuc/dm-hang-hoa-thi-truongs/n
 import { LoaiGiaDto } from '../../../danhmuc/models/dm-loai-gia/LoaiGiaDto';
 import { ThuThapGiaThiTruongCreateDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongCreateDto';
 import { stringToDateStruct } from '../../../../core/formatters/date-range-validator';
-import { HHThiTruongDto } from '../../../danhmuc/models/dm-hh-thitruong/HHThiTruongDto';
-import { PagedResult } from '../../../danhmuc/models/helpers/paged-result';
+import { HHThiTruongTreeNodeDto } from '../../../danhmuc/models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 
 @Component({
   selector: 'app-themmoi-tt29',
@@ -33,9 +33,30 @@ import { PagedResult } from '../../../danhmuc/models/helpers/paged-result';
     FormFooterComponent,
   ],
   templateUrl: './themmoi-tt29.component.html',
-  styleUrls: ['./themmoi-tt29.component.css']
+  styleUrls: ['./themmoi-tt29.component.css'],
+  animations: [
+    trigger('collapseAnimation', [
+      state('expanded', style({
+        height: '*',
+        opacity: 1,
+        visibility: 'visible'
+      })),
+      state('collapsed', style({
+        height: '0',
+        opacity: 0,
+        visibility: 'hidden'
+      })),
+      transition('expanded => collapsed', [
+        animate('250ms cubic-bezier(0.4, 0.0, 0.2, 1)')
+      ]),
+      transition('collapsed => expanded', [
+        style({ visibility: 'visible' }),
+        animate('250ms cubic-bezier(0.4, 0.0, 0.2, 1)')
+      ])
+    ])
+  ]
 })
-export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
+export class ThemmoiTt29Component extends FormComponentBase implements OnInit, AfterViewInit, OnDestroy {
   // Services
   private thuThapGiaService = inject(ThuThapGiaThiTruongService);
   private loaiGiaService = inject(DmLoaiGiaService);
@@ -51,13 +72,18 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
   // Selected product info
   selectedHangHoa: {id: string, ten: string, ma: string} | null = null;
   
-  // Descendants list
-  descendants: HHThiTruongDto[] = [];
-  isLoadingDescendants = false;
-  currentPage = 1;
-  pageSize = 50;
-  totalItems = 0;
-  hasNextPage = false;
+  // Tree data
+  treeData: HHThiTruongTreeNodeDto[] = [];
+  isLoadingTree = false;
+  
+  // Thêm khai báo này để khắc phục lỗi
+  descendants: HHThiTruongTreeNodeDto[] = [];
+
+  // Thêm thuộc tính mới để theo dõi trạng thái thu gọn
+  isFormCollapsed = false;
+
+  // Thêm biến để lưu chiều cao ban đầu
+  private formOriginalHeight = 0;
 
   constructor(
     protected override fb: FormBuilder,
@@ -69,6 +95,23 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     this.loadLoaiGias();
+  }
+
+  ngAfterViewInit(): void {
+    // Lưu chiều cao ban đầu để xử lý animation tốt hơn
+    const formContainer = document.querySelector('.form-container') as HTMLElement;
+    if (formContainer) {
+      this.formOriginalHeight = formContainer.clientHeight;
+      // Set CSS variable for container height calculation
+      document.documentElement.style.setProperty('--container-height', `${window.innerHeight}px`);
+    }
+    
+    // Đăng ký sự kiện resize window để cập nhật chiều cao
+    window.addEventListener('resize', this.updateContainerHeight);
+  }
+  
+  override ngOnDestroy(): void {
+    window.removeEventListener('resize', this.updateContainerHeight);
   }
 
   protected buildForm(): void {
@@ -125,8 +168,8 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
           // Update form values
           this.form.patchValue({ hangHoaId: result.id });
           
-          // Load descendants for the selected item
-          this.loadDescendants(result.id);
+          // Load tree data for the selected item
+          this.loadTreeData(result.id);
         }
       },
       () => {
@@ -135,82 +178,50 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
     );
   }
   
-  // Load descendants for the selected product
-  loadDescendants(parentId: string, pageIndex: number = 1): void {
-    this.isLoadingDescendants = true;
+  // Load tree data for the selected product
+  loadTreeData(parentId: string): void {
+    this.isLoadingTree = true;
     
-    this.hangHoaThiTruongService.getAllDescendantsByParentId(parentId, pageIndex, this.pageSize)
-      .pipe(finalize(() => this.isLoadingDescendants = false))
+    this.hangHoaThiTruongService.getHierarchicalDescendants(parentId)
+      .pipe(finalize(() => this.isLoadingTree = false))
       .subscribe({
-        next: (result: any) => {
-          // Trích xuất mảng dữ liệu
-          let itemsArray = [];
-          
-          if (result && result.data && Array.isArray(result.data.data)) {
-            itemsArray = result.data.data;
-          } else if (result && Array.isArray(result.data)) {
-            itemsArray = result.data;
+        next: (response) => {
+          if (response && response.data) {
+            this.treeData = response.data;
+            this.descendants = this.flattenTreeData(this.treeData);
           }
-          
-          // Xử lý phân cấp và sắp xếp (nếu cần)
-          let processedItems = this.processItemsForDisplay(itemsArray);
-          
-          if (pageIndex === 1) {
-            this.descendants = processedItems;
-          } else {
-            this.descendants = [...this.descendants, ...processedItems];
-          }
-          
-          // Cập nhật phân trang
-          const pagination = result.pagination || (result.data && result.data.pagination) || {};
-          
-          this.currentPage = pagination.currentPage || pageIndex;
-          this.totalItems = pagination.totalItems || 0;
-          this.hasNextPage = pagination.hasNextPage || false;
         },
         error: (error) => {
-          console.error('Failed to load descendants:', error);
-          this.toastr.error('Không thể tải danh sách mặt hàng con', 'Lỗi');
+          console.error('Failed to load tree data:', error);
+          this.toastr.error('Không thể tải cấu trúc phân cấp mặt hàng', 'Lỗi');
         }
       });
   }
-
-  // Phương thức hỗ trợ xử lý dữ liệu hiển thị phân cấp
-  processItemsForDisplay(items: any[]): any[] {
-    if (!items || !items.length) return [];
+  
+  // Helper to flatten tree data for current UI
+  flattenTreeData(nodes: HHThiTruongTreeNodeDto[], level: number = 0): HHThiTruongTreeNodeDto[] {
+    let result: HHThiTruongTreeNodeDto[] = [];
     
-    // Phân loại các mặt hàng cha/con
-    const parents = items.filter(item => item.loaiMatHang === 0);
-    const children = items.filter(item => item.loaiMatHang === 1);
-    
-    // Sắp xếp theo mã (nếu backend chưa sắp xếp)
-    const sortedItems = [...items].sort((a, b) => {
-      // Sắp xếp theo cấp độ trước
-      if (a.loaiMatHang !== b.loaiMatHang) {
-        return a.loaiMatHang - b.loaiMatHang; // Cha (0) trước Con (1)
-      }
+    for (const node of nodes) {
+      // Add level for indentification
+      const nodeWithLevel = { ...node, level };
+      result.push(nodeWithLevel);
       
-      // Sau đó sắp xếp theo mã
-      return a.ma.localeCompare(b.ma, undefined, { numeric: true, sensitivity: 'base' });
-    });
+      // If there are child nodes, recursively flatten them
+      if (node.matHangCon && node.matHangCon.length > 0) {
+        result = result.concat(this.flattenTreeData(node.matHangCon, level + 1));
+      }
+    }
     
-    return sortedItems;
+    return result;
   }
   
-  // Load more descendants (pagination)
-  loadMoreDescendants(): void {
-    if (this.hasNextPage && this.selectedHangHoa) {
-      this.loadDescendants(this.selectedHangHoa.id, this.currentPage + 1);
-    }
-  }
-
   // Submit form
   save(): void {
     this.submitted = true;
     
     if (this.form.invalid) {
       this.markFormTouched();
-      this.toastr.error('Vui lòng kiểm tra lại thông tin', 'Lỗi');
       return;
     }
     
@@ -229,7 +240,6 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
         },
         error: (error) => {
           console.error('Error creating record:', error);
-          this.toastr.error(error.error?.message || 'Không thể thêm mới. Vui lòng thử lại sau', 'Lỗi');
         }
       });
   }
@@ -237,5 +247,44 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
   // Close modal
   close(): void {
     this.activeModal.dismiss('Đóng');
+  }
+
+  // Hàm cập nhật chiều cao khi resize
+  updateContainerHeight = (): void => {
+    document.documentElement.style.setProperty('--container-height', `${window.innerHeight}px`);
+  }
+  
+  // Cải thiện phương thức toggle collapse
+  toggleFormCollapse(): void {
+    const formContainer = document.querySelector('.form-container') as HTMLElement;
+    const tableContainer = document.querySelector('.table-container') as HTMLElement;
+    
+    if (formContainer && !this.isFormCollapsed) {
+      // Lưu chiều cao hiện tại trước khi collapse
+      this.formOriginalHeight = formContainer.clientHeight;
+      formContainer.style.height = `${this.formOriginalHeight}px`;
+      
+      // Force reflow
+      formContainer.offsetHeight;
+      
+      // Đặt vị trí của bảng để sẵn sàng di chuyển lên
+      if (tableContainer) {
+        tableContainer.style.position = 'relative';
+      }
+    } else if (formContainer && this.isFormCollapsed) {
+      // Khi mở rộng, đặt lại chiều cao
+      formContainer.style.height = '0px';
+      formContainer.offsetHeight; // Force reflow
+      formContainer.style.height = `${this.formOriginalHeight}px`;
+      
+      // Đặt lại vị trí của bảng sau khi mở rộng form
+      if (tableContainer) {
+        setTimeout(() => {
+          tableContainer.style.position = 'static';
+        }, 300); // thời gian tương đương với transition
+      }
+    }
+    
+    this.isFormCollapsed = !this.isFormCollapsed;
   }
 }
