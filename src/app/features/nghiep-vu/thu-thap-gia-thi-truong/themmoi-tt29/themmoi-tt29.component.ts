@@ -22,6 +22,7 @@ import { LoaiGiaDto } from '../../../danhmuc/models/dm-loai-gia/LoaiGiaDto';
 import { ThuThapGiaThiTruongCreateDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongCreateDto';
 import { stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { HHThiTruongTreeNodeDto } from '../../../danhmuc/models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
+import { HangHoaGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong/HangHoaGiaThiTruongDto';
 
 @Component({
   selector: 'app-themmoi-tt29',
@@ -59,7 +60,6 @@ import { HHThiTruongTreeNodeDto } from '../../../danhmuc/models/dm-hh-thitruong/
 export class ThemmoiTt29Component extends FormComponentBase implements OnInit, AfterViewInit, OnDestroy {
   private thuThapGiaService = inject(ThuThapGiaThiTruongService);
   private loaiGiaService = inject(DmLoaiGiaService);
-  private hangHoaThiTruongService = inject(DmHangHoaThiTruongService);
   private modalService = inject(NgbModal);
   private toastr = inject(ToastrService);
   
@@ -72,7 +72,8 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit, A
   treeData: HHThiTruongTreeNodeDto[] = [];
   isLoadingTree = false;
   
-  descendants: HHThiTruongTreeNodeDto[] = [];
+  // Thay đổi kiểu dữ liệu từ HHThiTruongTreeNodeDto sang HangHoaGiaThiTruongDto
+  descendants: HangHoaGiaThiTruongDto[] = [];
 
   isFormCollapsed = false;
 
@@ -138,54 +139,73 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit, A
     });
     
     if (this.selectedHangHoa) {
-      modalRef.componentInstance.preSelectedId = this.selectedHangHoa.id;
+      modalRef.componentInstance.selectedData = this.selectedHangHoa;
     }
     
     modalRef.result.then(
       (result) => {
-        if (result && result.id) {
-          this.selectedHangHoa = {
-            id: result.id,
-            ten: result.ten,
-            ma: result.ma || ''
-          };
+        if (result) {
+          this.selectedHangHoa = result;
+          this.form.patchValue({
+            hangHoaId: result.id,
+            tenHangHoa: result.ten
+          });
           
-          this.form.patchValue({ hangHoaId: result.id });
-          
+          // Tải dữ liệu cây khi đã chọn hàng hóa
           this.loadTreeData(result.id);
         }
       },
       () => {
+        // Modal dismissed
       }
     );
   }
   
+  // Cập nhật phương thức loadTreeData
   loadTreeData(parentId: string): void {
     this.isLoadingTree = true;
     
-    this.hangHoaThiTruongService.getHierarchicalDescendants(parentId)
-      .pipe(finalize(() => this.isLoadingTree = false))
-      .subscribe({
-        next: (response) => {
-          if (response && response.data) {
-            this.treeData = response.data;
-            this.descendants = this.flattenTreeData(this.treeData);
-          }
-        },
-        error: (error) => {
-          console.error('Failed to load tree data:', error);
-          this.toastr.error('Không thể tải cấu trúc phân cấp mặt hàng', 'Lỗi');
+    // Lấy ngày thu thập và loại giá từ form
+    const ngayThuThap = this.form.get('ngayThuThap')?.value;
+    const loaiGiaId = this.form.get('loaiGiaId')?.value;
+    
+    // Chuyển đổi ngày từ NgBootstrap DateStruct sang Date
+    const ngayThuThapDate = ngayThuThap ? 
+      new Date(ngayThuThap.year, ngayThuThap.month - 1, ngayThuThap.day) : 
+      new Date();
+    
+    this.thuThapGiaService.getHierarchicalDataWithPreviousPrices(
+      parentId, 
+      ngayThuThapDate, 
+      loaiGiaId
+    )
+    .pipe(finalize(() => this.isLoadingTree = false))
+    .subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.descendants = this.flattenTreeData(response.data);
+        } else {
+          this.descendants = [];
         }
-      });
+      },
+      error: (error) => {
+        console.error('Lỗi khi tải dữ liệu cây hàng hóa:', error);
+        this.toastr.error('Có lỗi xảy ra khi tải dữ liệu hàng hóa');
+        this.descendants = [];
+      }
+    });
   }
   
-  flattenTreeData(nodes: HHThiTruongTreeNodeDto[], level: number = 0): HHThiTruongTreeNodeDto[] {
-    let result: HHThiTruongTreeNodeDto[] = [];
+  // Cập nhật phương thức flattenTreeData để làm việc với HangHoaGiaThiTruongDto
+  flattenTreeData(nodes: HangHoaGiaThiTruongDto[], level: number = 0): HangHoaGiaThiTruongDto[] {
+    let result: HangHoaGiaThiTruongDto[] = [];
     
     for (const node of nodes) {
+      // Gán level cho node
       const nodeWithLevel = { ...node, level };
       result.push(nodeWithLevel);
       
+      // Đệ quy cho các con
       if (node.matHangCon && node.matHangCon.length > 0) {
         result = result.concat(this.flattenTreeData(node.matHangCon, level + 1));
       }

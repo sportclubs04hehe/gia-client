@@ -11,6 +11,8 @@ import { ThuThapGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong/Thu
 import { PaginationParams } from '../../../danhmuc/models/helpers/pagination-params';
 import { tap } from 'rxjs/operators';
 import { CacheService } from '../utils/cache.service';
+import { buildHttpParams } from '../../../danhmuc/helpers/build-http-params';
+import { HangHoaGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong/HangHoaGiaThiTruongDto';
 
 @Injectable({
   providedIn: 'root'
@@ -132,6 +134,32 @@ export class ThuThapGiaThiTruongService {
         this.clearListCache();
         this.cacheService.remove(`${this.cachePrefix}_detail_${id}`);
       })
+    );
+  }
+
+  getHierarchicalDataWithPreviousPrices(
+    parentId?: string,
+    ngayThuThap?: Date,
+    loaiGiaId?: string
+  ): Observable<ApiResponse<HangHoaGiaThiTruongDto[]>> {
+    const cacheKey = `${this.cachePrefix}_hierarchical_${parentId || 'root'}_${ngayThuThap?.toISOString() || 'nodate'}_${loaiGiaId || 'noloai'}`;
+    const cachedData = this.cacheService.get<ApiResponse<HangHoaGiaThiTruongDto[]>>(cacheKey);
+    
+    if (cachedData) {
+      return of(cachedData);
+    }
+
+    const params = buildHttpParams({
+      parentId: parentId,
+      ngayThuThap: ngayThuThap?.toISOString(),
+      loaiGiaId: loaiGiaId
+    });
+
+    return this.http.get<ApiResponse<HangHoaGiaThiTruongDto[]>>(
+      `${this.apiUrl}/${this.endpoint}/hierarchical`, 
+      { params }
+    ).pipe(
+      tap(result => this.cacheService.set(cacheKey, result))
     );
   }
 

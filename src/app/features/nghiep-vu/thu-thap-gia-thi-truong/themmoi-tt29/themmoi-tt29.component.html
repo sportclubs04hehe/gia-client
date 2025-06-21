@@ -70,17 +70,17 @@
     <table class="table table-sm table-hover mb-0">
       <thead class="sticky-header">
         <tr>
-          <th scope="col">Mã</th>
-          <th scope="col">Tên</th>
-          <th scope="col">Đặc tính</th>
+          <th scope="col">Mã hàng hóa</th>
+          <th scope="col">Tên hàng hóa, dịch vụ</th>
+          <th scope="col">Đặc điểm kinh tế, kỹ thuật, quy cách</th>
           <th scope="col">Đơn vị tính</th>
           <th scope="col">Giá phổ biến kỳ báo cáo</th>
+          <th scope="col">Giá bình quân kỳ trước</th>
           <th scope="col">Giá bình quân kỳ này</th>
+          <th scope="col">Mức tăng (giảm) giá bình quân</th>
+          <th scope="col">Tỷ lệ tăng (giảm) giá bình quân (%)</th>
           <th scope="col">Nguồn thông tin</th>
           <th scope="col">Ghi chú</th>
-          <th scope="col">Giá bình quân kỳ trước</th>
-          <th scope="col">Mức tăng giảm</th>
-          <th scope="col">Tỷ lệ tăng giảm</th>
         </tr>
       </thead>
       <tbody>
@@ -89,44 +89,60 @@
               [ngClass]="{'tree-parent': hh.loaiMatHang === 0, 'tree-child': hh.loaiMatHang === 1}"
               class="tree-item">
             <td class="text-center code-cell">
-              <div class="tree-item-code" [ngStyle]="getIndentStyle(hh.level)">
-                <ng-container *ngIf="hh.loaiMatHang === 0">
-                  <strong>{{ hh.ma }}</strong>
-                </ng-container>
-                <ng-container *ngIf="hh.loaiMatHang === 1">
-                  <span>{{ hh.ma }}</span>
-                </ng-container>
-              </div>
+              <span class="tree-item-code" [ngStyle]="getIndentStyle(hh.level)">
+                {{ hh.ma }}
+              </span>
             </td>
             <td class="item-name-cell">
-              <div class="tree-item-name" [ngStyle]="getIndentStyle(hh.level)">
-                <ng-container *ngIf="hh.loaiMatHang === 0">
-                  <strong>{{ hh.ten }}</strong>
-                </ng-container>
-                <ng-container *ngIf="hh.loaiMatHang === 1">
-                  <span>{{ hh.ten }}</span>
-                </ng-container>
-              </div>
+              <span class="tree-item-name" [ngStyle]="getIndentStyle(hh.level)">
+                {{ hh.ten }}
+              </span>
             </td>
             <td>{{ hh.dacTinh || '—' }}</td>
             <td>{{ hh.tenDonViTinh || '—' }}</td>
-            
+            <td class="text-end">
+              <input type="number" class="form-control form-control-sm" 
+                     placeholder="0" min="0" step="0.01">
+            </td>
+            <td class="text-end">
+              <span class="text-muted">
+                {{ hh.giaBinhQuanKyTruoc ? (hh.giaBinhQuanKyTruoc | currency:'VND':'symbol':'1.0-0') : '—' }}
+              </span>
+            </td>
+            <td class="text-end">
+              <input type="number" class="form-control form-control-sm" 
+                     placeholder="0" min="0" step="0.01">
+            </td>
+            <td class="text-end">
+              <span class="text-muted">—</span>
+            </td>
+            <td class="text-end">
+              <span class="text-muted">—</span>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" 
+                     placeholder="Nguồn thông tin">
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" 
+                     placeholder="Ghi chú">
+            </td>
           </tr>
         </ng-container>
         
         <tr *ngIf="isLoadingTree">
-          <td colspan="4" class="text-center py-3">
-            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-              <span class="visually-hidden">Loading...</span>
+          <td colspan="11" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Đang tải...</span>
             </div>
             Đang tải dữ liệu...
           </td>
         </tr>
         
         <tr *ngIf="!isLoadingTree && (!descendants || descendants.length === 0)">
-          <td colspan="4" class="text-center py-3">
-            <i class="bi bi-info-circle me-2"></i>
-            {{ selectedHangHoa ? 'Không có mặt hàng con' : 'Vui lòng chọn hàng hóa, dịch vụ' }}
+          <td colspan="11" class="text-center py-3">
+            <i class="bi bi-inbox text-muted me-2"></i>
+            Không có dữ liệu để hiển thị
           </td>
         </tr>
       </tbody>
