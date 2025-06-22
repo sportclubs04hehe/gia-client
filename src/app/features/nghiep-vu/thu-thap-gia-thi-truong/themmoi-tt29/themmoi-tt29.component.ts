@@ -19,10 +19,11 @@ import { NhomhhModalComponent } from '../../../danhmuc/dm-hang-hoa-thi-truongs/n
 
 // Models
 import { LoaiGiaDto } from '../../../danhmuc/models/dm-loai-gia/LoaiGiaDto';
-import { ThuThapGiaThiTruongCreateDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongCreateDto';
 import { stringToDateStruct } from '../../../../core/formatters/date-range-validator';
 import { HHThiTruongTreeNodeDto } from '../../../danhmuc/models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 import { HangHoaGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong/HangHoaGiaThiTruongDto';
+import { HangHoaGiaCreateDto, ThuThapGiaThiTruongBulkCreateDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongBulkCreateDto';
+import { ThuThapGiaThiTruongBulkCreateResponseDto } from '../../models/helpers/ThuThapGiaThiTruongBulkCreateResponseDto';
 
 @Component({
   selector: 'app-themmoi-tt29',
@@ -67,6 +68,12 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit, A
   isSubmitting = false;
   submitted = false;
   
+    giaInputs: Map<string, {
+    giaPhoBienKyBaoCao?: number;
+    giaBinhQuanKyNay?: number;
+    nguonThongTin?: string;
+    ghiChu?: string;
+  }> = new Map();
   selectedHangHoa: {id: string, ten: string, ma: string} | null = null;
   
   treeData: HHThiTruongTreeNodeDto[] = [];
@@ -213,31 +220,162 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit, A
     
     return result;
   }
+
+  debugGiaInputs(): void {
+  console.log('=== DEBUG GIA INPUTS ===');
+  console.log('Map size:', this.giaInputs.size);
+  this.giaInputs.forEach((value, key) => {
+    console.log(`HangHoa ID: ${key}`, value);
+  });
+  console.log('========================');
+}
   
-  save(): void {
+ save(): void {
     this.submitted = true;
     
     if (this.form.invalid) {
       this.markFormTouched();
       return;
     }
+
+      this.debugGiaInputs();
+
+    // Kiểm tra xem có dữ liệu giá nào được nhập không
+    const giaData = this.collectGiaData();
+    if (giaData.length === 0) {
+      this.toastr.warning('Vui lòng nhập ít nhất một giá cho hàng hóa', 'Thông báo');
+      return;
+    }
     
     this.isSubmitting = true;
     
-    const createDto: ThuThapGiaThiTruongCreateDto = this.prepareFormData(['ngayThuThap']);
+    const bulkCreateDto = this.prepareBulkCreateData(giaData);
     
-    this.thuThapGiaService.create(createDto)
+    this.thuThapGiaService.bulkCreate(bulkCreateDto)
       .pipe(finalize(() => this.isSubmitting = false))
       .subscribe({
         next: (response) => {
-          this.toastr.success('Thêm mới thành công', 'Thông báo');
-          this.activeModal.close('Đã lưu');
+          if (response.data) {
+            this.handleBulkCreateSuccess(response.data);
+          }
         },
         error: (error) => {
-          console.error('Error creating record:', error);
+          console.error('Error bulk creating records:', error);
+          this.toastr.error('Có lỗi xảy ra khi thêm mới dữ liệu', 'Lỗi');
         }
       });
   }
+
+  private collectGiaData(): HangHoaGiaCreateDto[] {
+  const giaData: HangHoaGiaCreateDto[] = [];
+  
+  console.log('Current giaInputs Map:', this.giaInputs);
+  
+  this.giaInputs.forEach((value, hangHoaId) => {
+    console.log('Processing hangHoaId:', hangHoaId, 'value:', value);
+    
+    // Chỉ thêm vào nếu có ít nhất một giá được nhập và có giá trị hợp lệ
+    if ((value.giaPhoBienKyBaoCao !== undefined && value.giaPhoBienKyBaoCao > 0) || 
+        (value.giaBinhQuanKyNay !== undefined && value.giaBinhQuanKyNay > 0)) {
+      
+      giaData.push({
+        hangHoaId: hangHoaId,
+        giaPhoBienKyBaoCao: value.giaPhoBienKyBaoCao,
+        giaBinhQuanKyNay: value.giaBinhQuanKyNay,
+        ghiChu: value.ghiChu
+      });
+      
+      console.log('Added to giaData:', {
+        hangHoaId,
+        giaPhoBienKyBaoCao: value.giaPhoBienKyBaoCao,
+        giaBinhQuanKyNay: value.giaBinhQuanKyNay,
+        ghiChu: value.ghiChu
+      });
+    }
+  });
+  
+  console.log('Final giaData:', giaData);
+  return giaData;
+}
+
+  private prepareBulkCreateData(giaData: HangHoaGiaCreateDto[]): ThuThapGiaThiTruongBulkCreateDto {
+    const ngayThuThap = this.form.get('ngayThuThap')?.value;
+    const ngayThuThapDate = ngayThuThap ? 
+      new Date(ngayThuThap.year, ngayThuThap.month - 1, ngayThuThap.day) : 
+      new Date();
+
+    return {
+      ngayThuThap: ngayThuThapDate,
+      loaiGiaId: this.form.get('loaiGiaId')?.value,
+      nguonThongTin: this.form.get('nguonThongTin')?.value,
+      danhSachGiaHangHoa: giaData
+    };
+  }
+
+  private handleBulkCreateSuccess(response: ThuThapGiaThiTruongBulkCreateResponseDto): void {
+    let message = `Thêm mới thành công ${response.totalCreated} bản ghi`;
+    
+    if (response.totalSkipped > 0) {
+      message += `, bỏ qua ${response.totalSkipped} bản ghi`;
+    }
+    
+    this.toastr.success(message, 'Thành công');
+    
+    // Hiển thị warnings nếu có
+    if (response.warnings.length > 0) {
+      response.warnings.forEach(warning => {
+        this.toastr.warning(warning, 'Cảnh báo', { timeOut: 5000 });
+      });
+    }
+    
+    // Hiển thị errors nếu có
+    if (response.errors.length > 0) {
+      response.errors.forEach(error => {
+        this.toastr.error(error, 'Lỗi', { timeOut: 7000 });
+      });
+    }
+    
+    this.activeModal.close('Đã lưu');
+  }
+
+    // Cập nhật giá khi người dùng nhập
+  updateGiaInput(hangHoaId: string, field: 'giaPhoBienKyBaoCao' | 'giaBinhQuanKyNay' | 'nguonThongTin' | 'ghiChu', value: any): void {
+  if (!this.giaInputs.has(hangHoaId)) {
+    this.giaInputs.set(hangHoaId, {});
+  }
+  
+  const current = this.giaInputs.get(hangHoaId)!;
+  
+  // Xử lý cho các field số
+  if (field === 'giaPhoBienKyBaoCao' || field === 'giaBinhQuanKyNay') {
+    // Chuyển đổi string sang number, nếu rỗng hoặc không hợp lệ thì set undefined
+    const numValue = value && value.trim() !== '' ? parseFloat(value) : undefined;
+    current[field] = !isNaN(numValue!) ? numValue : undefined;
+  } else {
+    // Xử lý cho các field text
+    current[field] = value || '';
+  }
+  
+  this.giaInputs.set(hangHoaId, current);
+  
+  // Debug: Log để kiểm tra
+  console.log('Updated giaInputs:', {
+    hangHoaId,
+    field,
+    value,
+    currentMap: this.giaInputs.get(hangHoaId)
+  });
+}
+
+  // Lấy giá trị input hiện tại
+  getGiaInputValue(hangHoaId: string, field: 'giaPhoBienKyBaoCao' | 'giaBinhQuanKyNay' | 'nguonThongTin' | 'ghiChu'): any {
+    return this.giaInputs.get(hangHoaId)?.[field] || '';
+  }
+
+  onInputChange(hangHoaId: string, field: 'giaPhoBienKyBaoCao' | 'giaBinhQuanKyNay' | 'nguonThongTin' | 'ghiChu', event: Event): void {
+  const target = event.target as HTMLInputElement;
+  this.updateGiaInput(hangHoaId, field, target.value);
+}
 
   close(): void {
     this.activeModal.dismiss('Đóng');

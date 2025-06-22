@@ -13,6 +13,8 @@ import { tap } from 'rxjs/operators';
 import { CacheService } from '../utils/cache.service';
 import { buildHttpParams } from '../../../danhmuc/helpers/build-http-params';
 import { HangHoaGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong/HangHoaGiaThiTruongDto';
+import { ThuThapGiaThiTruongBulkCreateResponseDto } from '../../models/helpers/ThuThapGiaThiTruongBulkCreateResponseDto';
+import { ThuThapGiaThiTruongBulkCreateDto } from '../../models/thu-thap-gia-thi-truong/ThuThapGiaThiTruongBulkCreateDto';
 
 @Injectable({
   providedIn: 'root'
@@ -162,6 +164,19 @@ export class ThuThapGiaThiTruongService {
       tap(result => this.cacheService.set(cacheKey, result))
     );
   }
+
+  bulkCreate(bulkCreateDto: ThuThapGiaThiTruongBulkCreateDto): Observable<ApiResponse<ThuThapGiaThiTruongBulkCreateResponseDto>> {
+  return this.http.post<ApiResponse<ThuThapGiaThiTruongBulkCreateResponseDto>>(
+    `${this.apiUrl}/${this.endpoint}/bulk`, 
+    bulkCreateDto
+  ).pipe(
+    tap(() => {
+      this.clearListCache();
+      // Xóa cache hierarchical vì dữ liệu đã thay đổi
+      this.cacheService.removeByPrefix(`${this.cachePrefix}_hierarchical`);
+    })
+  );
+}
 
   /**
    * Xóa cache danh sách

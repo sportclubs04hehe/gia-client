@@ -236,3 +236,31 @@ tbody {
   opacity: 0.9;
   transition: opacity 0.3s ease;
 }
+
+/* Highlight cho input có dữ liệu */
+.form-control-sm:not(:placeholder-shown) {
+  background-color: #f8f9fa;
+  border-color: #28a745;
+}
+
+.form-control-sm:focus {
+  border-color: #2980b9;
+  box-shadow: 0 0 0 0.2rem rgba(41, 128, 185, 0.25);
+}
+
+/* Style cho input number */
+.form-control-sm[type="number"] {
+  text-align: right;
+}
+
+/* Responsive cho table */
+@media (max-width: 1200px) {
+  .table {
+    font-size: 0.8rem;
+  }
+  
+  .form-control-sm {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
