@@ -21,8 +21,8 @@ export function codeValidator(maxLength: number = 25): ValidatorFn {
       hasError = true;
     }
 
-    // Kiểm tra ký tự đặc biệt (chỉ cho phép chữ cái, số, gạch dưới và gạch ngang)
-    if (!/^[a-zA-Z0-9_-]*$/.test(value)) {
+    // Kiểm tra ký tự đặc biệt (chỉ cho phép chữ cái, số, gạch dưới, gạch ngang và dấu chấm)
+    if (!/^[a-zA-Z0-9_\.-]*$/.test(value)) {
       errors['hasSpecialChar'] = true;
       hasError = true;
     }

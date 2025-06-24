@@ -1,13 +1,11 @@
 /* Table Styling */
 .table-container {
-  height: calc(100vh - 180px);
-  min-height: 300px;
+  height: calc(100vh - 200px);
   overflow-y: auto;
-  /* Cho phép cuộn dọc nhưng ẩn thanh cuộn ngang */
   overflow-x: hidden;
   border-radius: 0.5rem;
   position: relative;
-  padding-bottom: 50px;
+  padding-bottom: 0; /* Loại bỏ padding-bottom */
 }
 
 .custom-table {

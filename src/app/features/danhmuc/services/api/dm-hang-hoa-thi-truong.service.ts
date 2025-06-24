@@ -382,24 +382,6 @@ export class DmHangHoaThiTruongService {
     return this.http.get<PagedResult<HHThiTruongTreeNodeDto>>(`${this.apiUrl}/${this.endpoint}/children/${parentId}`, { params });
   }
 
-  /**
-   * Lấy đường dẫn đầy đủ từ gốc đến node bao gồm các node con cần thiết
-   * @param targetNodeId ID của node đích cần lấy đường dẫn đến
-   * @param newItemId ID của mặt hàng mới vừa thêm (tùy chọn)
-   * @returns Observable chứa cây với đường dẫn và tất cả con của node cuối cùng đã được tải sẵn
-   */
-  getFullPathWithChildren(targetNodeId: string, newItemId?: string): Observable<HHThiTruongTreeNodeDto[]> {
-    let params = new HttpParams();
-    if (newItemId) {
-      params = params.set('newItemId', newItemId);
-    }
-
-    return this.http.get<HHThiTruongTreeNodeDto[]>(
-      `${this.apiUrl}/${this.endpoint}/full-path/${targetNodeId}`,
-      { params }
-    );
-  }
-
   validateCode(ma: string, parentId?: string, exceptId?: string): Observable<ApiResponse<CodeValidationResult>> {
     let params = new HttpParams()
       .set('ma', ma);

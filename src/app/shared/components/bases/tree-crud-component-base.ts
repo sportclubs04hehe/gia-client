@@ -41,7 +41,7 @@ export abstract class TreeCrudComponentBase<T extends ITreeEntity, TNode = T> ex
   // Convert from tree node to entity if different types
   abstract convertNodeToEntity(nodes: TNode[]): T[];
   
-  // Get the full path to an item in the tree
+  // Get the full path to an item in the tree trả về sau khi thêm mới ở đây
   abstract getFullPathWithChildren(parentId: string, itemId: string): Observable<TNode[]>;
   
   /**

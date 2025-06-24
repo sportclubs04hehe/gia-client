@@ -10,8 +10,8 @@ export class CodeInputDirective {
   @HostListener('input', ['$event'])
   onInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    // Loại bỏ khoảng trắng và ký tự đặc biệt
-    const filteredValue = input.value.replace(/[^a-zA-Z0-9_-]/g, '');
+    // Loại bỏ khoảng trắng và ký tự đặc biệt (cho phép dấu chấm)
+    const filteredValue = input.value.replace(/[^a-zA-Z0-9_\.-]/g, '');
     
     // Cập nhật lại giá trị nếu có thay đổi
     if (filteredValue !== input.value) {
@@ -26,7 +26,8 @@ export class CodeInputDirective {
     event.preventDefault();
     const pastedText = event.clipboardData?.getData('text/plain');
     if (pastedText) {
-      const filteredText = pastedText.replace(/[^a-zA-Z0-9_-]/g, '');
+      // Lọc khoảng trắng và ký tự đặc biệt (cho phép dấu chấm)
+      const filteredText = pastedText.replace(/[^a-zA-Z0-9_\.-]/g, '');
       const input = this.el.nativeElement as HTMLInputElement;
       
       // Chèn nội dung đã lọc vào vị trí hiện tại

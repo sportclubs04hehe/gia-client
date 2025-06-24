@@ -203,10 +203,6 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
     } as HHThiTruongDto));
   }
 
-  override getFullPathWithChildren(parentId: string, itemId: string): Observable<HHThiTruongTreeNodeDto[]> {
-    return this.dmHangHoaThiTruongService.getFullPathWithChildren(parentId, itemId);
-  }
-
   override loadParentItemsFromService(): Observable<HHThiTruongDto[]> {
     return this.dmHangHoaThiTruongService.getAllParentCategories();
   }
@@ -252,6 +248,10 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
         }
       });
     }
+  }
+
+   override getFullPathWithChildren(parentId: string, itemId: string): Observable<HHThiTruongTreeNodeDto[]> {
+    throw new Error('Method not implemented.');
   }
 
   /* Quản lý hành động UI */

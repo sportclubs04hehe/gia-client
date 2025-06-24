@@ -1,6 +1,6 @@
 /* Table Styling */
 .table-container {
-  height: calc(100vh - 180px); /* Adjust this as needed */
+  height: calc(100vh - 200px); /* Adjust this as needed */
   min-height: 300px; /* Ensure there's enough height to trigger scroll */
   overflow-y: auto;
   overflow-x: auto;
