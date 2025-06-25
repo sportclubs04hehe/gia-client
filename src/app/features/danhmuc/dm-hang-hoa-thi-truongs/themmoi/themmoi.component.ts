@@ -290,16 +290,12 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
       .subscribe({
         next: (response) => {
           if (response && response.data) {
-            // Trả về đầy đủ thông tin cần thiết
-            const result = {
+            // Đóng modal và trả về kết quả với đầy đủ thông tin
+            this.activeModal.close({
               item: response.data,
               parentId: parentId,
-              success: true,
-              useOptimizedPath: true // Đánh dấu để sử dụng API tối ưu
-            };
-            
-            // Đóng modal và trả về kết quả
-            this.activeModal.close(result);
+              success: true
+            });
           } else {
             this.modalNotificationService.error('Không nhận được dữ liệu phản hồi từ máy chủ', 'Lỗi');
           }

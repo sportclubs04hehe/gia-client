@@ -414,7 +414,7 @@ export class DmHangHoaThiTruongService {
      */
   getHierarchicalDescendants(parentId: string): Observable<ApiResponse<HHThiTruongTreeNodeDto[]>> {
     return this.http.get<ApiResponse<HHThiTruongTreeNodeDto[]>>(
-      `${this.apiUrl}/${this.endpoint}/hierarchical/${parentId}`
+      `${this.apiUrl}/${this.endpoint}/hierarchical-path/${parentId}`
     );
   }
 }

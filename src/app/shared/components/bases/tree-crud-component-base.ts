@@ -117,38 +117,78 @@ export abstract class TreeCrudComponentBase<T extends ITreeEntity, TNode = T> ex
   /**
    * Navigate to an item in the tree and show it
    */
-  navigateToItemInTree(parentId: string, item: T): void {
-    this.spinnerService.showTableSpinner();
-    this.getFullPathWithChildren(parentId, item.id).subscribe({
-      next: (pathTree) => {
-        if (!pathTree?.length) {
-          this.spinnerService.hideTableSpinner();
-          return;
-        }
-
-        // Update root data if needed
-        pathTree.forEach(rootNode => {
-          const entityNode = this.convertNodeToEntity([rootNode])[0];
-          const existingRoot = this.parentItems.find(x => x.id === entityNode.id);
-          if (!existingRoot) {
-            this.parentItems = [...this.parentItems, entityNode];
-          }
-        });
-
-        // Process tree path nodes
-        this.processTreePath(pathTree);
-        
-        // Select and scroll to the item
-        this.selectAndScrollToItem(item);
+ navigateToItemInTree(parentId: string, item: T): void {
+  this.spinnerService.showTableSpinner();
+  
+  this.getFullPathWithChildren(parentId, item.id).subscribe({
+    next: (pathTree) => {
+      if (!pathTree?.length) {
         this.spinnerService.hideTableSpinner();
-      },
-      error: (error) => {
-        console.error('Error loading path:', error);
-        this.spinnerService.hideTableSpinner();
-        this.loadParentItems();
+        return;
       }
-    });
+
+      // Xử lý cây phân cấp nhận được
+      this.processTreePath(pathTree);
+      
+      // Thêm đoạn code này để đảm bảo tất cả node cha được mở rộng
+      this.ensureParentNodesExpanded(item);
+      
+      // Chọn và cuộn đến bản ghi mới
+      this.selectAndScrollToItem(item);
+      this.spinnerService.hideTableSpinner();
+    },
+    error: (error) => {
+      console.error('Error loading path:', error);
+      this.spinnerService.hideTableSpinner();
+      this.loadParentItems();
+    }
+  });
+}
+
+// Thêm phương thức này
+protected ensureParentNodesExpanded(item: T): void {
+  if (!this.treeTableComponent) return;
+  
+  const parentIdFieldName = this.getParentIdFieldName();
+  let currentItem: T | null = item;
+  let currentParentId = currentItem[parentIdFieldName as keyof T] as unknown as string;
+  
+  // Duyệt ngược từ node hiện tại lên các node cha
+  while (currentParentId) {
+    // Mở rộng node cha
+    this.treeTableComponent.expandedRows.set(currentParentId, true);
+    
+    // Không cần gọi thêm API ở đây nữa
+    // Các dữ liệu con đã được đưa vào nodeChildrenMap trong autoExpandPathNodes
+    
+    // Tìm node cha
+    currentItem = this.findItemById(currentParentId);
+    if (!currentItem) break;
+    
+    // Lấy id cha của node cha
+    currentParentId = currentItem[parentIdFieldName as keyof T] as unknown as string;
   }
+  
+  // Cập nhật UI sau khi đã mở rộng tất cả các nút cha
+  this.treeTableComponent.detectChanges();
+}
+
+// Tìm item theo ID
+protected findItemById(id: string): T | null {
+  // Tìm trong danh sách gốc
+  const rootItem = this.parentItems.find(item => item.id === id);
+  if (rootItem) return rootItem;
+  
+  // Tìm trong các node con
+  if (this.treeTableComponent) {
+    for (const [, children] of this.treeTableComponent.nodeChildrenMap.entries()) {
+      const foundItem = children.find(item => item.id === id);
+      if (foundItem) return foundItem;
+    }
+  }
+  
+  return null;
+}
   
   /**
    * Update node in tree (when information changes or node moves)

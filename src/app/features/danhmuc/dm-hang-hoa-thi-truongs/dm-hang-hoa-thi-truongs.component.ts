@@ -11,7 +11,7 @@ import { TreeTableComponent } from '../../../shared/components/table/tree-table/
 import { TableColumn } from '../../../shared/models/table-column';
 import { ThemmoiComponent } from './themmoi/themmoi.component';
 import { SuaComponent } from './sua/sua.component';
-import { Observable, Subject } from 'rxjs';
+import { catchError, map, Observable, of, Subject } from 'rxjs';
 import { TreeCrudComponentBase } from '../../../shared/components/bases/tree-crud-component-base';
 import { TreeSearchService } from '../services/utils/tree-search.service';
 import { HhThiTruongImportExcelComponent } from './hh-thi-truong-import-excel/hh-thi-truong-import-excel.component';
@@ -33,7 +33,7 @@ import { Loai } from '../models/enum/loai';
 export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTruongDto, HHThiTruongTreeNodeDto> implements OnInit, OnDestroy {
   private dmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
   private treeSearchService = inject(TreeSearchService);
-  private ngbModalService = inject(NgbModal); 
+  private ngbModalService = inject(NgbModal);
   private destroy$ = new Subject<void>();
 
   isSearchActive = false;
@@ -250,9 +250,69 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
     }
   }
 
-   override getFullPathWithChildren(parentId: string, itemId: string): Observable<HHThiTruongTreeNodeDto[]> {
-    throw new Error('Method not implemented.');
+override getFullPathWithChildren(parentId: string, itemId: string): Observable<HHThiTruongTreeNodeDto[]> {
+  // Thay đổi ở đây: Sử dụng itemId thay vì parentId để lấy đường dẫn đầy đủ
+  const idToUse = itemId || parentId;
+
+  if (!idToUse) {
+    return of([]);
   }
+
+  // Sử dụng getHierarchicalDescendants để lấy cấu trúc cây phân cấp
+  return this.dmHangHoaThiTruongService.getHierarchicalDescendants(idToUse).pipe(
+    map(response => {
+      if (!response || !response.data) {
+        return [];
+      }
+
+      this.autoExpandPathNodes(response.data);
+      
+      return response.data;
+    }),
+    catchError(error => {
+      console.error('Lỗi khi lấy cấu trúc cây:', error);
+      return of([]);
+    })
+  );
+}
+
+// Thêm phương thức mới để tự động mở rộng các node cha
+private autoExpandPathNodes(pathNodes: HHThiTruongDto[] | HHThiTruongTreeNodeDto[]): void {
+  if (!this.treeTableComponent) return;
+  
+  // Tạo Map để lưu trữ các node con theo ID của node cha
+  const nodeChildrenMap = new Map<string, HHThiTruongDto[]>();
+  
+  // Xây dựng Map node cha -> danh sách con
+  for (const node of pathNodes) {
+    if (node.matHangChaId) {
+      if (!nodeChildrenMap.has(node.matHangChaId)) {
+        nodeChildrenMap.set(node.matHangChaId, []);
+      }
+      nodeChildrenMap.get(node.matHangChaId)?.push(node as HHThiTruongDto);
+    }
+  }
+  
+  // Duyệt qua từng node trong đường dẫn (trừ node cuối là bản ghi mới)
+  for (let i = 0; i < pathNodes.length - 1; i++) {
+    const node = pathNodes[i];
+    if (node.id) {
+      // Mở rộng node
+      this.treeTableComponent.expandedRows.set(node.id, true);
+      
+      // Nếu node này có con trong đường dẫn, thêm vào nodeChildrenMap của TreeTable
+      if (nodeChildrenMap.has(node.id)) {
+        // Chỉ thêm vào nếu chưa có để tránh ghi đè dữ liệu đã có
+        if (!this.treeTableComponent.nodeChildrenMap.has(node.id)) {
+          this.treeTableComponent.nodeChildrenMap.set(node.id, nodeChildrenMap.get(node.id) || []);
+        }
+      }
+    }
+  }
+  
+  // Cập nhật UI
+  this.treeTableComponent.detectChanges();
+}
 
   /* Quản lý hành động UI */
   onButtonAction(action: string): void {
@@ -310,7 +370,7 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
   }
 
   openImportExcelModal(): void {
-    const modalRef = this.ngbModalService.open(HhThiTruongImportExcelComponent, { 
+    const modalRef = this.ngbModalService.open(HhThiTruongImportExcelComponent, {
       size: 'xl',
       backdrop: 'static'
     });
