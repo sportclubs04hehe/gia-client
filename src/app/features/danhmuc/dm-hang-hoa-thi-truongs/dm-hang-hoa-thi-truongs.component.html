@@ -52,6 +52,8 @@
           [loadChildren]="loadChildrenForNode"
           [defaultPageSize]="100"
           [searchTerm]="currentSearchTerm"
+          [newlyAddedItemId]="newlyAddedItemId"
+          [loadAllChildren]="loadAllChildrenForParent.bind(this)"
           (rowSelected)="onRowSelected($event)"
           (nodeToggled)="onNodeToggled($event)">
         </app-tree-table>

@@ -51,6 +51,12 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
     { field: 'dacTinh', header: 'Đặc tính', width: '25%', formatter: (item) => item.dacTinh || '' }
   ];
 
+  // Add this property to track newly added items
+  newlyAddedItemId: string | null = null;
+
+  // Add property to store the parent ID of newly added items
+  newItemParentId: string | null = null;
+
   constructor() {
     super();
     // Bind the method to preserve 'this' context when used in template binding
@@ -150,12 +156,35 @@ export class DmHangHoaThiTruongsComponent extends TreeCrudComponentBase<HHThiTru
   }
 
   override handleItemCreated(result: any): void {
+    // Set the newly added item ID
+    this.newlyAddedItemId = result.item?.id;
+    
+    // Store the parent ID of the new item
+    this.newItemParentId = result.parentId || null;
+    
     if (result.parentId) {
       this.navigateToItemInTree(result.parentId, result.item);
+      
+      // After navigation, set the parent ID for the "View All" feature
+      setTimeout(() => {
+        if (this.treeTableComponent) {
+          this.treeTableComponent.setParentForNewItem(result.parentId);
+        }
+      }, 500);
     } else {
       this.loadParentItems();
       this.selectAndScrollToItem(result.item);
     }
+    
+    // Clear the indicator after a few seconds
+    setTimeout(() => {
+      this.newlyAddedItemId = null;
+      this.newItemParentId = null;
+      // Force refresh view if needed
+      if (this.treeTableComponent) {
+        this.treeTableComponent.detectChanges();
+      }
+    }, 5000); // 5 seconds
   }
 
   override handleItemUpdated(updatedItem: HHThiTruongDto, originalData?: any): void {
@@ -300,12 +329,45 @@ private autoExpandPathNodes(pathNodes: HHThiTruongDto[] | HHThiTruongTreeNodeDto
       // Mở rộng node
       this.treeTableComponent.expandedRows.set(node.id, true);
       
-      // Nếu node này có con trong đường dẫn, thêm vào nodeChildrenMap của TreeTable
+      // Nếu node này có con trong đường dẫn, cập nhật nodeChildrenMap của TreeTable
       if (nodeChildrenMap.has(node.id)) {
-        // Chỉ thêm vào nếu chưa có để tránh ghi đè dữ liệu đã có
-        if (!this.treeTableComponent.nodeChildrenMap.has(node.id)) {
+        if (this.treeTableComponent.nodeChildrenMap.has(node.id)) {
+          // Đã có danh sách con, kiểm tra và thêm bản ghi mới nếu chưa tồn tại
+          const existingChildren = this.treeTableComponent.nodeChildrenMap.get(node.id) || [];
+          const newChildren = nodeChildrenMap.get(node.id) || [];
+          
+          // Thêm các bản ghi mới chưa có trong danh sách hiện tại
+          for (const newChild of newChildren) {
+            const exists = existingChildren.some(existing => existing.id === newChild.id);
+            if (!exists) {
+              existingChildren.push(newChild);
+            }
+          }
+          
+          // Cập nhật lại danh sách
+          this.treeTableComponent.nodeChildrenMap.set(node.id, existingChildren);
+        } else {
+          // Chưa có danh sách con, thêm mới
           this.treeTableComponent.nodeChildrenMap.set(node.id, nodeChildrenMap.get(node.id) || []);
         }
+      }
+    }
+  }
+  
+  // Đảm bảo bản ghi mới luôn được hiển thị bằng cách thêm trực tiếp vào danh sách con
+  const lastNode = pathNodes[pathNodes.length - 1];
+  if (lastNode && lastNode.matHangChaId) {
+    const parentId = lastNode.matHangChaId;
+    
+    // Kiểm tra xem nhóm cha đã được mở rộng chưa
+    if (this.treeTableComponent.expandedRows.get(parentId)) {
+      const existingChildren = this.treeTableComponent.nodeChildrenMap.get(parentId) || [];
+      
+      // Kiểm tra bản ghi mới đã có trong danh sách chưa
+      const exists = existingChildren.some(existing => existing.id === lastNode.id);
+      if (!exists) {
+        existingChildren.push(lastNode as HHThiTruongDto);
+        this.treeTableComponent.nodeChildrenMap.set(parentId, existingChildren);
       }
     }
   }
@@ -390,5 +452,52 @@ private autoExpandPathNodes(pathNodes: HHThiTruongDto[] | HHThiTruongTreeNodeDto
   private handleDeleteError(error: any): void {
     this.spinnerService.hideSavingSpinner();
     console.error('Lỗi khi xóa mặt hàng:', error);
+  }
+
+  // Add method to load all children for a parent
+  loadAllChildrenForParent(parentId: string): void {
+    if (!parentId || !this.treeTableComponent) return;
+    
+    this.spinnerService.showSavingSpinner();
+    
+    // Call service to get all children with a large page size
+    this.dmHangHoaThiTruongService.getChildrenByParent(parentId, 1, 1000).subscribe({
+      next: (result) => {
+        if (result && result.data) {
+          // Update the tree table with all children
+          const allChildren = this.convertNodeToEntity(result.data);
+          
+          // Set all children to the tree table
+          this.treeTableComponent.nodeChildrenMap.set(parentId, allChildren);
+          
+          // Ensure the node is expanded
+          this.treeTableComponent.expandedRows.set(parentId, true);
+          
+          // Update pagination info
+          this.treeTableComponent.nodePaginationMap.set(parentId, {
+            currentPage: 1,
+            totalPages: Math.ceil((result.pagination?.totalItems || allChildren.length) / this.treeTableComponent.defaultPageSize),
+            hasNextPage: false,
+            isLoadingMore: false
+          });
+          
+          // Force refresh
+          this.treeTableComponent.detectChanges();
+          
+          // Wait a bit and scroll to the newly added item to keep it visible
+          setTimeout(() => {
+            if (this.newlyAddedItemId) {
+              this.scrollToSelectedItem(this.newlyAddedItemId);
+            }
+          }, 100);
+        }
+        
+        this.spinnerService.hideSavingSpinner();
+      },
+      error: (error) => {
+        console.error('Lỗi khi tải tất cả bản ghi con:', error);
+        this.spinnerService.hideSavingSpinner();
+      }
+    });
   }
 }

@@ -26,6 +26,8 @@ export class TreeTableComponent<T extends TreeNode> {
   @Input() defaultPageSize: number = 100;
   @Input() levelField: string = 'level';
   @Input() searchTerm: string = '';
+  @Input() newlyAddedItemId: string | null = null;
+  @Input() loadAllChildren: ((parentId: string) => void) | null = null;
 
   @Output() rowSelected = new EventEmitter<T>();
   @Output() nodeToggled = new EventEmitter<{ node: T, expanded: boolean }>();
@@ -36,6 +38,10 @@ export class TreeTableComponent<T extends TreeNode> {
   nodePaginationMap = new Map<string, NodePagination>();
   selectedRowId: string | null = null;
   private initialLoadingMap = new Map<string, boolean>();
+
+  // New properties to track parent of new item
+  parentForNewItem: string | null = null;
+  showViewAllForParent: boolean = false;
 
   constructor(private cdr: ChangeDetectorRef) { }
 
@@ -321,5 +327,27 @@ export class TreeTableComponent<T extends TreeNode> {
     }
 
     return null;
+  }
+
+  // Add a method to check if a row is newly added
+  isNewlyAddedItem(itemId: string): boolean {
+    return this.newlyAddedItemId === itemId;
+  }
+
+  // Add this method to set the parent for new item
+  setParentForNewItem(parentId: string | null): void {
+    if (parentId) {
+      this.parentForNewItem = parentId;
+      this.showViewAllForParent = true;
+    }
+  }
+
+  // Method to load all children for a parent
+  loadAllChildrenForParent(parentId: string): void {
+    if (this.loadAllChildren && parentId) {
+      this.loadAllChildren(parentId);
+      // Hide the button after clicking
+      this.showViewAllForParent = false;
+    }
   }
 }

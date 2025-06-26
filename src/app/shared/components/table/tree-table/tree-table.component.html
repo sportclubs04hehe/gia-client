@@ -70,6 +70,18 @@
                     <small><i class="bi bi-info-circle me-2"></i> Không có dữ liệu con</small>
                   </td>
                 </tr>
+
+                <!-- For the immediate parent of newly added items -->
+                <tr *ngIf="showViewAllForParent && parentForNewItem" 
+                    class="view-all-records-row" 
+                    (click)="loadAllChildrenForParent(parentForNewItem)">
+                  <td [attr.colspan]="columns.length" class="text-center py-2">
+                    <div class="view-all-wrapper">
+                      <i class="bi bi-arrow-down-circle-fill me-1"></i>
+                      <span class="view-all-text">Xem tất cả mặt hàng trong nhóm này</span>
+                    </div>
+                  </td>
+                </tr>
               </ng-container>
             </ng-container>
           </ng-container>
@@ -108,6 +120,9 @@
                 (renderCellValue(node, columns[0]) | capitalize | textHighlight:searchTerm) : 
                 (renderCellValue(node, columns[0]) | textHighlight:searchTerm)">
               </span>
+              
+              <!-- Thêm nhãn cho các mục mới được thêm -->
+              <span *ngIf="isNewlyAddedItem(node[keyField])" class="ms-2 badge bg-success">Mới</span>
             </div>
           </td>
 
@@ -133,9 +148,7 @@
         <ng-container *ngIf="!isLoadingChildren(parentId)">
           <ng-container *ngFor="let child of getNodeChildren(parentId)">
             <!-- Hiển thị node -->
-            <ng-container [ngTemplateOutlet]="treeNodeTemplate" [ngTemplateOutletContext]="{node: child, level: level}">
-            </ng-container>
-
+            <ng-container [ngTemplateOutlet]="treeNodeTemplate" [ngTemplateOutletContext]="{node: child, level: level}"></ng-container>
             <!-- Tiếp tục đệ quy nếu node này đang mở rộng -->
             <ng-container *ngIf="isNodeExpanded(child[keyField])">
               <ng-container *ngTemplateOutlet="recursiveListTemplate; context:{
