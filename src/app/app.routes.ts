@@ -25,5 +25,15 @@ export const routes: Routes = [
                     .then(m => m.DmDonViTinhComponent)
             },
         ]
+    },
+    {
+        path: 'nghiep-vu',
+         children: [
+            {
+                path: 'thu-thap-gia-thi-truong-tt29',
+                loadComponent: () => import('./features/nghiep-vu/thu-thap-gia-thi-truong-tt29/thu-thap-gia-thi-truong-tt29.component')
+                    .then(m => m.ThuThapGiaThiTruongTt29Component)
+            },
+        ]
     }
 ];

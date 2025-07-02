@@ -1,0 +1,137 @@
+<div class="modal-header bg-light border-bottom shadow-sm py-2">
+  <h5 class="modal-title small-title mb-0">
+    <i class="bi bi-clipboard2-data-fill" style="color: #0a547c;"></i>
+    Thêm mới thu thập giá thị trường theo Thông Tư 29
+  </h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="huy()"></button>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="luu()">
+  <!-- Add toggle button -->
+  <div class="form-toggle-container">
+    <button type="button" class="toggle-btn" (click)="toggleForm()">
+      <i class="bi" [ngClass]="isFormExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      {{ isFormExpanded ? 'Thu gọn' : 'Mở rộng' }}
+    </button>
+  </div>
+
+  <!-- Add animation to modal-body -->
+  <div class="modal-body" [@formVisibility]="isFormExpanded ? 'expanded' : 'collapsed'">
+    <!-- Thông tin chung phiếu thu thập giá -->
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label fw-medium">Loại giá <span class="text-danger">*</span></label>
+          <select class="form-select form-select-sm shadow-none" formControlName="loaiGiaId">
+            <option value="">-- Chọn loại giá --</option>
+            <option *ngFor="let loai of danhSachLoaiGia" [value]="loai.id">
+              {{ loai.ten }}
+            </option>
+          </select>
+          <div *ngIf="isControlInvalid('loaiGiaId')" class="invalid-feedback d-block small">
+            Vui lòng chọn loại giá
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label fw-medium">Nhóm hàng hóa <span class="text-danger">*</span></label>
+          <div class="position-relative" (click)="openNhomHangHoaModal()">
+            <input style="cursor: pointer;" type="text" class="form-control form-control-sm shadow-none pe-5"
+              [value]="selectedNhomHangHoa?.ten || ''" readonly placeholder="Chọn nhóm hàng hóa" />
+            <input type="hidden" formControlName="nhomHangHoaId" />
+
+            <span class="position-absolute top-50 end-0 translate-middle-y pe-3" style="color: #2980b9;">
+              <i class="bi bi-folder2"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <app-date-input 
+        [size]="'small'" 
+        formControlName="ngayNhap" 
+        label="Ngày nhập" 
+        class="fw-medium"
+        [required]="true" 
+        [showTodayButton]="true">
+        </app-date-input>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add animation to table container -->
+  <div class="table-container" [@tableHeight]="isFormExpanded ? 'normal' : 'expanded'">
+    <table class="table table-hover text-center align-middle mb-0">
+      <thead class="table-light sticky-top">
+        <tr>
+          <th>Mã hàng hóa</th>
+          <th>Tên hàng hóa, dịch vụ</th>
+          <th>Đặc điểm kinh tế, kỹ thuật, quy cách</th>
+          <th>Đơn vị tính</th>
+          <th>Giá phổ biến kỳ báo cáo</th>
+          <th>Giá bình quân kỳ trước</th>
+          <th>Giá bình quân kỳ này</th>
+          <th>Mức tăng (giảm) giá bình quân</th>
+          <th>Tỷ lệ tăng (giảm) giá bình quân (%)</th>
+          <th>Nguồn thông tin</th>
+          <th>Ghi chú</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of chiTietGia">
+          <td class="small text-nowrap">{{ item.maHangHoa }}</td>
+          <td class="text-start small">{{ item.tenHangHoa }}</td>
+          <td class="small">{{ item.dacTinh || '-' }}</td>
+          <td class="small">{{ item.donViTinh }}</td>
+          <td>
+            <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.giaPhoBienKyBaoCao"
+              [ngModelOptions]="{standalone: true}" (blur)="tinhMucTangGiamTyLe(item)"
+              (keypress)="onlyNumberKey($event)">
+          </td>
+          <td>
+            <input type="text" class="form-control form-control-sm table-input table-input-disabled"
+              [(ngModel)]="item.giaBinhQuanKyTruoc" [ngModelOptions]="{standalone: true}" disabled readonly>
+          </td>
+          <td>
+            <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.giaBinhQuanKyNay"
+              [ngModelOptions]="{standalone: true}" (blur)="tinhMucTangGiamTyLe(item)"
+              (keypress)="onlyNumberKey($event)">
+          </td>
+          <td class="small text-nowrap">{{ item.mucTangGiamGiaBinhQuan | number:'1.0-2' }}</td>
+          <td class="small text-nowrap">{{ item.tyLeTangGiamGiaBinhQuan | number:'1.0-2' }}%</td>
+          <td>
+            <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.nguonThongTin"
+              [ngModelOptions]="{standalone: true}">
+          </td>
+          <td>
+            <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.ghiChu"
+              [ngModelOptions]="{standalone: true}">
+          </td>
+        </tr>
+
+        <tr *ngIf="chiTietGia.length === 0 && !isLoadingMatHang">
+          <td colspan="12" class="text-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <span class="text-muted">Vui lòng chọn nhóm hàng hóa để hiển thị danh sách mặt hàng thu thập
+              giá</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="isLoadingMatHang" class="text-center py-4">
+    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+    <span class="text-primary">Đang tải danh sách mặt hàng...</span>
+  </div>
+
+  <app-form-footer [isSaving]="isSaving" [size]="'small'" [disabled]="form.invalid || chiTietGia.length === 0"
+    (save)="luu()" (cancel)="huy()">
+  </app-form-footer>
+</form>

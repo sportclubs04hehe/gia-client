@@ -23,6 +23,7 @@ export class DateInputComponent implements OnInit, ControlValueAccessor {
   @Input() placeholder: string = 'dd/MM/yyyy';
   @Input() showTodayButton: boolean = true;
   @Input() showFooter: boolean = true;
+  @Input() size: 'default' | 'small' = 'default'; // New size input
   @ViewChild('datepicker') datepicker!: NgbInputDatepicker;
 
   control = new FormControl<NgbDateStruct | null>(null);

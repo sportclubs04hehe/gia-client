@@ -14,3 +14,35 @@
   font-size: 0.875em;
   color: #dc3545;
 }
+
+/* Smaller size styles */
+.small-label {
+  font-size: 0.75rem !important;
+}
+
+.small-input {
+  font-size: 0.75rem !important;
+  padding: 0.2rem 0.5rem !important;
+  min-height: 28px !important;
+}
+
+.small-button {
+  font-size: 0.75rem !important;
+  padding: 0.2rem 0.5rem !important;
+  min-height: 28px !important;
+}
+
+.small-feedback {
+  font-size: 0.7rem !important;
+}
+
+/* Fix for datepicker popup when using small size */
+::ng-deep .small-datepicker .ngb-dp-header {
+  font-size: 0.8rem !important;
+}
+
+::ng-deep .small-datepicker .ngb-dp-day {
+  font-size: 0.75rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+}

@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label *ngIf="label" [for]="ngControl.name || ''" class="form-label">
+    <label *ngIf="label" [for]="ngControl.name || ''" class="form-label" [class.small-label]="size === 'small'">
       {{ label }}
       <span *ngIf="required" class="text-danger">*</span>
     </label>
@@ -7,6 +7,8 @@
       <input
         [id]="ngControl.name || ''"
         class="form-control date-input"
+        [class.form-control-sm]="size === 'small'"
+        [class.small-input]="size === 'small'"
         [placeholder]="placeholder"
         [formControl]="control"
         ngbDatepicker
@@ -21,6 +23,8 @@
       />
       <button
         class="btn btn-outline-secondary calendar-button"
+        [class.btn-sm]="size === 'small'"
+        [class.small-button]="size === 'small'"
         type="button"
         (click)="datepicker.toggle()"
         [disabled]="disabled"
@@ -29,7 +33,9 @@
       </button>
       
       <!-- Error display -->
-      <div *ngIf="ngControl?.invalid && (ngControl?.touched || ngControl?.dirty)" class="invalid-feedback">
+      <div *ngIf="ngControl?.invalid && (ngControl?.touched || ngControl?.dirty)" 
+           class="invalid-feedback" 
+           [class.small-feedback]="size === 'small'">
         <ng-container *ngIf="ngControl?.errors?.['required']">
           {{ label || 'This field' }} là bắt buộc.
         </ng-container>
@@ -38,7 +44,6 @@
         </ng-container>
         <ng-container *ngIf="ngControl?.errors?.['ngbDate']?.invalid">
           Định dạng ngày/tháng/năm không hợp lệ. Vui lòng kiểm tra lại
-           <!-- {{ placeholder }}. -->
         </ng-container>
       </div>
     </div>
@@ -48,10 +53,15 @@
   <ng-template #footerTemplate>
     <hr class="my-0" />
     <div class="d-flex justify-content-between p-2">
-      <button *ngIf="showTodayButton" class="btn btn-primary btn-sm" (click)="setToToday()">
+      <button *ngIf="showTodayButton" 
+              class="btn btn-primary" 
+              [class.btn-sm]="size === 'small'"
+              (click)="setToToday()">
         Ngày hôm nay
       </button>
-      <button class="btn btn-secondary btn-sm" (click)="datepicker.close()">
+      <button class="btn btn-secondary" 
+              [class.btn-sm]="size === 'small'"
+              (click)="datepicker.close()">
         Đóng
       </button>
     </div>
