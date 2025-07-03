@@ -14,7 +14,6 @@
 </div>
 
 <form [formGroup]="form" (ngSubmit)="luu()" class="d-flex flex-column h-100">
-  <!-- Form content container -->
   <div class="form-content-container">
     <div class="modal-body">
       <!-- Thông tin chung phiếu thu thập giá -->
@@ -62,8 +61,8 @@
       </div>
 
 
-    <!-- Add animation to table container -->
-    <div class="table-container" [@tableHeight]="isFormExpanded ? 'normal' : 'expanded'">
+    <!-- Remove animation and use class binding -->
+    <div class="table-container" [class.expanded]="!isFormExpanded" [class.collapsed]="isFormExpanded">
       <table class="table table-hover text-center align-middle mb-0">
         <thead class="table-light sticky-top">
           <tr>
@@ -81,42 +80,84 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of chiTietGia">
+          <tr *ngFor="let item of chiTietGia" 
+              [class.parent-category]="item.loaiMatHang === Loai.Cha">
             <td class="small text-nowrap">{{ item.maHangHoa }}</td>
-            <td class="text-start small">{{ item.tenHangHoa }}</td>
-            <td class="small">{{ item.dacTinh || '-' }}</td>
-            <td class="small">{{ item.donViTinh }}</td>
-            <td>
-              <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.giaPhoBienKyBaoCao"
-                [ngModelOptions]="{standalone: true}" (blur)="tinhMucTangGiamTyLe(item)"
-                (keypress)="onlyNumberKey($event)">
+            
+            <!-- Tên hàng hóa - hiển thị khác biệt cho loại Cha -->
+            <td class="text-start small" 
+                [class.parent-category-name]="item.loaiMatHang === Loai.Cha">
+              {{ item.tenHangHoa }}
             </td>
-            <td>
-              <input type="text" class="form-control form-control-sm table-input table-input-disabled"
-                [(ngModel)]="item.giaBinhQuanKyTruoc" [ngModelOptions]="{standalone: true}" disabled readonly>
+            
+            <!-- Đặc điểm - chỉ hiển thị cho loại Con -->
+            <td class="small" *ngIf="item.loaiMatHang === Loai.Con">
+              {{ item.dacTinh || '-' }}
             </td>
-            <td>
-              <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.giaBinhQuanKyNay"
-                [ngModelOptions]="{standalone: true}" (blur)="tinhMucTangGiamTyLe(item)"
-                (keypress)="onlyNumberKey($event)">
+            <td class="small parent-category-cell" *ngIf="item.loaiMatHang === Loai.Cha">
+              <!-- Ô trống cho loại Cha -->
             </td>
-            <td class="small text-nowrap">{{ item.mucTangGiamGiaBinhQuan | number:'1.0-2' }}</td>
-            <td class="small text-nowrap">{{ item.tyLeTangGiamGiaBinhQuan | number:'1.0-2' }}%</td>
-            <td>
-              <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.nguonThongTin"
-                [ngModelOptions]="{standalone: true}">
+            
+            <!-- Đơn vị tính - chỉ hiển thị cho loại Con -->
+            <td class="small" *ngIf="item.loaiMatHang === Loai.Con">
+              {{ item.donViTinh }}
             </td>
-            <td>
-              <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.ghiChu"
-                [ngModelOptions]="{standalone: true}">
+            <td class="small parent-category-cell" *ngIf="item.loaiMatHang === Loai.Cha">
+              <!-- Ô trống cho loại Cha -->
             </td>
+            
+            <!-- Các cột input - chỉ hiển thị cho loại Con -->
+            <ng-container *ngIf="item.loaiMatHang === Loai.Con">
+              <td>
+                <input type="text" class="form-control form-control-sm table-input" 
+                       [(ngModel)]="item.giaPhoBienKyBaoCao"
+                       [ngModelOptions]="{standalone: true}" 
+                       (blur)="tinhMucTangGiamTyLe(item)"
+                       (keypress)="onlyNumberKey($event)">
+              </td>
+              <td>
+                <input type="text" class="form-control form-control-sm table-input table-input-disabled"
+                       [(ngModel)]="item.giaBinhQuanKyTruoc" 
+                       [ngModelOptions]="{standalone: true}" 
+                       disabled readonly>
+              </td>
+              <td>
+                <input type="text" class="form-control form-control-sm table-input" 
+                       [(ngModel)]="item.giaBinhQuanKyNay"
+                       [ngModelOptions]="{standalone: true}" 
+                       (blur)="tinhMucTangGiamTyLe(item)"
+                       (keypress)="onlyNumberKey($event)">
+              </td>
+              <td class="small text-nowrap">{{ item.mucTangGiamGiaBinhQuan | number:'1.0-2' }}</td>
+              <td class="small text-nowrap">{{ item.tyLeTangGiamGiaBinhQuan | number:'1.0-2' }}%</td>
+              <td>
+                <input type="text" class="form-control form-control-sm table-input" 
+                       [(ngModel)]="item.nguonThongTin"
+                       [ngModelOptions]="{standalone: true}">
+              </td>
+              <td>
+                <input type="text" class="form-control form-control-sm table-input" 
+                       [(ngModel)]="item.ghiChu"
+                       [ngModelOptions]="{standalone: true}">
+              </td>
+            </ng-container>
+            
+            <!-- Các ô trống cho loại Cha -->
+            <ng-container *ngIf="item.loaiMatHang === Loai.Cha">
+              <td class="parent-category-cell"></td> <!-- Giá phổ biến -->
+              <td class="parent-category-cell"></td> <!-- Giá bình quân kỳ trước -->
+              <td class="parent-category-cell"></td> <!-- Giá bình quân kỳ này -->
+              <td class="parent-category-cell"></td> <!-- Mức tăng giảm -->
+              <td class="parent-category-cell"></td> <!-- Tỷ lệ tăng giảm -->
+              <td class="parent-category-cell"></td> <!-- Nguồn thông tin -->
+              <td class="parent-category-cell"></td> <!-- Ghi chú -->
+            </ng-container>
           </tr>
 
           <tr *ngIf="chiTietGia.length === 0 && !isLoadingMatHang">
-            <td colspan="12" class="text-center">
+            <td colspan="11" class="text-center">
               <i class="bi bi-info-circle me-2"></i>
-              <span class="text-muted">Vui lòng chọn nhóm hàng hóa để hiển thị danh sách mặt hàng thu thập
-                giá</span>
+              <span class="text-muted">Vui lòng chọn nhóm hàng hóa để hiển thị danh sách mặt hàng thu thập giá</span>
             </td>
           </tr>
         </tbody>

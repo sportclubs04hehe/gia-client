@@ -21,6 +21,7 @@ th, td {
   font-size: 0.75rem !important;
   padding: 0.2rem 0.4rem !important;
   height: auto !important;
+  min-width: 100px;
 }
 
 .form-control-sm, .form-select-sm {
@@ -130,44 +131,42 @@ th, td {
 .modal-body {
   overflow: hidden;
   margin: 0;
-  padding-top: 0 !important; 
-  padding-bottom: 0.5rem;
-  /* Thêm padding cố định để tránh layout shift */
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
+  padding: 0 !important;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .row.g-3 {
   --bs-gutter-y: 0.25rem !important;
-  margin-top: 0 !important;
-  /* Thêm padding cố định cho form row */
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  margin: 0 !important;
+  padding: 0.5rem 0.75rem;
+  flex-shrink: 0;
 }
 
 .table-container {
-  position: relative;
-  overflow-y: auto;
   flex: 1 1 auto;
-  will-change: max-height;
-  min-height: 150px;
-  /* Sử dụng cùng timing với animation */
-  transition: max-height 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
-  max-height: calc(100vh - 255px);
-}
-
-/* Đảm bảo form container có transform GPU acceleration */
-.modal-body .row {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-tbody {
+  min-height: 0;
   overflow-y: auto;
+  margin: 0 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background-color: #fff;
 }
 
-.expanded-table {
-  max-height: calc(100vh - 150px);
+/* Khi form expand/collapse */
+.table-container.expanded {
+  margin-top: 0;
+}
+
+.table-container.collapsed {
+  margin-top: 0.5rem;
+}
+
+.table {
+  margin-bottom: 0 !important;
+  height: 100%;
 }
 
 .table thead.sticky-top {
@@ -209,31 +208,49 @@ form {
 
 .form-content-container {
   flex: 1 1 auto;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-/* Điều chỉnh lại chiều cao của table-container */
-.table-container {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  max-height: calc(100vh - 255px); /* Adjusted for footer height */
+/* Styling cho hàng loại Cha */
+.parent-category {
+  background-color: #f8f9fa !important;
+  border-left: 4px solid #007bff;
 }
 
-@media (max-height: 768px) {
-  .table-container {
-    max-height: calc(100vh - 220px);
-  }
-
-  .expanded-table {
-    max-height: calc(100vh - 120px);
-  }
+/* Styling cho tên hàng hóa loại Cha */
+.parent-category-name {
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  color: #2c3e50 !important;
+  font-size: 0.7rem;
 }
 
-/* Remove the old form-toggle-container styles since we're not using it anymore */
-.form-toggle-container {
-  display: none;
+/* Styling cho các ô trống của loại Cha */
+.parent-category-cell {
+  background-color: #f8f9fa !important;
+  position: relative;
+}
+
+.parent-category-cell::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 1px;
+  background-color: #dee2e6;
+}
+
+/* Hover effect cho hàng loại Cha */
+.parent-category:hover {
+  background-color: #e9ecef !important;
+}
+
+.table-input-disabled {
+  background-color: #f8f9fa;
+  opacity: 0.6;
 }

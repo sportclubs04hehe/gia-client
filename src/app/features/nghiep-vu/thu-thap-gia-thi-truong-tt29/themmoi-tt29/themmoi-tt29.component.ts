@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -15,6 +15,7 @@ import { finalize } from 'rxjs';
 import { CreateThuThapGiaModel } from '../../models/thu-thap-gia-thi-truong-tt29/CreateThuThapGiaModel';
 import { ThuThapGiaChiTietCreateDto } from '../../models/thu-thap-gia-chi-tiet/ThuThapGiaChiTietCreateDto';
 import { DmHangHoaThiTruongService } from '../../../danhmuc/services/api/dm-hang-hoa-thi-truong.service';
+import { Loai } from '../../../danhmuc/models/enum/loai';
 
 interface ChiTietGiaRow {
   hangHoaThiTruongId: string;
@@ -22,6 +23,7 @@ interface ChiTietGiaRow {
   tenHangHoa: string;
   dacTinh?: string;
   donViTinh: string;
+   loaiMatHang: Loai;
   giaPhoBienKyBaoCao?: string | number | null;
   giaBinhQuanKyTruoc?: string | number | null;
   giaBinhQuanKyNay?: string | number | null;
@@ -57,20 +59,7 @@ interface ChiTietGiaRow {
         visibility: 'hidden',
         overflow: 'hidden'
       })),
-      // Sử dụng timing giống nhau cho cả hai chiều
       transition('expanded <=> collapsed', [
-        animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)')
-      ])
-    ]),
-    trigger('tableHeight', [
-      state('normal', style({
-        'max-height': 'calc(100vh - 255px)'
-      })),
-      state('expanded', style({
-        'max-height': 'calc(100vh - 150px)'
-      })),
-      // Sử dụng timing mượt mà hơn
-      transition('normal <=> expanded', [
         animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)')
       ])
     ])
@@ -86,6 +75,8 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
   danhSachLoaiGia: LoaiGiaDto[] = [];
   danhSachHangHoaCon: HHThiTruongDto[] = [];
   selectedNhomHangHoa: { id: string, ten: string } | null = null;
+
+  Loai = Loai;
 
   chiTietGia: ChiTietGiaRow[] = [];
   override isSaving = false;
@@ -152,41 +143,60 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
    * Tải danh sách mặt hàng con theo ID nhóm hàng hóa đã chọn
    */
   loadMatHangCon(nhomHangHoaId: string): void {
-    this.isLoadingMatHang = true;
-    this.chiTietGia = []; // Xóa dữ liệu cũ
+  this.isLoadingMatHang = true;
+  this.chiTietGia = []; // Xóa dữ liệu cũ
 
-    this.dmHangHoaThiTruongService.getAllChildrenRecursive(nhomHangHoaId)
-      .pipe(finalize(() => this.isLoadingMatHang = false))
-      .subscribe({
-        next: (matHangCon) => {
-          // Chỉ lấy các mặt hàng có loại = Con (1)
-          const danhSachMatHang = matHangCon.filter(item => item.loaiMatHang === 1);
+  this.dmHangHoaThiTruongService.getAllChildrenRecursive(nhomHangHoaId)
+    .pipe(finalize(() => this.isLoadingMatHang = false))
+    .subscribe({
+      next: (matHangCon) => {
+        // Flatten cấu trúc cây để lấy tất cả mặt hàng con ở mọi cấp độ
+        const danhSachMatHang = this.flattenHangHoaTree(matHangCon);
 
-          // Chuyển đổi dữ liệu sang định dạng hiển thị trong bảng
-          this.chiTietGia = danhSachMatHang.map(item => ({
-            hangHoaThiTruongId: item.id,
-            maHangHoa: item.ma,
-            tenHangHoa: item.ten,
-            dacTinh: item.dacTinh,
-            donViTinh: item.tenDonViTinh || '',
-            giaPhoBienKyBaoCao: null,
-            giaBinhQuanKyTruoc: null,
-            giaBinhQuanKyNay: null,
-            mucTangGiamGiaBinhQuan: null,
-            tyLeTangGiamGiaBinhQuan: null,
-            nguonThongTin: null,
-            ghiChu: null
-          }));
+        this.chiTietGia = danhSachMatHang.map(item => ({
+          hangHoaThiTruongId: item.id,
+          maHangHoa: item.ma,
+          tenHangHoa: item.ten,
+          dacTinh: item.dacTinh,
+          donViTinh: item.tenDonViTinh || '',
+          loaiMatHang: item.loaiMatHang, 
+          giaPhoBienKyBaoCao: null,
+          giaBinhQuanKyTruoc: null,
+          giaBinhQuanKyNay: null,
+          mucTangGiamGiaBinhQuan: null,
+          tyLeTangGiamGiaBinhQuan: null,
+          nguonThongTin: null,
+          ghiChu: null
+        }));
 
-          if (this.chiTietGia.length === 0) {
-            this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
-          }
-        },
-        error: (error) => {
-          console.error('Lỗi khi tải danh sách mặt hàng con:', error);
-          this.toastr.error('Không thể tải danh sách mặt hàng con', 'Lỗi');
+        if (this.chiTietGia.length === 0) {
+          this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
         }
-      });
+      },
+      error: (error) => {
+        console.error('Lỗi khi tải danh sách mặt hàng con:', error);
+      }
+    });
+}
+
+  /**
+   * Flatten cấu trúc cây thành danh sách phẳng
+   */
+  private flattenHangHoaTree(nodes: any[]): any[] {
+    const result: any[] = [];
+    
+    const flatten = (items: any[]) => {
+      for (const item of items) {
+        result.push(item);
+        
+        if (item.matHangCon && item.matHangCon.length > 0) {
+          flatten(item.matHangCon);
+        }
+      }
+    };
+    
+    flatten(nodes);
+    return result;
   }
 
   /**
@@ -247,51 +257,49 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
     });
   }
 
-  /**
- * Chuẩn bị dữ liệu để lưu
- */
-  private prepareData(): CreateThuThapGiaModel | null {
-    if (this.form.invalid) {
-      this.markFormTouched();
-      return null;
-    }
-
-    // Lọc chỉ lấy những mặt hàng có nhập ít nhất một giá 
-    const validItems = this.chiTietGia.filter(item =>
-      (item.giaPhoBienKyBaoCao !== null && item.giaPhoBienKyBaoCao !== undefined && item.giaPhoBienKyBaoCao !== '') ||
-      (item.giaBinhQuanKyNay !== null && item.giaBinhQuanKyNay !== undefined && item.giaBinhQuanKyNay !== '')
-    );
-
-    if (validItems.length === 0) {
-      this.toastr.warning('Vui lòng nhập giá cho ít nhất một mặt hàng', 'Thông báo');
-      return null;
-    }
-
-    // Chuẩn bị dữ liệu thu thập giá
-    const dateFields = ['ngayNhap'];
-    const thuThapGiaData = this.prepareFormData(dateFields);
-
-    // Thêm trường năm
-    const currentYear = new Date().getFullYear();
-    thuThapGiaData.nam = currentYear;
-
-    // Chuẩn bị dữ liệu chi tiết giá - chỉ với các mặt hàng có nhập giá
-    const chiTietGiaData: ThuThapGiaChiTietCreateDto[] = validItems.map(item => ({
-      hangHoaThiTruongId: item.hangHoaThiTruongId,
-      giaPhoBienKyBaoCao: item.giaPhoBienKyBaoCao ? parseFloat(item.giaPhoBienKyBaoCao.toString()) : undefined,
-      giaBinhQuanKyTruoc: item.giaBinhQuanKyTruoc ? parseFloat(item.giaBinhQuanKyTruoc.toString()) : undefined,
-      giaBinhQuanKyNay: item.giaBinhQuanKyNay ? parseFloat(item.giaBinhQuanKyNay.toString()) : undefined,
-      mucTangGiamGiaBinhQuan: this.nullToUndefined(item.mucTangGiamGiaBinhQuan),
-      tyLeTangGiamGiaBinhQuan: this.nullToUndefined(item.tyLeTangGiamGiaBinhQuan),
-      nguonThongTin: this.nullToUndefined(item.nguonThongTin),
-      ghiChu: this.nullToUndefined(item.ghiChu)
-    }));
-
-    return {
-      thuThapGia: thuThapGiaData,
-      chiTietGia: chiTietGiaData
-    };
+ private prepareData(): CreateThuThapGiaModel | null {
+  if (this.form.invalid) {
+    this.markFormTouched();
+    return null;
   }
+
+  // Lọc chỉ lấy những mặt hàng loại Con có nhập ít nhất một giá 
+  const validItems = this.chiTietGia.filter(item =>
+    item.loaiMatHang === Loai.Con && // Chỉ lấy loại Con
+    ((item.giaPhoBienKyBaoCao !== null && item.giaPhoBienKyBaoCao !== undefined && item.giaPhoBienKyBaoCao !== '') ||
+     (item.giaBinhQuanKyNay !== null && item.giaBinhQuanKyNay !== undefined && item.giaBinhQuanKyNay !== ''))
+  );
+
+  if (validItems.length === 0) {
+    this.toastr.warning('Vui lòng nhập giá cho ít nhất một mặt hàng', 'Thông báo');
+    return null;
+  }
+
+  // Chuẩn bị dữ liệu thu thập giá
+  const dateFields = ['ngayNhap'];
+  const thuThapGiaData = this.prepareFormData(dateFields);
+
+  // Thêm trường năm
+  const currentYear = new Date().getFullYear();
+  thuThapGiaData.nam = currentYear;
+
+  // Chuẩn bị dữ liệu chi tiết giá - chỉ với các mặt hàng có nhập giá
+  const chiTietGiaData: ThuThapGiaChiTietCreateDto[] = validItems.map(item => ({
+    hangHoaThiTruongId: item.hangHoaThiTruongId,
+    giaPhoBienKyBaoCao: item.giaPhoBienKyBaoCao ? parseFloat(item.giaPhoBienKyBaoCao.toString()) : undefined,
+    giaBinhQuanKyTruoc: item.giaBinhQuanKyTruoc ? parseFloat(item.giaBinhQuanKyTruoc.toString()) : undefined,
+    giaBinhQuanKyNay: item.giaBinhQuanKyNay ? parseFloat(item.giaBinhQuanKyNay.toString()) : undefined,
+    mucTangGiamGiaBinhQuan: this.nullToUndefined(item.mucTangGiamGiaBinhQuan),
+    tyLeTangGiamGiaBinhQuan: this.nullToUndefined(item.tyLeTangGiamGiaBinhQuan),
+    nguonThongTin: this.nullToUndefined(item.nguonThongTin),
+    ghiChu: this.nullToUndefined(item.ghiChu)
+  }));
+
+  return {
+    thuThapGia: thuThapGiaData,
+    chiTietGia: chiTietGiaData
+  };
+}
 
   private nullToUndefined<T>(value: T | null): T | undefined {
     return value === null ? undefined : value;
@@ -310,15 +318,14 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
       .subscribe({
         next: (response) => {
           if (response && response.data) {
-            this.toastr.success('Tạo mới phiếu thu thập giá thành công', 'Thông báo');
+            this.toastr.success('Thêm mới thành công', 'Thông báo');
             this.activeModal.close('saved');
           } else {
-            this.toastr.error('Không nhận được phản hồi từ máy chủ', 'Lỗi');
+            console.error('Dữ liệu trả về không hợp lệ:', response);
           }
         },
         error: (error) => {
           console.error('Lỗi khi tạo phiếu thu thập giá:', error);
-          this.toastr.error('Không thể tạo phiếu thu thập giá', 'Lỗi');
         }
       });
   }
