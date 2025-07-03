@@ -73,6 +73,15 @@ th, td {
   min-height: 40px !important;
   padding-top: 0.4rem !important;
   padding-bottom: 0.4rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .small-title {
@@ -80,52 +89,60 @@ th, td {
   font-weight: 600 !important;
 }
 
-.form-toggle-container {
-  display: flex;
-  justify-content: center;
-  border-bottom: 1px solid #dee2e6;
-  background-color: #f8f9fa;
-  z-index: 2;
-  position: relative;
-  margin-top: -1px;
-}
-
 .toggle-btn {
   color: #0a547c;
-  background-color: transparent;
-  border: none;
+  background-color: rgba(10, 84, 124, 0.1);
+  border: 1px solid rgba(10, 84, 124, 0.2);
+  border-radius: 0.375rem;
   font-size: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 0.25rem 0.75rem;
-  transition: all 0.2s;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s ease;
   cursor: pointer;
+  font-weight: 500;
 }
 
 .toggle-btn:hover {
   color: #073654;
-  background-color: rgba(10, 84, 124, 0.05);
+  background-color: rgba(10, 84, 124, 0.15);
+  border-color: rgba(10, 84, 124, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-btn:focus {
-  box-shadow: none;
+  box-shadow: 0 0 0 2px rgba(10, 84, 124, 0.2);
   outline: none;
 }
 
 .toggle-btn i {
+  font-size: 0.875rem;
   transition: transform 0.3s ease;
 }
 
 .modal-body {
   overflow: hidden;
   margin: 0;
+  padding-top: 0 !important; 
   padding-bottom: 0.5rem;
-  will-change: height, opacity;
+  /* Thêm padding cố định để tránh layout shift */
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
 }
 
-.modal-body.collapsed {
-  overflow: hidden !important;
+.row.g-3 {
+  --bs-gutter-y: 0.25rem !important;
+  margin-top: 0 !important;
+  /* Thêm padding cố định cho form row */
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .table-container {
@@ -134,8 +151,15 @@ th, td {
   flex: 1 1 auto;
   will-change: max-height;
   min-height: 150px;
-  transition: all 0.3s ease-in-out;
-  max-height: calc(100vh - 222px);
+  /* Sử dụng cùng timing với animation */
+  transition: max-height 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  max-height: calc(100vh - 255px);
+}
+
+/* Đảm bảo form container có transform GPU acceleration */
+.modal-body .row {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 tbody {
@@ -176,6 +200,29 @@ tbody {
   border-right: none;
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-content-container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Điều chỉnh lại chiều cao của table-container */
+.table-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 255px); /* Adjusted for footer height */
+}
+
 @media (max-height: 768px) {
   .table-container {
     max-height: calc(100vh - 220px);
@@ -184,4 +231,9 @@ tbody {
   .expanded-table {
     max-height: calc(100vh - 120px);
   }
+}
+
+/* Remove the old form-toggle-container styles since we're not using it anymore */
+.form-toggle-container {
+  display: none;
 }

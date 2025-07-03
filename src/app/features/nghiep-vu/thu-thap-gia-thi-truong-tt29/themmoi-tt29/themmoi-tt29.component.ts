@@ -49,27 +49,30 @@ interface ChiTietGiaRow {
         height: '*',
         opacity: 1,
         visibility: 'visible',
-        padding: '0.5rem' // Thêm giá trị padding cụ thể
+        overflow: 'visible'
       })),
       state('collapsed', style({
         height: '0px',
         opacity: 0,
         visibility: 'hidden',
-        padding: '0',
         overflow: 'hidden'
       })),
-      // Tách thành 2 transition riêng biệt
-      transition('expanded => collapsed', animate('250ms ease-out')),
-      transition('collapsed => expanded', animate('300ms ease-in'))
+      // Sử dụng timing giống nhau cho cả hai chiều
+      transition('expanded <=> collapsed', [
+        animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)')
+      ])
     ]),
     trigger('tableHeight', [
       state('normal', style({
-        'max-height': 'calc(100vh - 222px)'
+        'max-height': 'calc(100vh - 255px)'
       })),
       state('expanded', style({
-        'max-height': 'calc(100vh - 120px)'
+        'max-height': 'calc(100vh - 150px)'
       })),
-      transition('normal <=> expanded', animate('250ms ease-in-out'))
+      // Sử dụng timing mượt mà hơn
+      transition('normal <=> expanded', [
+        animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)')
+      ])
     ])
   ]
 })
