@@ -52,7 +52,11 @@ td {
 .table-container {
   flex: 1 1 auto;
   overflow-y: auto;
-  max-height: calc(100vh - 195px);
+}
+
+.table-container.collapsed {
+  height: 100%;
+  margin-bottom: 10px;
 }
 
 .table thead.sticky-top {
@@ -159,11 +163,8 @@ td {
 
 /* Khi form expand/collapse */
 .table-container.expanded {
-  margin-top: 0;
-}
-
-.table-container.collapsed {
-  margin-top: 0.5rem;
+  height: 100%;
+  margin-bottom: 10px;
 }
 
 .table {
