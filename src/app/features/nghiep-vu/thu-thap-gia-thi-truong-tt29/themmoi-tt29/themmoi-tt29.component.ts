@@ -24,6 +24,7 @@ interface ChiTietGiaRow {
   dacTinh?: string;
   donViTinh: string;
   loaiMatHang: Loai;
+  level: number; // Thêm trường level
   giaPhoBienKyBaoCao?: string | number | null;
   giaBinhQuanKyTruoc?: string | number | null;
   giaBinhQuanKyNay?: string | number | null;
@@ -139,66 +140,65 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
     });
   }
 
-  /**
-   * Tải danh sách mặt hàng con theo ID nhóm hàng hóa đã chọn
-   */
   loadMatHangCon(nhomHangHoaId: string): void {
-    this.isLoadingMatHang = true;
-    this.chiTietGia = []; // Xóa dữ liệu cũ
+  this.isLoadingMatHang = true;
+  this.chiTietGia = []; // Xóa dữ liệu cũ
 
-    this.dmHangHoaThiTruongService.getAllChildrenRecursive(nhomHangHoaId)
-      .pipe(finalize(() => this.isLoadingMatHang = false))
-      .subscribe({
-        next: (matHangCon) => {
-          // Flatten cấu trúc cây để lấy tất cả mặt hàng con ở mọi cấp độ
-          const danhSachMatHang = this.flattenHangHoaTree(matHangCon);
+  this.dmHangHoaThiTruongService.getAllChildrenRecursive(nhomHangHoaId)
+    .pipe(finalize(() => this.isLoadingMatHang = false))
+    .subscribe({
+      next: (matHangCon) => {
+        // Flatten cấu trúc cây để lấy tất cả mặt hàng con ở mọi cấp độ
+        const danhSachMatHang = this.flattenHangHoaTree(matHangCon);
 
-          this.chiTietGia = danhSachMatHang.map(item => ({
-            hangHoaThiTruongId: item.id,
-            maHangHoa: item.ma,
-            tenHangHoa: item.ten,
-            dacTinh: item.dacTinh,
-            donViTinh: item.tenDonViTinh || '',
-            loaiMatHang: item.loaiMatHang,
-            giaPhoBienKyBaoCao: null,
-            giaBinhQuanKyTruoc: null,
-            giaBinhQuanKyNay: null,
-            mucTangGiamGiaBinhQuan: null,
-            tyLeTangGiamGiaBinhQuan: null,
-            nguonThongTin: null,
-            ghiChu: null
-          }));
+        this.chiTietGia = danhSachMatHang.map(item => ({
+          hangHoaThiTruongId: item.id,
+          maHangHoa: item.ma,
+          tenHangHoa: item.ten,
+          dacTinh: item.dacTinh,
+          donViTinh: item.tenDonViTinh || '',
+          loaiMatHang: item.loaiMatHang,
+          level: item.level || 0, // Thêm level từ kết quả flattened
+          giaPhoBienKyBaoCao: null,
+          giaBinhQuanKyTruoc: null,
+          giaBinhQuanKyNay: null,
+          mucTangGiamGiaBinhQuan: null,
+          tyLeTangGiamGiaBinhQuan: null,
+          nguonThongTin: null,
+          ghiChu: null
+        }));
 
-          if (this.chiTietGia.length === 0) {
-            this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
-          }
-        },
-        error: (error) => {
-          console.error('Lỗi khi tải danh sách mặt hàng con:', error);
+        if (this.chiTietGia.length === 0) {
+          this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
         }
-      });
-  }
+      },
+      error: (error) => {
+        console.error('Lỗi khi tải danh sách mặt hàng con:', error);
+      }
+    });
+}
 
   /**
-   * Flatten cấu trúc cây thành danh sách phẳng
-   */
-  private flattenHangHoaTree(nodes: any[]): any[] {
-    const result: any[] = [];
+ * Flatten cấu trúc cây thành danh sách phẳng với thông tin cấp độ
+ */
+private flattenHangHoaTree(nodes: any[]): any[] {
+  const result: any[] = [];
 
-    const flatten = (items: any[]) => {
-      for (const item of items) {
-        result.push(item);
+  const flatten = (items: any[], level: number = 0) => {
+    for (const item of items) {
+      // Thêm thuộc tính level vào item
+      const itemWithLevel = { ...item, level };
+      result.push(itemWithLevel);
 
-        if (item.matHangCon && item.matHangCon.length > 0) {
-          flatten(item.matHangCon);
-        }
+      if (item.matHangCon && item.matHangCon.length > 0) {
+        flatten(item.matHangCon, level + 1);
       }
-    };
+    }
+  };
 
-    flatten(nodes);
-    return result;
-  }
-
+  flatten(nodes);
+  return result;
+}
   /**
    * Hàm kiểm tra chỉ cho phép nhập số và dấu chấm
    */
@@ -342,5 +342,14 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
    */
   toggleForm(): void {
     this.isFormExpanded = !this.isFormExpanded;
+  }
+
+  /**
+   * Calculate indentation padding based on level
+   */
+  calculateIndent(level: number): string {
+    const basePadding = 0.5;  // Base padding in rem
+    const indentStep = 1;     // Increment per level in rem
+    return `${basePadding + (level * indentStep)}rem`;
   }
 }

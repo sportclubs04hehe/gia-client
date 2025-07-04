@@ -234,6 +234,8 @@ form {
 .parent-category-ma {
   font-weight: bold !important;
   color: #2c3e50 !important;
+  font-size: 0.7rem;
+  text-transform: uppercase !important;
 }
 
 /* Styling cho các ô trống của loại Cha */
@@ -274,4 +276,27 @@ form {
 .table tbody tr:hover td {
   background-color: rgba(0, 123, 255, 0.05) !important;
   border-color: #ffffff !important;
+}
+/* Thêm biểu tượng cho cấp độ */
+.indent-prefix {
+  display: inline-block;
+  margin-right: 0.3rem;
+}
+
+/* Định dạng các cấp độ khác nhau */
+.level-indicator {
+  display: inline-block;
+}
+
+/* Màu nền nhẹ để phân biệt các cấp */
+.row-level-0 td {
+  background-color: rgba(248, 249, 250, 0.4);
+}
+
+.row-level-1 td {
+  background-color: rgba(248, 249, 250, 0.2);
+}
+
+.row-level-2 td {
+  background-color: rgba(248, 249, 250, 0.1);
 }

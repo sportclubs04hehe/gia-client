@@ -81,8 +81,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of chiTietGia" 
-              [class.parent-category-ma]="item.loaiMatHang === Loai.Cha">
-            <td class="small text-nowrap">{{ item.maHangHoa }}</td>
+              [class.parent-category-ma]="item.loaiMatHang === Loai.Cha"
+              [ngClass]="'row-level-' + (item.level % 3)">
+            <td class="text-nowrap">
+              <div [style.padding-left]="calculateIndent(item.level)">
+                <span class="indent-prefix" *ngIf="item.level > 0">
+                  <i class="bi bi-dash-short"></i>
+                </span>
+                {{ item.maHangHoa }}
+              </div>
+            </td>
             
             <!-- Tên hàng hóa - hiển thị khác biệt cho loại Cha -->
             <td class="text-start small" 
