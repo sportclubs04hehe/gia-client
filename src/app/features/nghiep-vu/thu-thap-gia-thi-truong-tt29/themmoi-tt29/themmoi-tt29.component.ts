@@ -14,7 +14,6 @@ import { NhomhhModalComponent } from '../../../danhmuc/dm-hang-hoa-thi-truongs/n
 import { finalize } from 'rxjs';
 import { CreateThuThapGiaModel } from '../../models/thu-thap-gia-thi-truong-tt29/CreateThuThapGiaModel';
 import { ThuThapGiaChiTietCreateDto } from '../../models/thu-thap-gia-chi-tiet/ThuThapGiaChiTietCreateDto';
-import { DmHangHoaThiTruongService } from '../../../danhmuc/services/api/dm-hang-hoa-thi-truong.service';
 import { Loai } from '../../../danhmuc/models/enum/loai';
 
 interface ChiTietGiaRow {
@@ -24,7 +23,7 @@ interface ChiTietGiaRow {
   dacTinh?: string;
   donViTinh: string;
   loaiMatHang: Loai;
-  level: number; // Thêm trường level
+  level: number;
   giaPhoBienKyBaoCao?: string | number | null;
   giaBinhQuanKyTruoc?: string | number | null;
   giaBinhQuanKyNay?: string | number | null;
@@ -71,7 +70,6 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
   private thuThapGiaService = inject(ThuThapGiaThiTruongTt29Service);
   private modalService = inject(NgbModal);
   private toastr = inject(ToastrService);
-  private dmHangHoaThiTruongService = inject(DmHangHoaThiTruongService);
 
   danhSachLoaiGia: LoaiGiaDto[] = [];
   danhSachHangHoaCon: HHThiTruongDto[] = [];
@@ -93,17 +91,30 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
 
   ngOnInit(): void {
     this.loadLoaiGia();
+
+    // Theo dõi thay đổi của cả hai trường nhóm hàng hóa và ngày nhập
+    this.form.get('ngayNhap')?.valueChanges.subscribe(() => {
+      this.checkAndLoadData();
+    });
   }
 
   /**
    * Khởi tạo form
    */
   protected buildForm(): void {
+
+    const today = new Date();
+    const currentDate = {
+      year: today.getFullYear(),
+      month: today.getMonth() + 1, // JavaScript month bắt đầu từ 0
+      day: today.getDate()
+    };
+
     this.form = this.fb.group({
       loaiGiaId: ['', Validators.required],
-      nhomHangHoaId: [''],
-      ngayNhap: [null],
-      loaiNghiepVu: [0] // Mặc định là 0 = HH29
+      nhomHangHoaId: ['', Validators.required],
+      ngayNhap: [currentDate, Validators.required],
+      loaiNghiepVu: [0]
     });
   }
 
@@ -132,102 +143,193 @@ export class ThemmoiTt29Component extends FormComponentBase implements OnInit {
         };
         this.form.patchValue({ nhomHangHoaId: result.id });
 
-        // Tải danh sách mặt hàng con khi chọn nhóm hàng hóa
-        this.loadMatHangCon(result.id);
+        // Kiểm tra và tải dữ liệu nếu đủ điều kiện
+        this.checkAndLoadData();
       }
     }).catch(() => {
       // Modal dismissed
     });
   }
 
+  /**
+   * Kiểm tra xem cả hai trường nhóm hàng hóa và ngày nhập đã được chọn chưa
+   * Nếu đã chọn cả hai, gọi API để tải danh sách mặt hàng và giá kỳ trước
+   */
+  private checkAndLoadData(): void {
+    const nhomHangHoaId = this.form.get('nhomHangHoaId')?.value;
+    const ngayNhap = this.form.get('ngayNhap')?.value;
+
+    // Chỉ tải dữ liệu khi cả hai đã được chọn
+    if (nhomHangHoaId && ngayNhap) {
+      this.loadMatHangCon(nhomHangHoaId);
+    }
+  }
+
   loadMatHangCon(nhomHangHoaId: string): void {
-  this.isLoadingMatHang = true;
-  this.chiTietGia = []; // Xóa dữ liệu cũ
+    this.isLoadingMatHang = true;
+    this.chiTietGia = [];
 
-  this.dmHangHoaThiTruongService.getAllChildrenRecursive(nhomHangHoaId)
-    .pipe(finalize(() => this.isLoadingMatHang = false))
-    .subscribe({
-      next: (matHangCon) => {
-        // Flatten cấu trúc cây để lấy tất cả mặt hàng con ở mọi cấp độ
-        const danhSachMatHang = this.flattenHangHoaTree(matHangCon);
+    const ngayNhapStruct = this.form.get('ngayNhap')?.value;
 
-        this.chiTietGia = danhSachMatHang.map(item => ({
-          hangHoaThiTruongId: item.id,
-          maHangHoa: item.ma,
-          tenHangHoa: item.ten,
-          dacTinh: item.dacTinh,
-          donViTinh: item.tenDonViTinh || '',
-          loaiMatHang: item.loaiMatHang,
-          level: item.level || 0, // Thêm level từ kết quả flattened
-          giaPhoBienKyBaoCao: null,
-          giaBinhQuanKyTruoc: null,
-          giaBinhQuanKyNay: null,
-          mucTangGiamGiaBinhQuan: null,
-          tyLeTangGiamGiaBinhQuan: null,
-          nguonThongTin: null,
-          ghiChu: null
-        }));
-
-        if (this.chiTietGia.length === 0) {
-          this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
-        }
-      },
-      error: (error) => {
-        console.error('Lỗi khi tải danh sách mặt hàng con:', error);
+    let ngayNhapDate: Date | undefined = undefined;
+    if (ngayNhapStruct) {
+      if (ngayNhapStruct.year && ngayNhapStruct.month && ngayNhapStruct.day) {
+        ngayNhapDate = new Date(
+          ngayNhapStruct.year,
+          ngayNhapStruct.month - 1,
+          ngayNhapStruct.day
+        );
+      } else if (ngayNhapStruct instanceof Date) {
+        ngayNhapDate = ngayNhapStruct;
       }
-    });
-}
+    }
+
+    this.thuThapGiaService.getAllChildrenRecursive(nhomHangHoaId, ngayNhapDate)
+      .pipe(finalize(() => this.isLoadingMatHang = false))
+      .subscribe({
+        next: (matHangCon) => {
+          const danhSachMatHang = this.flattenHangHoaTree(matHangCon);
+
+          this.chiTietGia = danhSachMatHang.map(item => ({
+            hangHoaThiTruongId: item.id,
+            maHangHoa: item.ma,
+            tenHangHoa: item.ten,
+            dacTinh: item.dacTinh,
+            donViTinh: item.tenDonViTinh || '',
+            loaiMatHang: item.loaiMatHang,
+            level: item.level || 0,
+            giaPhoBienKyBaoCao: null,
+            giaBinhQuanKyTruoc: item.giaBinhQuanKyTruoc || null,
+            giaBinhQuanKyNay: null,
+            mucTangGiamGiaBinhQuan: null,
+            tyLeTangGiamGiaBinhQuan: null,
+            nguonThongTin: null,
+            ghiChu: null
+          }));
+
+          if (this.chiTietGia.length === 0) {
+            this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
+          }
+        },
+        error: (error) => {
+          console.error('Lỗi khi tải danh sách mặt hàng con:', error);
+          this.toastr.error('Không thể tải danh sách mặt hàng con', 'Lỗi');
+        }
+      });
+  }
 
   /**
  * Flatten cấu trúc cây thành danh sách phẳng với thông tin cấp độ
  */
-private flattenHangHoaTree(nodes: any[]): any[] {
-  const result: any[] = [];
+  private flattenHangHoaTree(nodes: any[]): any[] {
+    const result: any[] = [];
 
-  const flatten = (items: any[], level: number = 0) => {
-    for (const item of items) {
-      // Thêm thuộc tính level vào item
-      const itemWithLevel = { ...item, level };
-      result.push(itemWithLevel);
+    const flatten = (items: any[], level: number = 0) => {
+      for (const item of items) {
+        // Thêm thuộc tính level vào item
+        const itemWithLevel = { ...item, level };
+        result.push(itemWithLevel);
 
-      if (item.matHangCon && item.matHangCon.length > 0) {
-        flatten(item.matHangCon, level + 1);
+        if (item.matHangCon && item.matHangCon.length > 0) {
+          flatten(item.matHangCon, level + 1);
+        }
       }
-    }
-  };
+    };
 
-  flatten(nodes);
-  return result;
-}
+    flatten(nodes);
+    return result;
+  }
+
   /**
-   * Hàm kiểm tra chỉ cho phép nhập số và dấu chấm
+   * Hàm xử lý input cho các ô nhập giá số (có format dấu phẩy)
    */
-  onlyNumberKey(event: KeyboardEvent): boolean {
-    // Cho phép các phím số (0-9) và dấu chấm (.)
-    const charCode = event.which ? event.which : event.keyCode;
-    if (charCode === 46) { // dấu chấm (.)
-      // Kiểm tra xem đã có dấu chấm trong giá trị chưa
-      const input = event.target as HTMLInputElement;
-      if (input.value.includes('.')) {
-        return false;
-      }
-      return true;
+  onNumberInput(event: Event, item: ChiTietGiaRow, field: keyof ChiTietGiaRow): void {
+    const input = event.target as HTMLInputElement;
+    let rawValue = input.value;
+
+    // Chỉ cho phép số và dấu chấm thập phân
+    rawValue = rawValue.replace(/[^\d.]/g, '');
+
+    // Chỉ cho phép một dấu chấm thập phân
+    const parts = rawValue.split('.');
+    if (parts.length > 2) {
+      rawValue = parts[0] + '.' + parts[1];
     }
 
-    // Chỉ cho phép các ký tự số
-    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-      return false;
+    // Format với dấu phẩy phân cách hàng nghìn
+    const formattedValue = this.formatNumberWithComma(rawValue);
+
+    // Cập nhật giá trị hiển thị
+    input.value = formattedValue;
+    (item as any)[field] = formattedValue;
+
+    // Tính toán lại nếu là các trường giá
+    if (field === 'giaBinhQuanKyTruoc' || field === 'giaBinhQuanKyNay') {
+      this.tinhMucTangGiamTyLe(item);
     }
-    return true;
+  }
+
+  /**
+   * Format số với dấu phẩy phân cách hàng nghìn
+   */
+  formatNumberWithComma(value: string): string {
+    if (!value) return '';
+
+    // Tách phần nguyên và phần thập phân
+    const parts = value.split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1];
+
+    // Format phần nguyên với dấu phẩy
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    // Ghép lại với phần thập phân nếu có
+    return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+  }
+
+  /**
+   * Loại bỏ dấu phẩy và chuyển về số
+   */
+  parseFormattedNumber(value: string | number | null | undefined): number | undefined {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+
+    const stringValue = value.toString().replace(/,/g, '');
+    const numericValue = parseFloat(stringValue);
+
+    return isNaN(numericValue) ? undefined : numericValue;
+  }
+
+  onPriceRangeInput(event: Event, item: ChiTietGiaRow): void {
+    const input = event.target as HTMLInputElement;
+    const rawValue = input.value;
+
+    // Tách các phần bởi dấu "-"
+    const parts = rawValue.split('-').map(part =>
+      part.replace(/[^\d]/g, '') // loại bỏ ký tự không phải số
+    );
+
+    // Định dạng từng phần
+    const formattedParts = parts.map(part =>
+      part ? this.formatNumberWithComma(part) : ''
+    );
+
+    // Gộp lại chuỗi đã định dạng
+    const formattedValue = formattedParts.join('-');
+
+    // Cập nhật lại ô input
+    input.value = formattedValue;
+    item.giaPhoBienKyBaoCao = formattedValue;
   }
 
   /**
    * Tính mức tăng giảm và tỷ lệ tăng giảm khi người dùng nhập giá
    */
   tinhMucTangGiamTyLe(item: ChiTietGiaRow): void {
-    // Chuyển đổi giá trị string sang number trước khi tính toán
-    const giaKyTruoc = item.giaBinhQuanKyTruoc ? parseFloat(item.giaBinhQuanKyTruoc.toString()) : 0;
-    const giaKyNay = item.giaBinhQuanKyNay ? parseFloat(item.giaBinhQuanKyNay.toString()) : 0;
+    // Sử dụng hàm parseFormattedNumber để chuyển đổi giá trị có format
+    const giaKyTruoc = this.parseFormattedNumber(item.giaBinhQuanKyTruoc) || 0;
+    const giaKyNay = this.parseFormattedNumber(item.giaBinhQuanKyNay) || 0;
 
     if (giaKyTruoc !== 0 || giaKyNay !== 0) {
       // Tính mức tăng giảm = giá kỳ này - giá kỳ trước
@@ -283,12 +385,12 @@ private flattenHangHoaTree(nodes: any[]): any[] {
     const currentYear = new Date().getFullYear();
     thuThapGiaData.nam = currentYear;
 
-    // Chuẩn bị dữ liệu chi tiết giá - chỉ với các mặt hàng có nhập giá
+    // Chuẩn bị dữ liệu chi tiết giá
     const chiTietGiaData: ThuThapGiaChiTietCreateDto[] = validItems.map(item => ({
       hangHoaThiTruongId: item.hangHoaThiTruongId,
-      giaPhoBienKyBaoCao: item.giaPhoBienKyBaoCao ? parseFloat(item.giaPhoBienKyBaoCao.toString()) : undefined,
-      giaBinhQuanKyTruoc: item.giaBinhQuanKyTruoc ? parseFloat(item.giaBinhQuanKyTruoc.toString()) : undefined,
-      giaBinhQuanKyNay: item.giaBinhQuanKyNay ? parseFloat(item.giaBinhQuanKyNay.toString()) : undefined,
+      giaPhoBienKyBaoCao: item.giaPhoBienKyBaoCao ? item.giaPhoBienKyBaoCao.toString() : undefined, // Giữ dấu phẩy
+      giaBinhQuanKyTruoc: this.parseFormattedNumber(item.giaBinhQuanKyTruoc), // Bỏ dấu phẩy
+      giaBinhQuanKyNay: this.parseFormattedNumber(item.giaBinhQuanKyNay), // Bỏ dấu phẩy
       mucTangGiamGiaBinhQuan: this.nullToUndefined(item.mucTangGiamGiaBinhQuan),
       tyLeTangGiamGiaBinhQuan: this.nullToUndefined(item.tyLeTangGiamGiaBinhQuan),
       nguonThongTin: this.nullToUndefined(item.nguonThongTin),
@@ -352,4 +454,5 @@ private flattenHangHoaTree(nodes: any[]): any[] {
     const indentStep = 1;     // Increment per level in rem
     return `${basePadding + (level * indentStep)}rem`;
   }
+
 }

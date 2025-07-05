@@ -6,7 +6,7 @@ export interface ThuThapGiaChiTietDto extends DanhMucBase{
   tenHangHoa: string;
   maHangHoa: string;
   donViTinh: string;
-  giaPhoBienKyBaoCao?: number;
+  giaPhoBienKyBaoCao?: string;
   giaBinhQuanKyTruoc?: number;
   giaBinhQuanKyNay?: number;
   mucTangGiamGiaBinhQuan?: number;

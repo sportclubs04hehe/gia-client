@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment.development';
 import { CacheService } from '../utils/cache.service';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, shareReplay, tap } from 'rxjs';
 import { PagedResult } from '../../../danhmuc/models/helpers/paged-result';
 import { buildHttpParams } from '../../../danhmuc/helpers/build-http-params';
 import { ApiResponse } from '../../../danhmuc/models/dm_hanghoathitruong/api-response';
@@ -12,6 +12,7 @@ import { PaginationParams } from '../../../danhmuc/models/helpers/pagination-par
 import { SearchParams } from '../../../danhmuc/models/helpers/search-params';
 import { CreateThuThapGiaModel, UpdateThuThapGiaModel } from '../../models/thu-thap-gia-thi-truong-tt29/CreateThuThapGiaModel';
 import { ThuThapGiaThiTruongDto } from '../../models/thu-thap-gia-thi-truong-tt29/ThuThapGiaThiTruongDto';
+import { HHThiTruongTreeNodeDto } from '../../../danhmuc/models/dm-hh-thitruong/HHThiTruongTreeNodeDto';
 
 @Injectable({
   providedIn: 'root'
@@ -115,4 +116,25 @@ export class ThuThapGiaThiTruongTt29Service {
   delete(id: string): Observable<ApiResponse<string>> {
     return this.http.delete<ApiResponse<string>>(`${this.apiUrl}/${this.endpoint}/${id}`);
   }
+
+    /**
+ * Lấy tất cả các mặt hàng con theo ID cha (bao gồm cả lồng nhau)
+ * @param parentId ID của mặt hàng cha
+ * @returns Observable chứa danh sách mặt hàng con dạng cây
+ */
+  getAllChildrenRecursive(parentId: string, ngayNhap?: Date): Observable<HHThiTruongTreeNodeDto[]> {
+  let params = new HttpParams();
+  
+  if (ngayNhap) {
+    params = params.set('ngayNhap', ngayNhap.toISOString());
+  }
+  
+  return this.http.get<ApiResponse<HHThiTruongTreeNodeDto[]>>(
+    `${this.apiUrl}/${this.endpoint}/recursive-children/${parentId}`,
+    { params }
+  ).pipe(
+    map(response => response.data || []),
+    shareReplay(1)
+  );
+}
 }

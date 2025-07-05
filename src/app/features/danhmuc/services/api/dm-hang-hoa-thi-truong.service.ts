@@ -418,17 +418,4 @@ export class DmHangHoaThiTruongService {
     );
   }
 
-  /**
- * Lấy tất cả các mặt hàng con theo ID cha (bao gồm cả lồng nhau)
- * @param parentId ID của mặt hàng cha
- * @returns Observable chứa danh sách mặt hàng con dạng cây
- */
-getAllChildrenRecursive(parentId: string): Observable<HHThiTruongTreeNodeDto[]> {
-  return this.http.get<ApiResponse<HHThiTruongTreeNodeDto[]>>(
-    `${this.apiUrl}/${this.endpoint}/recursive-children/${parentId}`
-  ).pipe(
-    map(response => response.data || []),
-    shareReplay(1)
-  );
-}
 }
