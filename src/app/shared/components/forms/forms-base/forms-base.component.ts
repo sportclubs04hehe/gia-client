@@ -23,8 +23,18 @@ export abstract class FormComponentBase implements OnDestroy {
     Object.keys(this.form.controls).forEach(key => {
       const control = this.form.get(key);
       control?.markAsTouched();
-      control?.markAsDirty(); // Add this line to the base class
+      control?.markAsDirty(); 
     });
+  }
+  
+  /**
+   * Check if a form control is invalid and has been touched
+   * @param controlName Name of the form control to check
+   * @returns True if the control is invalid and touched/dirty, false otherwise
+   */
+  isControlInvalid(controlName: string): boolean {
+    const control = this.form.get(controlName);
+    return !!control && control.invalid && (control.touched || control.dirty);
   }
   
   /**
