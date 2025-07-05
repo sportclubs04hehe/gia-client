@@ -3,7 +3,14 @@
     <i class="bi bi-clipboard2-data-fill" style="color: #0a547c;"></i>
     THÊM MỚI THU THẬP GIÁ THỊ TRƯỜNG THEO THÔNG TƯ 29
   </h5>
+  <!-- Thêm nút lọc bên cạnh nút thu gọn/mở rộng -->
   <div class="header-actions">
+    <button type="button" class="toggle-btn" (click)="toggleFilter()" 
+      [ngClass]="{'active': isFilterEnabled}"
+      title="Chỉ hiển thị mặt hàng có mức tăng giảm">
+      <i class="bi" [ngClass]="isFilterEnabled ? 'bi-funnel-fill' : 'bi-funnel'"></i>
+      {{ isFilterEnabled ? 'Bỏ lọc' : 'Chỉ lọc tăng giảm' }}
+    </button>
     <button type="button" class="toggle-btn" (click)="toggleForm()"
       [title]="isFormExpanded ? 'Thu gọn form nhập liệu' : 'Mở rộng form nhập liệu'">
       <i class="bi" [ngClass]="isFormExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
@@ -82,7 +89,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of chiTietGia" [class.parent-category-ma]="item.loaiMatHang === Loai.Cha"
+            <!-- Thay đổi ngFor để sử dụng mảng đã lọc -->
+            <tr *ngFor="let item of filteredChiTietGia" [class.parent-category-ma]="item.loaiMatHang === Loai.Cha"
               [ngClass]="'row-level-' + (item.level % 3)">
               <td class="text-nowrap">
                 <div [style.padding-left]="calculateIndent(item.level)">
@@ -130,8 +138,14 @@
                     [(ngModel)]="item.giaBinhQuanKyNay" [ngModelOptions]="{standalone: true}"
                     (input)="onNumberInput($event, item, 'giaBinhQuanKyNay')">
                 </td>
-                <td class="small text-nowrap">{{ item.mucTangGiamGiaBinhQuan | number:'1.0-2' }}</td>
-                <td class="small text-nowrap">{{ item.tyLeTangGiamGiaBinhQuan | number:'1.0-2' }}%</td>
+                <td class="small text-nowrap">
+                  {{ item.mucTangGiamGiaBinhQuan !== null && item.mucTangGiamGiaBinhQuan !== undefined ? 
+                     (item.mucTangGiamGiaBinhQuan | number:'1.0-2') : '-' }}
+                </td>
+                <td class="small text-nowrap">
+                  {{ item.tyLeTangGiamGiaBinhQuan !== null && item.tyLeTangGiamGiaBinhQuan !== undefined ? 
+                     (item.tyLeTangGiamGiaBinhQuan | number:'1.0-2') + '%' : '-' }}
+                </td>
                 <td>
                   <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.nguonThongTin"
                     [ngModelOptions]="{standalone: true}">

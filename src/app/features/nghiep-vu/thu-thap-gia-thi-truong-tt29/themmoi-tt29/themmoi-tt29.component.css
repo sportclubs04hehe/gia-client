@@ -134,6 +134,17 @@ td {
   transition: transform 0.3s ease;
 }
 
+.toggle-btn.active {
+  color: #fff;
+  background-color: #0a547c;
+  border-color: #0a547c;
+}
+
+.toggle-btn.active:hover {
+  background-color: #073e5c;
+  border-color: #073e5c;
+}
+
 .modal-body {
   overflow: hidden;
   margin: 0;
