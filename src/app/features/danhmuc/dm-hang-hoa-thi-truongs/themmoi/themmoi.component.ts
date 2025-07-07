@@ -257,12 +257,6 @@ export class ThemmoiComponent extends FormComponentBase implements OnInit {
       }
     );
   }
-  
-  // Kiểm tra trạng thái lỗi của control
-  isControlInvalid(controlName: string): boolean {
-    const control = this.form.get(controlName);
-    return !!control && control.invalid && (control.dirty || control.touched);
-  }
 
   /**
    * Xử lý khi lưu form thêm mới

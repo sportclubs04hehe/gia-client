@@ -51,13 +51,14 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
   private activeModal = inject(NgbActiveModal);
   private thuThapGiaService = inject(ThuThapGiaThiTruongTt29Service);
   private modalService = inject(NgbModal);
-  
+
   danhSachLoaiGia: LoaiGiaDto[] = [];
   selectedNhomHangHoa: { id: string, ten: string } | null = null;
   Loai = Loai;
   isFormExpanded = true;
 
   override ngOnInit(): void {
+    this.buildForm();
     this.loadLoaiGia();
     this.watchFormChanges();
   }
@@ -66,7 +67,7 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
     const today = new Date();
     const currentDate = {
       year: today.getFullYear(),
-      month: today.getMonth() + 1, 
+      month: today.getMonth() + 1,
       day: today.getDate()
     };
 
@@ -106,10 +107,10 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
         error: (error) => this.handleLoadError(error)
       });
   }
-  
+
   private convertNgbDateToJsDate(ngayNhapStruct: any): Date | undefined {
     if (!ngayNhapStruct) return undefined;
-    
+
     if (ngayNhapStruct.year && ngayNhapStruct.month && ngayNhapStruct.day) {
       return new Date(
         ngayNhapStruct.year,
@@ -119,22 +120,22 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
     } else if (ngayNhapStruct instanceof Date) {
       return ngayNhapStruct;
     }
-    
+
     return undefined;
   }
-  
+
   private processMatHangConResponse(matHangCon: any[]): void {
     const danhSachMatHang = this.flattenHangHoaTree(matHangCon);
     this.mapToChiTietGia(danhSachMatHang);
-    
+
     if (this.chiTietGia.length === 0) {
       this.toastr.info('Nhóm hàng hóa này không có mặt hàng con nào', 'Thông báo');
     }
-    
+
     this.filteredChiTietGia = [...this.chiTietGia];
     this.applyFilter();
   }
-  
+
   private mapToChiTietGia(danhSachMatHang: any[]): void {
     this.chiTietGia = danhSachMatHang.map(item => ({
       hangHoaThiTruongId: item.id,
@@ -153,7 +154,7 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
       ghiChu: null
     }));
   }
-  
+
   private handleLoadError(error: any): void {
     console.error('Lỗi khi tải danh sách mặt hàng con:', error);
     this.toastr.error('Không thể tải danh sách mặt hàng con', 'Lỗi');
@@ -187,7 +188,7 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
         this.form.patchValue({ nhomHangHoaId: result.id });
         this.checkAndLoadData();
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   private loadLoaiGia(): void {
@@ -212,7 +213,7 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
         error: (error) => console.error('Lỗi khi tạo phiếu thu thập giá:', error)
       });
   }
-  
+
   private handleSaveSuccess(response: any): void {
     if (response?.data) {
       this.toastr.success('Thêm mới thành công', 'Thông báo');
@@ -244,7 +245,7 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
       chiTietGia: chiTietGiaData
     };
   }
-  
+
   private getValidItems(): ChiTietGiaRow[] {
     return this.chiTietGia.filter(item =>
       item.loaiMatHang === Loai.Con && (
@@ -253,7 +254,7 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
       )
     );
   }
-  
+
   private prepareChiTietData(validItems: ChiTietGiaRow[]): ThuThapGiaChiTietCreateDto[] {
     return validItems.map(item => ({
       hangHoaThiTruongId: item.hangHoaThiTruongId,

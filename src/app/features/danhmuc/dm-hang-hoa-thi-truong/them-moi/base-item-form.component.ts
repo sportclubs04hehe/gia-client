@@ -23,9 +23,4 @@ export abstract class BaseItemFormComponent extends FormComponentBase {
   constructor(protected override fb: FormBuilder) {
     super(fb);
   }
-  
-  isControlInvalid(controlName: string): boolean {
-    const control = this.form.get(controlName);
-    return !!control && control.invalid && (control.dirty || control.touched);
-  }
 }

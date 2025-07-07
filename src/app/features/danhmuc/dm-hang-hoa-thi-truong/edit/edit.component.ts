@@ -229,12 +229,6 @@ export class EditComponent extends FormComponentBase implements OnInit, OnDestro
     );
   }
 
-  // Helper method to check if control is invalid (for template)
-  isControlInvalid(controlName: string): boolean {
-    const control = this.form.get(controlName);
-    return control ? control.invalid && (control.dirty || control.touched) : false;
-  }
-
   get isValidatingCode(): boolean {
     const control = this.form?.get('maMatHang');
     return control?.pending === true;
