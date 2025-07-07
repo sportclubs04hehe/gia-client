@@ -14,6 +14,8 @@ import { ChiTietGiaRow } from "../../models/thu-thap-gia-thi-truong-tt29/ChiTiet
 import { CreateThuThapGiaModel } from "../../models/thu-thap-gia-thi-truong-tt29/CreateThuThapGiaModel";
 import { ThuThapGiaThiTruongTt29Service } from "../../services/api/thu-thap-gia-thi-truong-tt29.service";
 import { ThemMoiGiaBaseComponent } from "../../../../shared/components/bases/them-moi-gia-base.component";
+import { HHThiTruongTreeNodeDto } from "../../../danhmuc/models/dm-hh-thitruong/HHThiTruongTreeNodeDto";
+import { TextHighlightPipe } from "../../../../shared/pipes/text-highlight.pipe";
 
 @Component({
   selector: 'app-themmoi-tt29',
@@ -23,7 +25,8 @@ import { ThemMoiGiaBaseComponent } from "../../../../shared/components/bases/the
     ReactiveFormsModule,
     FormsModule,
     DateInputComponent,
-    FormFooterComponent
+    FormFooterComponent,
+    TextHighlightPipe
   ],
   templateUrl: './themmoi-tt29.component.html',
   styleUrl: './themmoi-tt29.component.css',
@@ -56,6 +59,13 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
   selectedNhomHangHoa: { id: string, ten: string } | null = null;
   Loai = Loai;
   isFormExpanded = true;
+
+  // Thêm các thuộc tính
+  searchTerm = '';
+  isSearching = false;
+  searchTimeout: any;
+  searchResults: HHThiTruongTreeNodeDto[] = [];
+  originalChiTietGia: ChiTietGiaRow[] = []; // Để lưu danh sách gốc khi tìm kiếm
 
   override ngOnInit(): void {
     this.buildForm();
@@ -97,6 +107,8 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
   loadMatHangCon(nhomHangHoaId: string): void {
     this.isLoadingMatHang = true;
     this.chiTietGia = [];
+    this.originalChiTietGia = []; // Reset danh sách gốc
+    this.searchTerm = ''; // Reset từ khóa tìm kiếm
 
     const ngayNhapDate = this.convertNgbDateToJsDate(this.form.get('ngayNhap')?.value);
 
@@ -275,4 +287,91 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
   toggleForm(): void {
     this.isFormExpanded = !this.isFormExpanded;
   }
+
+  // Phương thức tìm kiếm với debounce
+  searchMatHang(searchTerm: string): void {
+    this.searchTerm = searchTerm;
+
+    // Clear timeout trước đó nếu có
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Không tìm kiếm nếu từ khóa quá ngắn
+    if (!searchTerm || searchTerm.length < 2) {
+      // Nếu xóa từ khóa, hiển thị lại tất cả mặt hàng
+      if (this.originalChiTietGia.length > 0) {
+        this.chiTietGia = [...this.originalChiTietGia];
+        this.filteredChiTietGia = [...this.chiTietGia];
+        this.applyFilter();
+      }
+      return;
+    }
+
+    // Thiết lập timeout để tránh gửi quá nhiều request
+    this.searchTimeout = setTimeout(() => {
+      const nhomHangHoaId = this.form.get('nhomHangHoaId')?.value;
+      if (!nhomHangHoaId) {
+        this.toastr.warning('Vui lòng chọn nhóm hàng hóa trước khi tìm kiếm', 'Thông báo');
+        return;
+      }
+
+      this.isSearching = true;
+
+      // Gọi service để tìm kiếm
+      this.thuThapGiaService.searchMatHang(nhomHangHoaId, searchTerm)
+        .pipe(finalize(() => this.isSearching = false))
+        .subscribe({
+          next: (results) => {
+            this.handleSearchResults(results);
+          },
+          error: (error) => {
+            console.error('Lỗi khi tìm kiếm mặt hàng:', error);
+            this.toastr.error('Không thể tìm kiếm mặt hàng', 'Lỗi');
+          }
+        });
+    }, 300); // 300ms debounce
+  }
+
+  // Xử lý kết quả tìm kiếm
+  private handleSearchResults(results: HHThiTruongTreeNodeDto[]): void {
+    this.searchResults = results;
+
+    // Lưu danh sách gốc nếu chưa lưu
+    if (this.originalChiTietGia.length === 0) {
+      this.originalChiTietGia = [...this.chiTietGia];
+    }
+
+    if (results.length === 0) {
+      // Không tìm thấy kết quả - giữ nguyên chiTietGia nhưng hiển thị mảng rỗng
+      this.filteredChiTietGia = [];
+    } else {
+      // Tìm thấy kết quả - cập nhật danh sách hiển thị
+      const flattenedResults = this.flattenHangHoaTree(results);
+      this.mapToChiTietGia(flattenedResults);
+      this.filteredChiTietGia = [...this.chiTietGia];
+      this.applyFilter();
+    }
+  }
+
+  // Xóa tìm kiếm
+  clearSearch(inputElement?: HTMLInputElement): void {
+  // Xóa nội dung input nếu có
+  if (inputElement) {
+    inputElement.value = '';
+  }
+  
+  this.searchTerm = '';
+  this.searchResults = [];
+
+  // Khôi phục danh sách gốc
+  if (this.originalChiTietGia.length > 0) {
+    this.chiTietGia = [...this.originalChiTietGia];
+    this.filteredChiTietGia = [...this.chiTietGia];
+    this.applyFilter();
+
+    // Chỉ xóa danh sách gốc khi đã khôi phục xong
+    this.originalChiTietGia = [];
+  }
+}
 }

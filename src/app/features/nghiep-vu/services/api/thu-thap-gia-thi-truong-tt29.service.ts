@@ -137,4 +137,25 @@ export class ThuThapGiaThiTruongTt29Service {
     shareReplay(1)
   );
 }
+
+/**
+ * Tìm kiếm mặt hàng theo từ khóa
+ * @param nhomHangHoaId ID của nhóm hàng hóa
+ * @param searchTerm Từ khóa tìm kiếm
+ * @param maxResults Số lượng kết quả tối đa
+ * @returns Observable chứa danh sách mặt hàng phù hợp
+ */
+searchMatHang(nhomHangHoaId: string, searchTerm: string, maxResults: number = 25): Observable<HHThiTruongTreeNodeDto[]> {
+  let params = new HttpParams()
+    .set('q', searchTerm)
+    .set('maxResults', maxResults.toString());
+  
+  return this.http.get<ApiResponse<HHThiTruongTreeNodeDto[]>>(
+    `${this.apiUrl}/${this.endpoint}/search-mat-hang/${nhomHangHoaId}`,
+    { params }
+  ).pipe(
+    map(response => response.data || []),
+    shareReplay(1)
+  );
+}
 }

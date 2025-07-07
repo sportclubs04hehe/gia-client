@@ -5,17 +5,46 @@
   </h5>
   <!-- Thêm nút lọc bên cạnh nút thu gọn/mở rộng -->
   <div class="header-actions">
+    <!-- Thêm ô tìm kiếm vào đây -->
+    <!-- Thay đổi điều kiện để ô tìm kiếm luôn hiển thị khi có dữ liệu gốc -->
+    <div class="search-container me-2" *ngIf="(chiTietGia.length > 0 || originalChiTietGia.length > 0) && !isLoadingMatHang">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white">
+          <i class="bi" [ngClass]="isSearching ? 'bi-hourglass-split' : 'bi-search'"></i>
+        </span>
+        <input 
+          type="text" 
+          class="form-control form-control-sm shadow-none" 
+          placeholder="Tìm kiếm mặt hàng..." 
+          #searchInput 
+          (input)="searchMatHang(searchInput.value)"
+        >
+        <button 
+          *ngIf="searchInput.value" 
+          class="btn btn-sm btn-outline-secondary" 
+          type="button"
+          (click)="clearSearch(searchInput)">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Nút lọc tăng/giảm -->
     <button type="button" class="toggle-btn" (click)="toggleFilter()" 
       [ngClass]="{'active': isFilterEnabled}"
       title="Chỉ hiển thị mặt hàng có mức tăng giảm">
       <i class="bi" [ngClass]="isFilterEnabled ? 'bi-funnel-fill' : 'bi-funnel'"></i>
       {{ isFilterEnabled ? 'Bỏ lọc' : 'Chỉ lọc tăng giảm' }}
     </button>
+    
+    <!-- Nút thu gọn/mở rộng -->
     <button type="button" class="toggle-btn" (click)="toggleForm()"
       [title]="isFormExpanded ? 'Thu gọn form nhập liệu' : 'Mở rộng form nhập liệu'">
       <i class="bi" [ngClass]="isFormExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
       {{ isFormExpanded ? 'Thu gọn' : 'Mở rộng' }}
     </button>
+    
+    <!-- Nút đóng -->
     <button type="button" class="btn-close" aria-label="Close" (click)="huy()"></button>
   </div>
 </div>
@@ -69,7 +98,6 @@
         </div>
       </div>
 
-
       <!-- Remove animation and use class binding -->
       <div class="table-container" [class.expanded]="!isFormExpanded" [class.collapsed]="isFormExpanded">
         <table class="table table-hover text-center align-middle mb-0">
@@ -92,22 +120,24 @@
             <!-- Thay đổi ngFor để sử dụng mảng đã lọc -->
             <tr *ngFor="let item of filteredChiTietGia" [class.parent-category-ma]="item.loaiMatHang === Loai.Cha"
               [ngClass]="'row-level-' + (item.level % 3)">
+              <!-- Cập nhật phần mã hàng hóa -->
               <td class="text-nowrap">
                 <div [style.padding-left]="calculateIndent(item.level)">
                   <span class="indent-prefix" *ngIf="item.level > 0">
                     <i class="bi bi-dash-short"></i>
                   </span>
-                  {{ item.maHangHoa }}
+                  <span [innerHTML]="item.maHangHoa | textHighlight:searchTerm"></span>
                 </div>
               </td>
               
+              <!-- Cập nhật phần tên hàng hóa -->
               <td class="text-start small" [class.parent-category-name]="item.loaiMatHang === Loai.Cha">
-                {{ item.tenHangHoa }}
+                <span [innerHTML]="item.tenHangHoa | textHighlight:searchTerm"></span>
               </td>
 
-              <!-- Đặc điểm - chỉ hiển thị cho loại Con -->
+              <!-- Cập nhật phần đặc điểm -->
               <td class="small" *ngIf="item.loaiMatHang === Loai.Con">
-                {{ item.dacTinh || '-' }}
+                <span [innerHTML]="(item.dacTinh || '-') | textHighlight:searchTerm"></span>
               </td>
               <td class="small parent-category-cell" *ngIf="item.loaiMatHang === Loai.Cha">
                 <!-- Ô trống cho loại Cha -->
@@ -168,7 +198,18 @@
               </ng-container>
             </tr>
 
-            <tr *ngIf="chiTietGia.length === 0 && !isLoadingMatHang">
+            <!-- Thêm điều kiện hiển thị thông báo khi tìm kiếm không có kết quả -->
+            <tr *ngIf="filteredChiTietGia.length === 0 && !isLoadingMatHang && searchTerm">
+              <td colspan="11" class="text-center py-3">
+                  <i class="bi bi-exclamation-circle me-2"></i>
+                  <span class="text-muted">Không tìm thấy mặt hàng nào phù hợp với từ khóa "<strong>{{ searchTerm }}</strong>"
+                    <br>
+                  <a style="cursor: pointer;" (click)="clearSearch()">Xóa tìm kiếm</a></span>
+              </td>
+            </tr>
+
+            <!-- Giữ nguyên dòng hiển thị khi không có dữ liệu -->
+            <tr *ngIf="chiTietGia.length === 0 && !isLoadingMatHang && !searchTerm">
               <td colspan="11" class="text-center">
                 <i class="bi bi-info-circle me-2"></i>
                 <span class="text-muted">

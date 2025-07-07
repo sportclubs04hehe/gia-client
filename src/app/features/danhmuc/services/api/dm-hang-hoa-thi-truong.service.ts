@@ -308,7 +308,7 @@ export class DmHangHoaThiTruongService {
     const params = new HttpParams()
       .set('searchTerm', searchTerm.trim())
       .set('pageIndex', '1')
-      .set('pageSize', '15'); // Lấy đủ kết quả để hiển thị
+      .set('pageSize', '15'); 
 
     return this.http.get<any>(
       `${this.apiUrl}/${this.endpoint}/search-hierarchical`,

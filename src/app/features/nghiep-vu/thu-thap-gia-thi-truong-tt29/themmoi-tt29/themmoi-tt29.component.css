@@ -316,3 +316,27 @@ form {
   font-size: 0.7rem !important;
   font-weight: 500;
 }
+
+/* Highlight kết quả tìm kiếm */
+.search-match {
+  background-color: rgba(255, 251, 0, 0.2);
+  border-bottom: 1px solid #ffc107;
+}
+
+/* Style cho ô tìm kiếm */
+.search-container {
+  width: 250px;
+}
+
+.search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.search-clear:hover {
+  color: #343a40;
+}
