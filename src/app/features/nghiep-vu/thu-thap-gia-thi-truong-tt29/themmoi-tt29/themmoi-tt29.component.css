@@ -54,6 +54,12 @@ td {
   overflow-y: auto;
 }
 
+/* Đảm bảo container cho phép cuộn ngang */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
 .table-container.collapsed {
   height: 100%;
   margin-bottom: 10px;
@@ -339,4 +345,60 @@ form {
 
 .search-clear:hover {
   color: #343a40;
+}
+
+/* Make the "Ghi chú" column wider with horizontal scrolling */
+table th:last-child {
+  min-width: 250px;
+  width: 250px;
+}
+
+table td:last-child {
+  min-width: 250px;
+  width: 250px;
+  max-width: 250px;
+  overflow: visible;
+  position: relative;
+}
+
+table td:last-child .table-input {
+  min-width: 100%;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Đảm bảo table có chiều rộng đủ lớn để chứa tất cả các cột */
+table {
+  width: auto;
+  min-width: 100%;
+}
+
+table th:nth-child(1) { min-width: 100px; } /* Mã hàng hóa */
+table th:nth-child(2) { min-width: 200px; } /* Tên hàng hóa */
+table th:nth-child(3) { min-width: 160px; } /* Đặc điểm */
+table th:nth-child(4) { min-width: 80px; } /* Đơn vị tính */
+table th:nth-child(5) { min-width: 170px; } /* Giá phổ biến */
+table th:nth-child(6) { min-width: 140px; } /* Giá bình quân kỳ trước */
+table th:nth-child(7) { min-width: 140px; } /* Giá bình quân kỳ này */
+table th:nth-child(8) { min-width: 150px; } /* Mức tăng giảm */
+table th:nth-child(9) { min-width: 150px; } /* Tỷ lệ tăng giảm */
+table th:nth-child(10) { min-width: 140px; } /* Nguồn thông tin */
+table th:nth-child(11) { min-width: 250px; } /* Ghi chú */
+
+/* Style cho textarea trong cột Ghi chú */
+.note-textarea {
+  resize: vertical !important; /* Cho phép resize theo chiều dọc */
+  min-height: 28px !important;
+  max-height: 150px !important; 
+  line-height: 1.2;
+  width: 100%;
+  overflow-y: auto !important; /* Đảm bảo hiển thị thanh cuộn dọc khi cần */
+  white-space: pre-wrap;
+  height: auto !important; /* Ghi đè các style khác để tự động mở rộng */
+}
+
+.table tbody tr td[colspan="11"]:hover {
+  background-color: transparent !important;
+  border-color: #dee2e6 !important;
 }

@@ -26,7 +26,7 @@ import { TextHighlightPipe } from "../../../../shared/pipes/text-highlight.pipe"
     FormsModule,
     DateInputComponent,
     FormFooterComponent,
-    TextHighlightPipe
+    TextHighlightPipe,
   ],
   templateUrl: './themmoi-tt29.component.html',
   styleUrl: './themmoi-tt29.component.css',
@@ -316,10 +316,24 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
         return;
       }
 
+      // Lấy ngày nhập từ form
+      const ngayNhapValue = this.form.get('ngayNhap')?.value;
+      
+      // Tạo đối tượng Date với giờ là 12:00:00 để tránh vấn đề múi giờ
+      let ngayNhap: Date | undefined;
+      if (ngayNhapValue && ngayNhapValue.year && ngayNhapValue.month && ngayNhapValue.day) {
+        ngayNhap = new Date(
+          ngayNhapValue.year, 
+          ngayNhapValue.month - 1, 
+          ngayNhapValue.day, 
+          12, 0, 0
+        ); 
+      }
+
       this.isSearching = true;
 
-      // Gọi service để tìm kiếm
-      this.thuThapGiaService.searchMatHang(nhomHangHoaId, searchTerm)
+      // Gọi service để tìm kiếm với ngayNhap
+      this.thuThapGiaService.searchMatHang(nhomHangHoaId, searchTerm, ngayNhap)
         .pipe(finalize(() => this.isSearching = false))
         .subscribe({
           next: (results) => {
@@ -356,22 +370,24 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
 
   // Xóa tìm kiếm
   clearSearch(inputElement?: HTMLInputElement): void {
-  // Xóa nội dung input nếu có
-  if (inputElement) {
-    inputElement.value = '';
+    // Xóa nội dung input nếu có
+    if (inputElement) {
+      inputElement.value = '';
+    }
+
+    this.searchTerm = '';
+    this.searchResults = [];
+
+    // Khôi phục danh sách gốc
+    if (this.originalChiTietGia.length > 0) {
+      this.chiTietGia = [...this.originalChiTietGia];
+      this.filteredChiTietGia = [...this.chiTietGia];
+      this.applyFilter();
+
+      // Chỉ xóa danh sách gốc khi đã khôi phục xong
+      this.originalChiTietGia = [];
+    }
   }
+
   
-  this.searchTerm = '';
-  this.searchResults = [];
-
-  // Khôi phục danh sách gốc
-  if (this.originalChiTietGia.length > 0) {
-    this.chiTietGia = [...this.originalChiTietGia];
-    this.filteredChiTietGia = [...this.chiTietGia];
-    this.applyFilter();
-
-    // Chỉ xóa danh sách gốc khi đã khôi phục xong
-    this.originalChiTietGia = [];
-  }
-}
 }

@@ -181,8 +181,8 @@
                     [ngModelOptions]="{standalone: true}">
                 </td>
                 <td>
-                  <input type="text" class="form-control form-control-sm table-input" [(ngModel)]="item.ghiChu"
-                    [ngModelOptions]="{standalone: true}">
+                  <textarea class="form-control form-control-sm table-input note-textarea" [(ngModel)]="item.ghiChu"
+                    [ngModelOptions]="{standalone: true}" rows="1"></textarea>
                 </td>
               </ng-container>
 
@@ -209,14 +209,14 @@
             </tr>
 
             <!-- Giữ nguyên dòng hiển thị khi không có dữ liệu -->
-            <tr *ngIf="chiTietGia.length === 0 && !isLoadingMatHang && !searchTerm">
-              <td colspan="11" class="text-center">
-                <i class="bi bi-info-circle me-2"></i>
-                <span class="text-muted">
-                  {{selectedNhomHangHoa ? 'Vui lòng chọn ngày nhập để hiển thị danh sách mặt hàng thu thập giá' : 'Vui lòng chọn nhóm hàng hóa và ngày nhập để hiển thị danh sách mặt hàng thu thập giá'}}
-                </span>
-              </td>
-            </tr>
+           <tr *ngIf="chiTietGia.length === 0 && !isLoadingMatHang && !searchTerm" class="no-hover">
+          <td colspan="11" class="text-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <span class="text-muted">
+              {{selectedNhomHangHoa ? 'Vui lòng chọn ngày nhập để hiển thị danh sách mặt hàng thu thập giá' : 'Vui lòng chọn nhóm hàng hóa và ngày nhập để hiển thị danh sách mặt hàng thu thập giá'}}
+            </span>
+          </td>
+        </tr>
           </tbody>
         </table>
       </div>
