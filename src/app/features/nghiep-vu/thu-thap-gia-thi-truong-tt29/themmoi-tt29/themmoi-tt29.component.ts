@@ -105,20 +105,39 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
   }
 
   loadMatHangCon(nhomHangHoaId: string): void {
-    this.isLoadingMatHang = true;
-    this.chiTietGia = [];
-    this.originalChiTietGia = []; // Reset danh sách gốc
-    this.searchTerm = ''; // Reset từ khóa tìm kiếm
+  this.isLoadingMatHang = true;
+  this.chiTietGia = [];
+  this.originalChiTietGia = []; // Reset danh sách gốc
+  this.searchTerm = ''; // Reset từ khóa tìm kiếm
 
-    const ngayNhapDate = this.convertNgbDateToJsDate(this.form.get('ngayNhap')?.value);
+  const ngayNhapValue = this.form.get('ngayNhap')?.value;
+  let ngayNhapDate: Date | undefined;
+  
+  // Đảm bảo luôn có ngayNhap hợp lệ
+  if (ngayNhapValue) {
+    if (ngayNhapValue.year && ngayNhapValue.month && ngayNhapValue.day) {
+      ngayNhapDate = new Date(
+        ngayNhapValue.year,
+        ngayNhapValue.month - 1,
+        ngayNhapValue.day
+      );
+    } else if (ngayNhapValue instanceof Date) {
+      ngayNhapDate = ngayNhapValue;
+    }
+  }
 
+  // Chỉ gọi API nếu có ngayNhap hợp lệ
+  if (ngayNhapDate) {
     this.thuThapGiaService.getAllChildrenRecursive(nhomHangHoaId, ngayNhapDate)
       .pipe(finalize(() => this.isLoadingMatHang = false))
       .subscribe({
         next: (matHangCon) => this.processMatHangConResponse(matHangCon),
         error: (error) => this.handleLoadError(error)
       });
+  } else {
+    this.isLoadingMatHang = false;
   }
+}
 
   private convertNgbDateToJsDate(ngayNhapStruct: any): Date | undefined {
     if (!ngayNhapStruct) return undefined;
@@ -357,15 +376,61 @@ export class ThemmoiTt29Component extends ThemMoiGiaBaseComponent {
     }
 
     if (results.length === 0) {
-      // Không tìm thấy kết quả - giữ nguyên chiTietGia nhưng hiển thị mảng rỗng
+      // Không tìm thấy kết quả - hiển thị mảng rỗng
       this.filteredChiTietGia = [];
     } else {
-      // Tìm thấy kết quả - cập nhật danh sách hiển thị
+      // Tìm thấy kết quả - cập nhật danh sách hiển thị nhưng giữ lại giá đã nhập
       const flattenedResults = this.flattenHangHoaTree(results);
-      this.mapToChiTietGia(flattenedResults);
+      
+      // Thay vì gọi mapToChiTietGia trực tiếp, gọi phương thức mới để giữ lại giá trị đã nhập
+      this.mapToChiTietGiaWithPreservedValues(flattenedResults);
+      
       this.filteredChiTietGia = [...this.chiTietGia];
       this.applyFilter();
     }
+  }
+
+  // Thêm phương thức mới để giữ lại giá trị đã nhập
+  private mapToChiTietGiaWithPreservedValues(danhSachMatHang: any[]): void {
+    // Tạo map để tra cứu nhanh giá trị đã nhập theo ID
+    const existingValuesMap = new Map();
+    
+    // Lưu các giá trị đã nhập từ danh sách gốc
+    if (this.originalChiTietGia.length > 0) {
+      this.originalChiTietGia.forEach(item => {
+        existingValuesMap.set(item.hangHoaThiTruongId, {
+          giaPhoBienKyBaoCao: item.giaPhoBienKyBaoCao,
+          giaBinhQuanKyNay: item.giaBinhQuanKyNay,
+          mucTangGiamGiaBinhQuan: item.mucTangGiamGiaBinhQuan,
+          tyLeTangGiamGiaBinhQuan: item.tyLeTangGiamGiaBinhQuan,
+          nguonThongTin: item.nguonThongTin,
+          ghiChu: item.ghiChu
+        });
+      });
+    }
+
+    // Tạo danh sách mới với giá trị được khôi phục từ danh sách gốc
+    this.chiTietGia = danhSachMatHang.map(item => {
+      const existingValues = existingValuesMap.get(item.id);
+      
+      return {
+        hangHoaThiTruongId: item.id,
+        maHangHoa: item.ma,
+        tenHangHoa: item.ten,
+        dacTinh: item.dacTinh,
+        donViTinh: item.tenDonViTinh || '',
+        loaiMatHang: item.loaiMatHang,
+        level: item.level || 0,
+        // Khôi phục giá trị đã nhập nếu có
+        giaPhoBienKyBaoCao: existingValues?.giaPhoBienKyBaoCao ?? null,
+        giaBinhQuanKyTruoc: item.giaBinhQuanKyTruoc || null,
+        giaBinhQuanKyNay: existingValues?.giaBinhQuanKyNay ?? null,
+        mucTangGiamGiaBinhQuan: existingValues?.mucTangGiamGiaBinhQuan ?? null,
+        tyLeTangGiamGiaBinhQuan: existingValues?.tyLeTangGiamGiaBinhQuan ?? null,
+        nguonThongTin: existingValues?.nguonThongTin ?? null,
+        ghiChu: existingValues?.ghiChu ?? null
+      };
+    });
   }
 
   // Xóa tìm kiếm
